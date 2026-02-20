@@ -196,6 +196,15 @@ public class PCTabs extends Sprite {
 
             // Add event listener for push-to-talk changes
             pushToTalkButton.addEventListener(PCPushToTalkButton.PUSH_TO_TALK_TOGGLED, onPushToTalkToggled);
+
+            //777592 - Speaker icons toggle
+            var speakerIconsToggle:PCGenericToggle = new PCGenericToggle("Speaker Icons", "ON", "OFF", 280, 25);
+            speakerIconsToggle.x = 10;
+            speakerIconsToggle.y = 145;
+            speakerIconsToggle.isEnabled = VoiceChatService.getInstance().getSpeakerIconsEnabled();
+            background.addChild(speakerIconsToggle);
+            backgroundMicSelectors[background + "_speakerIcons"] = speakerIconsToggle;
+            speakerIconsToggle.addEventListener(PCGenericToggle.TOGGLE_CHANGED, onSpeakerIconsToggleChanged);
         } else if (labelText == "Choose how, when and who has priority in groups") {
             // Priority System Enable/Disable Toggle
             var priorityToggle:PCGenericToggle = new PCGenericToggle("Priority System", "Enabled", "Disabled", 280, 25);
@@ -276,6 +285,14 @@ public class PCTabs extends Sprite {
 
         trace("PCTabs: Loaded saved priority settings");
     }
+    //777592
+    private function onSpeakerIconsToggleChanged(e:Event):void {
+        var toggle:PCGenericToggle = e.target as PCGenericToggle;
+        var enabled:Boolean = toggle.isEnabled;
+        trace("PCTabs: Speaker icons toggled to:", enabled);
+        VoiceChatService.getInstance().setSpeakerIconsEnabled(enabled);
+    }
+
     private function onPriorityToggleChanged(e:Event):void {
         var toggle:PCGenericToggle = e.target as PCGenericToggle;
         var enabled:Boolean = toggle.isEnabled;

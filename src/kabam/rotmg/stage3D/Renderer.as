@@ -298,30 +298,36 @@ import flash.display.StageScaleMode;
                try
                {
                   test = GraphicsBitmapFill(graphicsData).bitmapData.width;
+                  this.graphic3D_.setGraphic(GraphicsBitmapFill(graphicsData),this.context3D);
+                  finalTransform.identity();
+                  finalTransform.append(this.graphic3D_.getMatrix3D());
+                  finalTransform.appendScale(1 / Stage3DConfig.HALF_WIDTH,1 / Stage3DConfig.HALF_HEIGHT,1);
+                  finalTransform.appendTranslation(this.tX / Stage3DConfig.WIDTH,this.tY / Stage3DConfig.HEIGHT,0);
+                  this.context3D.setProgramConstantsFromMatrix(Context3DProgramType.VERTEX,0,finalTransform,true);
+                  this.graphic3D_.render(this.context3D);
                }
                catch(e:Error)
                {
-                  //trace("ERROR CAUGHT -- Invalid Bitmap Data");
                   continue;
                }
-               this.graphic3D_.setGraphic(GraphicsBitmapFill(graphicsData),this.context3D);
-               finalTransform.identity();
-               finalTransform.append(this.graphic3D_.getMatrix3D());
-               finalTransform.appendScale(1 / Stage3DConfig.HALF_WIDTH,1 / Stage3DConfig.HALF_HEIGHT,1);
-               finalTransform.appendTranslation(this.tX / Stage3DConfig.WIDTH,this.tY / Stage3DConfig.HEIGHT,0);
-               this.context3D.setProgramConstantsFromMatrix(Context3DProgramType.VERTEX,0,finalTransform,true);
-               this.graphic3D_.render(this.context3D);
             }
             if(graphicsData is GraphicsGradientFill)
             {
-               this.context3D.GetContext3D().setProgram(this.shadowProgram_);
-               this.graphic3D_.setGradientFill(GraphicsGradientFill(graphicsData),this.context3D,Stage3DConfig.HALF_WIDTH,Stage3DConfig.HALF_HEIGHT);
-               finalTransform.identity();
-               finalTransform.append(this.graphic3D_.getMatrix3D());
-               finalTransform.appendTranslation(this.tX / Stage3DConfig.WIDTH,this.tY / Stage3DConfig.HEIGHT,0);
-               this.context3D.setProgramConstantsFromMatrix(Context3DProgramType.VERTEX,0,finalTransform,true);
-               this.context3D.setProgramConstantsFromVector(Context3DProgramType.FRAGMENT,4,Vector.<Number>([0.5,0.25,0,0]));
-               this.graphic3D_.renderShadow(this.context3D);
+               try
+               {
+                  this.context3D.GetContext3D().setProgram(this.shadowProgram_);
+                  this.graphic3D_.setGradientFill(GraphicsGradientFill(graphicsData),this.context3D,Stage3DConfig.HALF_WIDTH,Stage3DConfig.HALF_HEIGHT);
+                  finalTransform.identity();
+                  finalTransform.append(this.graphic3D_.getMatrix3D());
+                  finalTransform.appendTranslation(this.tX / Stage3DConfig.WIDTH,this.tY / Stage3DConfig.HEIGHT,0);
+                  this.context3D.setProgramConstantsFromMatrix(Context3DProgramType.VERTEX,0,finalTransform,true);
+                  this.context3D.setProgramConstantsFromVector(Context3DProgramType.FRAGMENT,4,Vector.<Number>([0.5,0.25,0,0]));
+                  this.graphic3D_.renderShadow(this.context3D);
+               }
+               catch(e:Error)
+               {
+                  continue;
+               }
             }
             if(graphicsData == null && grahpicsData3d.length != 0)
             {

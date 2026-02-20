@@ -22,6 +22,9 @@ public class VoiceChatService {
     private var gameServerIP:String;
     private var isVoiceConnected:Boolean = false;
 
+    //777592 - Speaker icon manager
+    private var speakerIconManager:SpeakerIconManager;
+
     public static function getInstance():VoiceChatService {
         if (!_instance) {
             _instance = new VoiceChatService();
@@ -451,6 +454,30 @@ public class VoiceChatService {
             trace("VoiceChatService: Removed manual priority for account:", accountId);
         }
     }
+    //777592 - Speaker icon management
+    public function setSpeakerIconManager(mgr:SpeakerIconManager):void {
+        speakerIconManager = mgr;
+    }
+
+    public function onPlayerSpeaking(playerId:String):void {
+        if (speakerIconManager) speakerIconManager.showSpeaker(parseInt(playerId));
+    }
+
+    public function onPlayerSilent(playerId:String):void {
+        if (speakerIconManager) speakerIconManager.hideSpeaker(parseInt(playerId));
+    }
+
+    public function setSpeakerIconsEnabled(enabled:Boolean):void {
+        if (speakerIconManager) speakerIconManager.setEnabled(enabled);
+        if (settings) settings.saveSpeakerIconsEnabled(enabled);
+    }
+
+    public function getSpeakerIconsEnabled():Boolean {
+        if (speakerIconManager) return speakerIconManager.enabled;
+        if (settings) return settings.getSpeakerIconsEnabled();
+        return true;
+    }
+
     // UPDATED: Enhanced dispose with settings cleanup
     public function dispose(onComplete:Function = null):void {
         if (settings) {
@@ -468,6 +495,12 @@ public class VoiceChatService {
         } else if (onComplete != null) {
             // No audioBridge, call callback immediately
             onComplete(null);
+        }
+
+        //777592
+        if (speakerIconManager) {
+            speakerIconManager.dispose();
+            speakerIconManager = null;
         }
 
         currentPCManager = null;

@@ -250,6 +250,15 @@ public class PCBridge extends EventDispatcher  {
                         // Handle client port if needed
                         break;
 
+                    //777592 - Speaker icon events from C# voice mixer
+                    case "SPEAKING":
+                        VoiceChatService.getInstance().onPlayerSpeaking(parts[1].replace(/\s/g, ""));
+                        break;
+
+                    case "SILENT":
+                        VoiceChatService.getInstance().onPlayerSilent(parts[1].replace(/\s/g, ""));
+                        break;
+
                     default:
                         trace("PCBridge: Unknown command:", parts[0]);
                         break;

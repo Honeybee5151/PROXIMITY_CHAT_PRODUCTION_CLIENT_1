@@ -31,7 +31,7 @@ public class PCSettings extends EventDispatcher
     private static const AUTO_PRIORITY_LOCKED:String = "autoPriorityLocked";
     private static const NON_PRIORITY_VOLUME:String = "nonPriorityVolume";
     private static const MAX_PRIORITY_SLOTS:String = "maxPrioritySlots";
-
+    private static const SPEAKER_ICONS_ENABLED:String = "speakerIconsEnabled"; //777592
 
 
     public function PCSettings()
@@ -514,6 +514,26 @@ public class PCSettings extends EventDispatcher
     /**
      * Check if SharedObject is available and working
      */
+    //777592 - Speaker icons setting
+    public function saveSpeakerIconsEnabled(enabled:Boolean):void {
+        if (!_sharedObject) return;
+        try {
+            _sharedObject.data[SPEAKER_ICONS_ENABLED] = enabled;
+            _sharedObject.flush();
+            trace("PCSettings: Saved speaker icons enabled:", enabled);
+            dispatchEvent(new Event(SETTINGS_SAVED));
+        } catch (error:Error) {
+            trace("PCSettings: Failed to save speaker icons enabled:", error.message);
+        }
+    }
+
+    public function getSpeakerIconsEnabled():Boolean {
+        if (!_sharedObject || _sharedObject.data[SPEAKER_ICONS_ENABLED] === undefined) {
+            return true; // Default ON
+        }
+        return _sharedObject.data[SPEAKER_ICONS_ENABLED] as Boolean;
+    }
+
     public function isAvailable():Boolean
     {
         return _sharedObject != null;

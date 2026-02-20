@@ -60,6 +60,7 @@ import kabam.rotmg.ui.view.BossHealthBar;
 import kabam.rotmg.ui.view.HUDView;
 //777592
 import kabam.rotmg.ProximityChat.PCManager;
+import kabam.rotmg.ProximityChat.SpeakerIconManager;
 
 import org.osflash.signals.Signal;
 
@@ -131,8 +132,9 @@ public class GameSprite extends Sprite {
       // Add to stage
       addChild(proximityChatManager);
 
-      // Optional: Listen for events
-
+      //777592 - Speaker icon manager for voice chat indicators above player heads
+      var iconMgr:SpeakerIconManager = new SpeakerIconManager(this);
+      VoiceChatService.getInstance().setSpeakerIconManager(iconMgr);
    }
 
 
