@@ -2,6 +2,7 @@ package kabam.rotmg.ProximityChat {
 
 import flash.display.Shape;
 import flash.display.Sprite;
+import flash.display.Stage;
 import flash.events.Event;
 import flash.geom.Rectangle;
 
@@ -70,6 +71,10 @@ public class PCManager extends Sprite
 
     private function initialize():void
     {
+        // Hide until scale is fixed (prevents 1-frame flash at wrong size)
+        visible = false;
+        addEventListener(Event.ADDED_TO_STAGE, onAddedToStage);
+
         // Create the main container with mask and background
         maskBackground = new PCMask(
                 _containerWidth,
@@ -498,8 +503,54 @@ public class PCManager extends Sprite
             chatToggle.setState(isEnabled, false);
         }
     }
+    private function onAddedToStage(e:Event):void
+    {
+        removeEventListener(Event.ADDED_TO_STAGE, onAddedToStage);
+        // Fix scale immediately but stay hidden
+        fixScale();
+        // Wait one frame before showing — ensures the corrected scale
+        // is applied before Flash renders, preventing the 1-frame flash
+        addEventListener(Event.ENTER_FRAME, onFirstFrame);
+        stage.addEventListener(Event.RESIZE, onStageResize);
+    }
+
+    private function onFirstFrame(e:Event):void
+    {
+        removeEventListener(Event.ENTER_FRAME, onFirstFrame);
+        fixScale(); // Re-apply in case parent scale changed between add and render
+        visible = true;
+    }
+
+    private function onStageResize(e:Event):void
+    {
+        fixScale();
+    }
+
+    private function fixScale():void
+    {
+        var parentScaleX:Number = parent ? parent.scaleX : 1;
+        var parentScaleY:Number = parent ? parent.scaleY : 1;
+
+        var p:Sprite = parent as Sprite;
+        while (p && p.parent && !(p is Stage)) {
+            p = p.parent as Sprite;
+            if (p) {
+                parentScaleX *= p.scaleX;
+                parentScaleY *= p.scaleY;
+            }
+        }
+
+        if (parentScaleX > 0 && parentScaleY > 0) {
+            this.scaleX = 1 / parentScaleX;
+            this.scaleY = 1 / parentScaleY;
+        }
+    }
+
     public function dispose():void
     {
+        if (stage) {
+            stage.removeEventListener(Event.RESIZE, onStageResize);
+        }
         // Step 1: Remove event listeners FIRST (prevent any callbacks)
         if (verticalSlider)
         {
