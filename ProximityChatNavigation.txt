@@ -1,0 +1,72 @@
+Hello it is me Shangapallia again. Here we have a proximity chat for rotmg-pservers created by Claude.
+So for the main batch of files the navigation is src -> kabam -> rotmg -> ProximityChat.
+
+Content: An ingame UI, which is initialized in PCManager. Its parts are, PCCycleButton, PCGenericToggle, PCMask,
+PCMicSelector, PCNumberSlider, PCPushToTalkButton, PCSlider, PCTabs, PCToggle, PCVisualiser, PCVolumeSlider. Although,
+most of the UI stuff is initialized in PCTabs which is then initialized in PCManger, thereafter in GameSprite.
+
+
+The proximity-chat comes with an authentication-system, the client receives from the server in gameserverconnections the
+code from the server at login. It is generated at account generation, but a system in place for existing accounts exists
+so you do not need to worry about that. After receiving the code, it is transferred from PCBridge (the link between the
+c# program and the client) to the c# program. It is then used as like a check between the server and and c# program. The
+system was accidentally tested when I removed the receiver in gameserverconnection and the VoiceHandler (the main
+receiver and sender in the server) did not receive the voice bytes. So spoofing is countered. Unless the code can be
+transcribed by another user when it is sent out.
+
+VoiceChatService is initalized in titleview. It basically activates the chsarp program. It is like the manager of
+PCBridge.
+
+The system comes with push-to-talk which is tested and works. And a incoming-sound volume slider which works. And a mic
+selector which works. Furthermore, there is a prioritize system, which is customizable, and is supposed to make the
+experience in big groups more enjoyable. That system is not tested yet.
+
+When you have added the stuff from the server to your server, you need to add exceptions in the firewall to 2051,
+both in your provider and your VPS.
+
+To get this all to work, you need to publish the console1, and put the contents of the publish by your swf, moe.png,
+etc. You can also copy the publish content from its repository and it will work as well.
+
+//777592 is the navigation code. Basically every (should be every) new code section in files other than the batch
+have the code before so that you can easily find what is needed to implement.
+
+An important implementation (well all parts are quite needed), is that in the server side -> connectionlistener is what
+activates the 2051 port.
+
+Bugs:
+
+1. After leaving the game overnight, voice did not work.
+2. One time it did not send voice, and pressing guild to deactivate fixed it. Could not replicate this.
+3. When you log into the game, and switch the guild activation to enable from disable for the first time that session,
+it flickers form disabled to enabled. (fixed)
+4. When you restart the game in intelljidea the console sometimes does not terminate.
+5. At generation of authentication, you need to go into a new instance for vc to work.
+6. When you package it in powershell, and play the game and exit the music continues to play. I cannot find it in task-
+manager, and need a computer-restart. Not sure if this happened for the other tester.
+7. If a player has a default mic as one which gives corrupted audio into the headphones, it will take a while to load
+the mic saved in settings.
+8. Switching mics if you use a mic combined with bluetooth headphones
+that causes distorted headphone audio, is not switched immediately to better audio
+at mic switch.
+9. Authentication disabled randomly, but fixed after restart. Uncertain context.
+
+(1-3 potentially fixed)
+(8 OBS has also so standard?)
+
+Easy change:
+
+1. If port 2051 is already in use go to this "await udpVoiceHandler.StartUdpVoiceServer(2051);" on the server
+and change it to what you want.
+
+
+To do/progress since last release.
+
+1. Make it UDP, perhaps. (DONE)
+
+2. Make the audio data for the visualiser not be sent when the UI is off. (DONE)
+
+3. Make when the sound of non-priority is on off, disable it coming into the client for reduced lag. (DONE)
+
+4. Disable stretching for teh UI.
+
+5. Efficient way to bundle all the files from proximitychat instead of loitering them by the swf.
