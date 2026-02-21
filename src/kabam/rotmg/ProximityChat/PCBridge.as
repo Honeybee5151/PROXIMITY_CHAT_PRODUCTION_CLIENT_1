@@ -19,6 +19,7 @@ public class PCBridge extends EventDispatcher  {
     private var pushToTalkKeyPressed:Boolean = false;
     public static const PTT_STATE_CHANGED:String = "PTT_STATE_CHANGED";
     private var processAlive:Boolean = false;
+    private var isDisposing:Boolean = false;
     private var retryCount:int = 0;
     private static const MAX_RETRIES:int = 3;
 
@@ -84,6 +85,11 @@ public class PCBridge extends EventDispatcher  {
         trace("PCBridge: Set incoming volume to", volume);
     }
 
+    public function setSpeakerIconMode(mode:String):void {
+        sendCommand("SET_SPEAKER_ICON:" + mode);
+        trace("PCBridge: Set speaker icon mode to", mode);
+    }
+
     private function connectToPipe():void {
         sendCommand("GET_MICS");
     }
@@ -105,8 +111,8 @@ public class PCBridge extends EventDispatcher  {
         trace("PCBridge: Audio process exited with code:", e.exitCode);
         processAlive = false;
 
-        // Auto-retry on unexpected crash (exit code != 0)
-        if (e.exitCode != 0) {
+        // Only auto-retry on unexpected crash — NOT during intentional dispose
+        if (e.exitCode != 0 && !isDisposing) {
             trace("PCBridge: Unexpected exit - attempting restart");
             retryLaunch();
         }
@@ -343,6 +349,7 @@ public class PCBridge extends EventDispatcher  {
 
     public function dispose():void {
         trace("PCBridge: dispose() called");
+        isDisposing = true;
 
         try {
             if (audioProcess && audioProcess.running) {

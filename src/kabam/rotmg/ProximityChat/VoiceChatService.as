@@ -181,6 +181,10 @@ public class VoiceChatService {
                         trace("VoiceChatService: Always-on mode - transmission enabled");
                     }
                 }
+
+                // Restore saved speaker icon mode
+                var savedIconMode:String = settings.loadSpeakerIconMode();
+                audioBridge.setSpeakerIconMode(savedIconMode);
             }
         }
 
@@ -197,6 +201,22 @@ public class VoiceChatService {
         if (settings) {
             settings.saveIncomingVolume(volume);
         }
+    }
+
+    public function setSpeakerIconMode(mode:String):void {
+        if (audioBridge) {
+            audioBridge.setSpeakerIconMode(mode);
+        }
+        if (settings) {
+            settings.saveSpeakerIconMode(mode);
+        }
+    }
+
+    public function getSpeakerIconMode():String {
+        if (settings) {
+            return settings.loadSpeakerIconMode();
+        }
+        return "all";
     }
 
 

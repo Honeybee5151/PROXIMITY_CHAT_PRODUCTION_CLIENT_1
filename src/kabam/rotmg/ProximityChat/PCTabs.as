@@ -197,14 +197,18 @@ public class PCTabs extends Sprite {
             // Add event listener for push-to-talk changes
             pushToTalkButton.addEventListener(PCPushToTalkButton.PUSH_TO_TALK_TOGGLED, onPushToTalkToggled);
 
-            //777592 - Speaker icons toggle
-            var speakerIconsToggle:PCGenericToggle = new PCGenericToggle("Speaker Icons", "ON", "OFF", 280, 25);
-            speakerIconsToggle.x = 10;
-            speakerIconsToggle.y = 145;
-            speakerIconsToggle.isEnabled = VoiceChatService.getInstance().getSpeakerIconsEnabled();
-            background.addChild(speakerIconsToggle);
-            backgroundMicSelectors[background + "_speakerIcons"] = speakerIconsToggle;
-            speakerIconsToggle.addEventListener(PCGenericToggle.TOGGLE_CHANGED, onSpeakerIconsToggleChanged);
+            //777592 - Speaker icons mode cycle: All / Others / Off
+            var speakerIconsCycle:PCCycleButton = new PCCycleButton("Speaker Icons", 280, 25, ["All", "Others", "Off"]);
+            speakerIconsCycle.x = 10;
+            speakerIconsCycle.y = 145;
+            // Restore saved mode
+            var savedMode:String = VoiceChatService.getInstance().getSpeakerIconMode();
+            if (savedMode == "others") speakerIconsCycle.currentState = 1;
+            else if (savedMode == "off") speakerIconsCycle.currentState = 2;
+            else speakerIconsCycle.currentState = 0;
+            background.addChild(speakerIconsCycle);
+            backgroundMicSelectors[background + "_speakerIcons"] = speakerIconsCycle;
+            speakerIconsCycle.addEventListener(PCCycleButton.STATE_CHANGED, onSpeakerIconModeChanged);
         } else if (labelText == "Choose how, when and who has priority in groups") {
             // Priority System Enable/Disable Toggle
             var priorityToggle:PCGenericToggle = new PCGenericToggle("Priority System", "Enabled", "Disabled", 280, 25);
@@ -286,11 +290,12 @@ public class PCTabs extends Sprite {
         trace("PCTabs: Loaded saved priority settings");
     }
     //777592
-    private function onSpeakerIconsToggleChanged(e:Event):void {
-        var toggle:PCGenericToggle = e.target as PCGenericToggle;
-        var enabled:Boolean = toggle.isEnabled;
-        trace("PCTabs: Speaker icons toggled to:", enabled);
-        VoiceChatService.getInstance().setSpeakerIconsEnabled(enabled);
+    private function onSpeakerIconModeChanged(e:Event):void {
+        var cycle:PCCycleButton = e.target as PCCycleButton;
+        var modes:Array = ["all", "others", "off"];
+        var mode:String = modes[cycle.currentState];
+        trace("PCTabs: Speaker icon mode changed to:", mode);
+        VoiceChatService.getInstance().setSpeakerIconMode(mode);
     }
 
     private function onPriorityToggleChanged(e:Event):void {
@@ -319,8 +324,8 @@ public class PCTabs extends Sprite {
         trace("PCTabs: Auto priority changed to:", button.currentStateText);
 
         // Use VoiceChatService
-        VoiceChatService.getInstance().setAutoPriorityGuild(button.isGuildMode);
-        VoiceChatService.getInstance().setAutoPriorityLocked(button.isLockedMode);
+        VoiceChatService.getInstance().setAutoPriorityGuild(button.isGuildMode || button.isBothMode);
+        VoiceChatService.getInstance().setAutoPriorityLocked(button.isLockedMode || button.isBothMode);
     }
 
     private function onNonPriorityVolumeChanged(e:Event):void {

@@ -114,6 +114,10 @@ public class GameSprite extends Sprite {
       this.textBox_.addEventListener(MouseEvent.MOUSE_DOWN, this.onChatDown);
       this.textBox_.addEventListener(MouseEvent.MOUSE_UP, this.onChatUp);
       this.idleWatcher_ = new IdleWatcher();
+
+      //777592 - Speaker icon manager: init early so icons work before UI is opened
+      var iconMgr:SpeakerIconManager = new SpeakerIconManager(this);
+      VoiceChatService.getInstance().setSpeakerIconManager(iconMgr);
    }
 //777592
    public function initializePCUI():void {
@@ -131,10 +135,6 @@ public class GameSprite extends Sprite {
 
       // Add to stage
       addChild(proximityChatManager);
-
-      //777592 - Speaker icon manager for voice chat indicators above player heads
-      var iconMgr:SpeakerIconManager = new SpeakerIconManager(this);
-      VoiceChatService.getInstance().setSpeakerIconManager(iconMgr);
    }
 
 

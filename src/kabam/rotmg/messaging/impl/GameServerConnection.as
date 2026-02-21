@@ -1522,7 +1522,7 @@ public class GameServerConnection
                   go.rtHp_ = go.hp_;
                   continue;
                case StatData.SIZE_STAT:
-                  go.size_ = value;
+                  go.setSize(value);
                   continue;
                case StatData.MAX_MP_STAT:
                   player.maxMP_ = value;

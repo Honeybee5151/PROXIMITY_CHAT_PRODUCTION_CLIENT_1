@@ -64,7 +64,7 @@ import flash.display.StageScaleMode;
 
       private var graphic3D_:Graphic3D;
 
-      protected var _projection:Matrix3D;
+      protected static var _projection:Matrix3D;
 
       protected var cameraMatrix_:Matrix3D;
 
@@ -119,7 +119,7 @@ import flash.display.StageScaleMode;
 
       public function init(context3D:Context3D) : void
       {
-         this._projection = Util.perspectiveProjection(56,1,0.1,2048);
+         BuildProjectionMatrix();
          var vsAssembler:AGALMiniAssembler = new AGALMiniAssembler();
          vsAssembler.assemble(Context3DProgramType.VERTEX,this._vertexShader);
          var fsAssembler:AGALMiniAssembler = new AGALMiniAssembler();
@@ -290,6 +290,10 @@ import flash.display.StageScaleMode;
          this.widthOffset_ = -mapWidth / 2;
          this.heightOffset_ = mapHeight / 2;
          this.UpdateCameraMatrix(camera);
+         const mult:Number = 2;
+         var mscale:Number = Parameters.data_.mscale;
+         var scaleX:Number = mscale * (800 / WebMain.STAGE.stageWidth) * mult;
+         var scaleY:Number = mscale * (600 / WebMain.STAGE.stageHeight) * mult;
          for each(graphicsData in graphicsDatas)
          {
             this.context3D.GetContext3D().setCulling(Context3DTriangleFace.NONE);
@@ -318,6 +322,7 @@ import flash.display.StageScaleMode;
                   this.context3D.GetContext3D().setProgram(this.shadowProgram_);
                   this.graphic3D_.setGradientFill(GraphicsGradientFill(graphicsData),this.context3D,Stage3DConfig.HALF_WIDTH,Stage3DConfig.HALF_HEIGHT);
                   finalTransform.identity();
+                  finalTransform.appendScale(scaleX, scaleY, 1);
                   finalTransform.append(this.graphic3D_.getMatrix3D());
                   finalTransform.appendTranslation(this.tX / Stage3DConfig.WIDTH,this.tY / Stage3DConfig.HEIGHT,0);
                   this.context3D.setProgramConstantsFromMatrix(Context3DProgramType.VERTEX,0,finalTransform,true);
@@ -337,10 +342,11 @@ import flash.display.StageScaleMode;
                   this.context3D.GetContext3D().setCulling(Context3DTriangleFace.BACK);
                   grahpicsData3d[index3d].UpdateModelMatrix(this.widthOffset_,this.heightOffset_);
                   finalTransform.identity();
+                  finalTransform.appendRotation(-90, Vector3D.Z_AXIS);
                   finalTransform.append(grahpicsData3d[index3d].GetModelMatrix());
                   finalTransform.append(this.cameraMatrix_);
-                  finalTransform.append(this._projection);
-                  finalTransform.appendTranslation(this.tX / Stage3DConfig.WIDTH,this.tY / Stage3DConfig.HEIGHT * 11.5,0);
+                  finalTransform.append(_projection);
+                  finalTransform.appendTranslation(this.tX / Stage3DConfig.WIDTH,this.tY / Stage3DConfig.HEIGHT,0);
                   this.context3D.setProgramConstantsFromMatrix(Context3DProgramType.VERTEX,0,finalTransform,true);
                   this.context3D.setProgramConstantsFromMatrix(Context3DProgramType.VERTEX,8,grahpicsData3d[index3d].GetModelMatrix(),true);
                   grahpicsData3d[index3d].draw(this.context3D.GetContext3D());
@@ -353,6 +359,35 @@ import flash.display.StageScaleMode;
                }
             }
          }
+      }
+
+      private static function CreateOrthographicOffCenter(left:Number, right:Number, bottom:Number, top:Number, zNear:Number, zFar:Number): Matrix3D {
+         var data:Vector.<Number> = new Vector.<Number>(16,true);
+
+         data[0] = 2 / (right - left);
+         data[1] = data[2] = data[3] = 0;
+
+         data[5] = 2 / (top - bottom);
+         data[4] = data[6] = data[7] = 0;
+
+         data[10] = 1 / (zNear - zFar);
+         data[8] = data[9] = data[11] = 0;
+
+         data[12] = (left + right) / (left - right);
+         data[13] = (top + bottom) / (bottom - top);
+         data[14] = zNear / (zNear - zFar);
+         data[15] = 1;
+
+         var matrix:Matrix3D = new Matrix3D();
+         matrix.rawData = data;
+         return matrix;
+      }
+
+      public static function BuildProjectionMatrix(): void {
+         var mscale:Number = Parameters.data_.mscale;
+         var w:Number = WebMain.sWidth / mscale / 600;
+         var h:Number = WebMain.sHeight / mscale / 600;
+         _projection = CreateOrthographicOffCenter(-6 * w, 6 * w, -6 * h, 6 * h, -100, 100);
       }
 
       private function setTranslationToGame() : void

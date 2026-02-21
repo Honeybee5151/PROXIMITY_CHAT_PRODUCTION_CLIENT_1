@@ -43,7 +43,8 @@ public class PCCycleButton extends Sprite {
     public function PCCycleButton(
             labelText:String = "Auto Priority",
             width:Number = 200,
-            height:Number = 25
+            height:Number = 25,
+            customStates:Array = null
     ) {
         _labelText = labelText;
         _width = width;
@@ -56,11 +57,16 @@ public class PCCycleButton extends Sprite {
 
         // Define the cycle states
         _states = new Vector.<String>();
-        _states.push("Guild");
-        _states.push("Locked");
-        _states.push("Both");
+        if (customStates != null) {
+            for each (var s:String in customStates)
+                _states.push(s);
+        } else {
+            _states.push("Guild");
+            _states.push("Locked");
+            _states.push("Both");
+        }
 
-        _currentState = 0; // Start with Guild
+        _currentState = 0;
 
         initialize();
     }

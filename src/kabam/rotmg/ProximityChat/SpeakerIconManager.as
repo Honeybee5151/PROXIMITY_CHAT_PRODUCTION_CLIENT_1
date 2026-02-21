@@ -18,10 +18,10 @@ public class SpeakerIconManager {
         this.gs = gameSprite;
         this.activeIcons = new Dictionary();
 
-        // Load saved setting
+        // Load saved setting — "off" mode disables icon display entirely
         var settings:PCSettings = PCSettings.getInstance();
         if (settings) {
-            _enabled = settings.getSpeakerIconsEnabled();
+            _enabled = settings.loadSpeakerIconMode() != "off";
         }
 
         trace("SpeakerIconManager: Initialized, enabled=" + _enabled);

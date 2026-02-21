@@ -150,6 +150,7 @@ public class WebMain extends Sprite {
         sHeight = stage.stageHeight;
         Camera.adjustDimensions();
         Stage3DConfig.Dimensions();
+        Renderer.BuildProjectionMatrix();
     }
 
     private function onAddedToStage(event:Event):void {

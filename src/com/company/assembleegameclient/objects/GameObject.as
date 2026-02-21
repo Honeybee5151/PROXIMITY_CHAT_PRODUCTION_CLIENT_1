@@ -398,7 +398,7 @@ public class GameObject extends BasicObject {
 
     override public function draw(graphicsData:Vector.<IGraphicsData>, camera:Camera, time:int):void {
         var texture:BitmapData = this.getTexture(camera, time);
-        if (this.props_.drawOnGround_ || this.obj3D_ != null && Parameters.isGpuRender()) {
+        if (this.props_.drawOnGround_) {
             if (square_.faces_.length == 0) {
                 return;
             }

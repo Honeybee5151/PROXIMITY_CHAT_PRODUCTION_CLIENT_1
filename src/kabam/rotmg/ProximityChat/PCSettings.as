@@ -32,6 +32,7 @@ public class PCSettings extends EventDispatcher
     private static const NON_PRIORITY_VOLUME:String = "nonPriorityVolume";
     private static const MAX_PRIORITY_SLOTS:String = "maxPrioritySlots";
     private static const SPEAKER_ICONS_ENABLED:String = "speakerIconsEnabled"; //777592
+    private static const SPEAKER_ICON_MODE:String = "speakerIconMode"; // "all", "others", "off"
 
 
     public function PCSettings()
@@ -532,6 +533,25 @@ public class PCSettings extends EventDispatcher
             return true; // Default ON
         }
         return _sharedObject.data[SPEAKER_ICONS_ENABLED] as Boolean;
+    }
+
+    public function saveSpeakerIconMode(mode:String):void {
+        if (!_sharedObject) return;
+        try {
+            _sharedObject.data[SPEAKER_ICON_MODE] = mode;
+            _sharedObject.flush();
+            trace("PCSettings: Saved speaker icon mode:", mode);
+            dispatchEvent(new Event(SETTINGS_SAVED));
+        } catch (error:Error) {
+            trace("PCSettings: Failed to save speaker icon mode:", error.message);
+        }
+    }
+
+    public function loadSpeakerIconMode():String {
+        if (!_sharedObject || _sharedObject.data[SPEAKER_ICON_MODE] === undefined) {
+            return "all"; // Default: show all icons
+        }
+        return _sharedObject.data[SPEAKER_ICON_MODE] as String;
     }
 
     public function isAvailable():Boolean
