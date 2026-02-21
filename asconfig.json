@@ -1,0 +1,29 @@
+{
+    "config": "air",
+    "compilerOptions": {
+        "source-path": [
+            "src"
+        ],
+        "library-path": [
+            "libs"
+        ],
+        "output": "bin-debug/client.swf",
+        "default-size": {
+            "width": 800,
+            "height": 600
+        },
+        "default-frame-rate": 60,
+        "default-background-color": "#000000",
+        "optimize": true,
+        "strict": true,
+        "warnings": false,
+        "keep-as3-metadata": [
+            "Inject",
+            "Embed",
+            "PostConstruct",
+            "ArrayElementType"
+        ]
+    },
+    "mainClass": "WebMain",
+    "application": "WebMain-app.xml"
+}
