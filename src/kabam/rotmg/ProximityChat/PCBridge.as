@@ -10,6 +10,8 @@ import flash.events.ProgressEvent;
 import flash.events.Event;
 import flash.utils.ByteArray;
 import flash.utils.setTimeout;
+import flash.utils.setInterval;
+import flash.utils.clearInterval;
 
 public class PCBridge extends EventDispatcher  {
     public var audioProcess:NativeProcess;
@@ -22,6 +24,7 @@ public class PCBridge extends EventDispatcher  {
     private var isDisposing:Boolean = false;
     private var retryCount:int = 0;
     private static const MAX_RETRIES:int = 3;
+    private var keepaliveTimerId:uint = 0;
 
     public function PCBridge(manager:PCManager = null) {
         proximityChatManager = manager;
@@ -66,6 +69,7 @@ public class PCBridge extends EventDispatcher  {
                 retryCount = 0;
                 trace("PCBridge: Process started successfully");
                 trace("PCBridge: Process running =", audioProcess.running);
+                startKeepalive();
                 setTimeout(connectToPipe, 1000);
             } else {
                 trace("PCBridge: Process failed to start");
@@ -102,18 +106,17 @@ public class PCBridge extends EventDispatcher  {
     private function onErrorData(e:ProgressEvent):void
     {
         var error:String = audioProcess.standardError.readUTFBytes(audioProcess.standardError.bytesAvailable);
-        trace("PCBridge: *** C# ERROR ***:", error);
-
-        // ADD THIS LINE - Process the error stream too!
+        // Don't trace raw stderr — too noisy, slows Flash event loop drain
         processAudioMessage(error);
     }
     private function onProcessExit(e:NativeProcessExitEvent):void {
         trace("PCBridge: Audio process exited with code:", e.exitCode);
         processAlive = false;
+        stopKeepalive();
 
-        // Only auto-retry on unexpected crash — NOT during intentional dispose
-        if (e.exitCode != 0 && !isDisposing) {
-            trace("PCBridge: Unexpected exit - attempting restart");
+        // Auto-retry on ANY unexpected exit — NOT during intentional dispose
+        if (!isDisposing) {
+            trace("PCBridge: Unexpected exit (code=" + e.exitCode + ") - attempting restart + reconnect");
             retryLaunch();
         }
     }
@@ -121,10 +124,39 @@ public class PCBridge extends EventDispatcher  {
     private function retryLaunch():void {
         if (retryCount < MAX_RETRIES) {
             retryCount++;
-            trace("PCBridge: Retry " + retryCount + "/" + MAX_RETRIES + " in 2 seconds...");
-            setTimeout(startAudioProgram, 2000);
+            trace("PCBridge: Retry " + retryCount + "/" + MAX_RETRIES + " in 500ms...");
+            setTimeout(function():void {
+                startAudioProgram();
+                // After restart, reconnect voice if we had auth
+                setTimeout(function():void {
+                    var voiceService:VoiceChatService = VoiceChatService.getInstance();
+                    if (voiceService && voiceService.hasVoiceAuth()) {
+                        trace("PCBridge: Reconnecting voice after restart");
+                        voiceService.reconnectAfterRestart();
+                    }
+                }, 1000);
+            }, 500);
         } else {
             trace("PCBridge: Max retries reached - voice chat unavailable");
+        }
+    }
+
+    private function startKeepalive():void {
+        stopKeepalive();
+        // Send KEEPALIVE every 30 seconds to keep stdin pipe active
+        keepaliveTimerId = setInterval(function():void {
+            if (processAlive && audioProcess && audioProcess.running) {
+                sendCommand("KEEPALIVE");
+            } else {
+                stopKeepalive();
+            }
+        }, 30000);
+    }
+
+    private function stopKeepalive():void {
+        if (keepaliveTimerId != 0) {
+            clearInterval(keepaliveTimerId);
+            keepaliveTimerId = 0;
         }
     }
 
@@ -188,7 +220,6 @@ public class PCBridge extends EventDispatcher  {
 
                     case "AUDIO_LEVEL":
                         var level:Number = parseFloat(parts[1]);
-                        trace("PCBridge: *** AUDIO_LEVEL COMMAND RECEIVED ***:", parts[1], "parsed as:", level);
                         if (proximityChatManager) {
                             proximityChatManager.updateVisualizerLevel(level);
                         }
@@ -348,29 +379,65 @@ public class PCBridge extends EventDispatcher  {
     }
 
     public function dispose():void {
-        trace("PCBridge: dispose() called");
+        // Capture stack trace to identify WHO called dispose
+        var stack:String = new Error().getStackTrace();
+        trace("PCBridge: dispose() called, processAlive=" + processAlive);
+        trace("PCBridge: dispose() STACK TRACE:\n" + stack);
         isDisposing = true;
+        stopKeepalive();
 
-        try {
-            if (audioProcess && audioProcess.running) {
-                sendCommand("EXIT");
-
-                setTimeout(function ():void {
-                    if (audioProcess && audioProcess.running) {
-                        trace("PCBridge: Force closing process");
-                        audioProcess.exit(true);
-                    }
-                }, 100);
+        // Remove event listeners first to prevent retry during shutdown
+        if (audioProcess) {
+            try {
+                audioProcess.removeEventListener(ProgressEvent.STANDARD_OUTPUT_DATA, onOutputData);
+                audioProcess.removeEventListener(ProgressEvent.STANDARD_ERROR_DATA, onErrorData);
+                audioProcess.removeEventListener(NativeProcessExitEvent.EXIT, onProcessExit);
+            } catch (e:Error) {
+                trace("PCBridge: Error removing listeners:", e.message);
             }
-        } catch (e:Error) {
-            trace("PCBridge: Error during disposal:", e.message);
-            if (audioProcess) {
-                try {
-                    audioProcess.exit(true);
-                } catch (e2:Error) {
-                    trace("PCBridge: Force close also failed:", e2.message);
+        }
+
+        // Only try to communicate with a living process
+        if (processAlive && audioProcess && audioProcess.running) {
+            try {
+                // Send dispose reason to ConsoleApp1 BEFORE EXIT so it gets logged
+                var reason:String = "unknown";
+                if (stack) {
+                    // Extract caller from stack trace (2nd line = caller of dispose)
+                    var lines:Array = stack.split('\n');
+                    reason = lines.length > 1 ? lines[1] : "no_stack";
+                    // Clean up whitespace
+                    reason = reason.replace(/^\s+/, "").replace(/\s+$/, "");
                 }
+                sendCommand("DISPOSE_NOTIFY:" + reason);
+                sendCommand("EXIT");
+                // Give it a moment to exit gracefully, then force kill
+                setTimeout(function ():void {
+                    forceKillProcess();
+                }, 500);
+            } catch (e:Error) {
+                trace("PCBridge: Error sending EXIT:", e.message);
+                forceKillProcess();
             }
+        } else {
+            trace("PCBridge: Process already dead, nothing to clean up");
+        }
+
+        processAlive = false;
+        audioProcess = null;
+    }
+
+    private function forceKillProcess():void {
+        if (audioProcess) {
+            try {
+                if (audioProcess.running) {
+                    trace("PCBridge: Force closing process");
+                    audioProcess.exit(true);
+                }
+            } catch (e:Error) {
+                trace("PCBridge: Force close failed:", e.message);
+            }
+            audioProcess = null;
         }
     }
 

@@ -23,7 +23,8 @@ public class PCVolumeSlider extends Sprite {
     // Properties
     private var _width:Number;
     private var _height:Number;
-    private var _value:Number = 1.0; // 0.0 to 1.0
+    private var _value:Number = 1.0; // 0.0 to 2.0 (1.0 = normal, 2.0 = max boost)
+    private var _maxValue:Number = 2.0;
     private var _isDragging:Boolean = false;
     private var _thumbWidth:Number = 8;   // Reduce from 12 to 8
     private var _thumbHeight:Number = 10; // Reduce from 16 to 10
@@ -122,8 +123,8 @@ public class PCVolumeSlider extends Sprite {
         g.drawRoundRect(trackX, trackY, trackWidth, _trackHeight, _trackHeight, _trackHeight);
         g.endFill();
 
-        // Position thumb based on value
-        var thumbX:Number = trackX + (_value * (trackWidth - _thumbWidth));
+        // Position thumb based on value (normalized to 0-1 range for position)
+        var thumbX:Number = trackX + ((_value / _maxValue) * (trackWidth - _thumbWidth));
         var thumbY:Number = _height / 2 - _thumbHeight / 2;
 
         // Draw thumb exactly like PCMicSelector
@@ -154,7 +155,11 @@ public class PCVolumeSlider extends Sprite {
         } else {
             var percentage:int = Math.round(_value * 100);
             valueLabel.text = percentage + "%";
-            valueFormat.color = _textColor;
+            if (_value > 1.0) {
+                valueFormat.color = 0xffaa44; // Orange when boosted above 100%
+            } else {
+                valueFormat.color = _textColor;
+            }
         }
 
         valueLabel.setTextFormat(valueFormat);
@@ -223,9 +228,10 @@ public class PCVolumeSlider extends Sprite {
         // Get mouse position relative to this slider
         var localMouseX:Number = mouseX;
 
-        // Calculate new value
-        var newValue:Number = (localMouseX - trackX) / trackWidth;
-        newValue = Math.max(0, Math.min(1, newValue)); // Clamp to 0-1
+        // Calculate new value (0 to _maxValue range)
+        var normalizedPos:Number = (localMouseX - trackX) / trackWidth;
+        normalizedPos = Math.max(0, Math.min(1, normalizedPos)); // Clamp position 0-1
+        var newValue:Number = normalizedPos * _maxValue; // Scale to 0-maxValue
 
         if (newValue != _value) {
             _value = newValue;
@@ -243,9 +249,19 @@ public class PCVolumeSlider extends Sprite {
     }
 
     public function set value(val:Number):void {
-        _value = Math.max(0, Math.min(1, val));
+        _value = Math.max(0, Math.min(_maxValue, val));
         draw();
         updateValueLabel();
+    }
+
+    public function set maxValue(val:Number):void {
+        _maxValue = val;
+        draw();
+        updateValueLabel();
+    }
+
+    public function get maxValue():Number {
+        return _maxValue;
     }
 
     public function get isMuted():Boolean {

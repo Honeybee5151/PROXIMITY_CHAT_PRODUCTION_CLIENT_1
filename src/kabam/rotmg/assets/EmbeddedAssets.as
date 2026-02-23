@@ -6,6 +6,8 @@
 package kabam.rotmg.assets
 {
 import kabam.rotmg.assets.custom.images.AnimEmotes;
+import kabam.rotmg.assets.custom.images.CommunitySprites16x16;
+import kabam.rotmg.assets.custom.images.CommunitySprites8x8;
 import kabam.rotmg.assets.custom.images.CustomAssets8x8;
 import kabam.rotmg.assets.custom.images.CustomUV128x128;
 import kabam.rotmg.assets.custom.images.Emotes;
@@ -17,6 +19,8 @@ public class EmbeddedAssets
    public static var emotes:Class = Emotes;
    public static var customAssets8x8:Class = CustomAssets8x8;
    public static var customUV128x128:Class = CustomUV128x128;
+   public static var communitySprites8x8:Class = CommunitySprites8x8;
+   public static var communitySprites16x16:Class = CommunitySprites16x16;
 
    // production.
    private static var JapaneseSign:Class = japaneseSign;

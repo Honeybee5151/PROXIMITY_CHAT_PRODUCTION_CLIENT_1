@@ -21,6 +21,7 @@ public class VoiceChatService {
     private var myPlayerID:String;
     private var gameServerIP:String;
     private var isVoiceConnected:Boolean = false;
+    private var isVoiceConnecting:Boolean = false;
 
     //777592 - Speaker icon manager
     private var speakerIconManager:SpeakerIconManager;
@@ -70,7 +71,14 @@ public class VoiceChatService {
             return;
         }
 
+        // Guard against duplicate connection attempts
+        if (isVoiceConnected || isVoiceConnecting) {
+            trace("VoiceChatService: Already connected/connecting — skipping duplicate CONNECT_VOICE");
+            return;
+        }
+
         if (myVoiceID && myPlayerID && gameServerIP) {
+            isVoiceConnecting = true;
             var connectCommand:String = "CONNECT_VOICE:" + gameServerIP + ":" + myPlayerID + ":" + myVoiceID;
             trace("VoiceChatService: Sending voice connection command:", connectCommand);
             audioBridge.sendCommand(connectCommand);
@@ -81,6 +89,7 @@ public class VoiceChatService {
     }
     public function onVoiceConnected():void {
         isVoiceConnected = true;
+        isVoiceConnecting = false;
         trace("VoiceChatService: Connected to voice server successfully");
 
         // Notify current PCManager if it exists
@@ -88,8 +97,33 @@ public class VoiceChatService {
             currentPCManager.onVoiceServerConnected();
         }
     }
+    public function reconnectAfterRestart():void {
+        // Reset connection state so connectToVoiceServer works
+        isVoiceConnected = false;
+        isVoiceConnecting = false;
+        trace("VoiceChatService: Reconnecting after ConsoleApp1 restart");
+
+        // Re-send mic setup commands that are normally sent on first init
+        // Without these, mic doesn't work after restart (only CONNECT_VOICE was sent)
+        if (audioBridge) {
+            audioBridge.startMicrophone();
+            audioBridge.sendCommand("SET_SPEAKER_ICON:" + (settings ? settings.loadSpeakerIconMode() : "all"));
+
+            // Re-select the saved microphone
+            if (settings) {
+                var savedMicId:String = settings.getSavedMicrophoneId();
+                if (savedMicId) {
+                    audioBridge.selectMicrophone(savedMicId);
+                }
+            }
+        }
+
+        connectToVoiceServer();
+    }
+
     public function onVoiceDisconnected():void {
         isVoiceConnected = false;
+        isVoiceConnecting = false;
         trace("VoiceChatService: Disconnected from voice server");
 
         // Notify current PCManager if it exists

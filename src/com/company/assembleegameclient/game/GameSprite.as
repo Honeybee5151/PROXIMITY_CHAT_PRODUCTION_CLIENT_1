@@ -570,8 +570,7 @@ public class GameSprite extends Sprite {
 //777592
          if (proximityChatManager)
          {
-            // Remove event listeners
-
+            trace("PCDebug: GameSprite.disconnect() disposing PCManager");
 
             // Remove from display list
             if (proximityChatManager.parent)

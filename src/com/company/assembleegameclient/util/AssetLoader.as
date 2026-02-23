@@ -165,6 +165,9 @@ public class AssetLoader
       AssetLibrary.addImageSet("animEmotes", new EmbeddedAssets.animEmotes().bitmapData, 32, 32);
       AssetLibrary.addImageSet("customAssets8x8", new EmbeddedAssets.customAssets8x8().bitmapData, 8, 8);
       AssetLibrary.addImageSet("customUV128x128", new EmbeddedAssets.customUV128x128().bitmapData, 128, 128);
+      // community dungeon sprites
+      AssetLibrary.addImageSet("communitySprites8x8", new EmbeddedAssets.communitySprites8x8().bitmapData, 8, 8);
+      AssetLibrary.addImageSet("communitySprites16x16", new EmbeddedAssets.communitySprites16x16().bitmapData, 16, 16);
    }
 
    private function addAnimatedCharacters():void

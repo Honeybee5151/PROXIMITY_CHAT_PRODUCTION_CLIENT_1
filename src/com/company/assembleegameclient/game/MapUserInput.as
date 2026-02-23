@@ -596,7 +596,7 @@ public class MapUserInput
                   }
 
                   if (gs_.proximityChatManager) {
-                      // Remove event listeners
+                      trace("PCDebug: MapUserInput PCUI toggle OFF — disposing PCManager");
 
                       // Remove from display list
                       if (gs_.proximityChatManager.parent) {
