@@ -26,13 +26,24 @@ public class GroundLibrary
    {
       var _local_2:XML;
       var _local_3:int;
+      var _local_4:TextureDataConcrete;
+      var _local_5:String;
       for each (_local_2 in _arg_1.Ground)
       {
          _local_3 = int(_local_2.@type);
          propsLibrary_[_local_3] = new GroundProperties(_local_2);
          xmlLibrary_[_local_3] = _local_2;
-         typeToTextureData_[_local_3] = new TextureDataConcrete(_local_2);
-         idToType_[String(_local_2.@id)] = _local_3;
+         _local_4 = new TextureDataConcrete(_local_2);
+         _local_5 = String(_local_2.@id);
+
+         // Custom ground tiles: use Color tag to generate solid-color 8x8 texture
+         if (_local_5.indexOf("custom_") == 0 && _local_2.hasOwnProperty("Color"))
+         {
+            _local_4.texture_ = new BitmapData(8, 8, false, uint(_local_2.Color));
+         }
+
+         typeToTextureData_[_local_3] = _local_4;
+         idToType_[_local_5] = _local_3;
       }
       defaultProps_ = propsLibrary_[0xFF];
    }

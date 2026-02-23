@@ -109,4 +109,214 @@
 		<Potion/>
 		<BagType>5</BagType>
 	</Object>
+	<Object type="0x5000" id="Stick">
+		<Class>Equipment</Class>
+		<Item/>
+		<Texture><File>lofiObj</File><Index>0x02</Index></Texture>
+		<SlotType>1</SlotType>
+		<Description>It's just a stick. You found it on the ground. Why are you holding this?</Description>
+		<RateOfFire>0.7</RateOfFire>
+		<Sound>weapon/long_sword</Sound>
+		<NumProjectiles>1</NumProjectiles>
+		<Projectile>
+			<ObjectId>Stick Poke</ObjectId>
+			<Speed>60</Speed>
+			<MinDamage>5</MinDamage>
+			<MaxDamage>15</MaxDamage>
+			<LifetimeMS>300</LifetimeMS>
+		</Projectile>
+		<BagType>0</BagType>
+	</Object>
+	<Object type="0x5001" id="Pointy Stick">
+		<Class>Equipment</Class>
+		<Item/>
+		<Texture><File>lofiObj</File><Index>0x02</Index></Texture>
+		<SlotType>2</SlotType>
+		<Description>A stick, but someone sharpened the end with a rock. A marginal improvement.</Description>
+		<RateOfFire>0.8</RateOfFire>
+		<Sound>weapon/dagger</Sound>
+		<NumProjectiles>1</NumProjectiles>
+		<Projectile>
+			<ObjectId>Stick Stab</ObjectId>
+			<Speed>80</Speed>
+			<MinDamage>10</MinDamage>
+			<MaxDamage>25</MaxDamage>
+			<LifetimeMS>250</LifetimeMS>
+		</Projectile>
+		<BagType>0</BagType>
+	</Object>
+	<Object type="0x5002" id="Enchanted Stick">
+		<Class>Equipment</Class>
+		<Item/>
+		<Texture><File>lofiObj5</File><Index>0x02</Index></Texture>
+		<SlotType>24</SlotType>
+		<Description>A wizard once sneezed on this stick and now it glows faintly. Technically a wand.</Description>
+		<RateOfFire>0.9</RateOfFire>
+		<Sound>weapon/wand</Sound>
+		<NumProjectiles>1</NumProjectiles>
+		<Projectile>
+			<ObjectId>Twig Bolt</ObjectId>
+			<Speed>90</Speed>
+			<MinDamage>15</MinDamage>
+			<MaxDamage>35</MaxDamage>
+			<LifetimeMS>400</LifetimeMS>
+		</Projectile>
+		<ActivateOnEquip>
+			<AddStat stat="27" amount="1"/>
+		</ActivateOnEquip>
+		<BagType>0</BagType>
+	</Object>
+	<Object type="0x5003" id="Legendary Stick">
+		<Class>Equipment</Class>
+		<Item/>
+		<Texture><File>lofiObj5</File><Index>0x30</Index></Texture>
+		<SlotType>1</SlotType>
+		<Description>Legends speak of a hero who felled Oryx with nothing but a stick. This is that stick. Probably.</Description>
+		<RateOfFire>1.3</RateOfFire>
+		<Sound>weapon/long_sword</Sound>
+		<NumProjectiles>3</NumProjectiles>
+		<ArcGap>8</ArcGap>
+		<Projectile>
+			<ObjectId>Legendary Splinter</ObjectId>
+			<Speed>110</Speed>
+			<MinDamage>100</MinDamage>
+			<MaxDamage>180</MaxDamage>
+			<LifetimeMS>475</LifetimeMS>
+			<ConditionEffect duration="3">Slowed</ConditionEffect>
+		</Projectile>
+		<ActivateOnEquip>
+			<AddStat stat="20" amount="5"/>
+			<AddStat stat="22" amount="5"/>
+			<AddStat stat="28" amount="5"/>
+			<AddStat stat="0" amount="-30"/>
+		</ActivateOnEquip>
+		<BagType>6</BagType>
+	</Object>
+	<Object type="0x5004" id="Stick 2">
+		<Class>Equipment</Class>
+		<Item/>
+		<Texture><File>lofiObj</File><Index>0x02</Index></Texture>
+		<SlotType>24</SlotType>
+		<Description>It's just another stick. Somehow even less impressive than the first one. You found it on the ground.</Description>
+		<RateOfFire>0.8</RateOfFire>
+		<Sound>weapon/wand</Sound>
+		<NumProjectiles>1</NumProjectiles>
+		<Projectile>
+			<ObjectId>Stick Poke</ObjectId>
+			<Speed>60</Speed>
+			<MinDamage>5</MinDamage>
+			<MaxDamage>15</MaxDamage>
+			<LifetimeMS>400</LifetimeMS>
+			<Size>50</Size>
+		</Projectile>
+		<BagType>0</BagType>
+	</Object>
+	<Object type="0x500c" id="Cave Stick">
+		<Class>Equipment</Class>
+		<Item/>
+		<Texture>
+			<File>communitySprites8x8</File>
+			<Index>0</Index>
+		</Texture>
+		<SlotType>1</SlotType>
+		<Description>It's literally just a stick you found on the ground. Somehow it hurts when you hit things with it.</Description>
+		<RateOfFire>0.8</RateOfFire>
+		<Sound>weapon/long_sword</Sound>
+		<NumProjectiles>1</NumProjectiles>
+		<Projectile>
+			<ObjectId>Stick Bonk</ObjectId>
+			<Speed>60</Speed>
+			<MinDamage>10</MinDamage>
+			<MaxDamage>25</MaxDamage>
+			<LifetimeMS>350</LifetimeMS>
+		</Projectile>
+		<BagType>0</BagType>
+	</Object>
+	<Object type="0x5012" id="Barbarian's War Club">
+		<Class>Equipment</Class>
+		<Item/>
+		<Texture>
+			<File>communitySprites8x8</File>
+			<Index>7</Index>
+		</Texture>
+		<SlotType>1</SlotType>
+		<Description>A massive, primitive club hewn from petrified oak and bound with iron rivets. Its wielder needs no finesse — only brute strength.</Description>
+		<RateOfFire>0.65</RateOfFire>
+		<Sound>weapon/long_sword</Sound>
+		<NumProjectiles>1</NumProjectiles>
+		<Projectile>
+			<ObjectId>Heavy Smash</ObjectId>
+			<Speed>70</Speed>
+			<MinDamage>200</MinDamage>
+			<MaxDamage>340</MaxDamage>
+			<LifetimeMS>350</LifetimeMS>
+			<ConditionEffect duration="1.5">Slowed</ConditionEffect>
+		</Projectile>
+		<ActivateOnEquip>
+			<AddStat stat="20" amount="5"/>
+			<AddStat stat="21" amount="3"/>
+			<AddStat stat="22" amount="-5"/>
+			<AddStat stat="28" amount="-3"/>
+		</ActivateOnEquip>
+		<BagType>4</BagType>
+	</Object>
+	<Object type="0x5013" id="Troll's Spiked Club">
+		<Class>Equipment</Class>
+		<Item/>
+		<Texture>
+			<File>communitySprites8x8</File>
+			<Index>7</Index>
+		</Texture>
+		<SlotType>1</SlotType>
+		<Description>Ripped from the grip of a bridge troll, this grotesque club is studded with jagged bone shards. Each swing sends splinters of pain in every direction.</Description>
+		<RateOfFire>0.55</RateOfFire>
+		<Sound>weapon/long_sword</Sound>
+		<NumProjectiles>3</NumProjectiles>
+		<ArcGap>25</ArcGap>
+		<Projectile>
+			<ObjectId>Bone Splinter</ObjectId>
+			<Speed>80</Speed>
+			<MinDamage>150</MinDamage>
+			<MaxDamage>280</MaxDamage>
+			<LifetimeMS>400</LifetimeMS>
+			<ConditionEffect duration="2">Stunned</ConditionEffect>
+		</Projectile>
+		<ActivateOnEquip>
+			<AddStat stat="20" amount="8"/>
+			<AddStat stat="0" amount="30"/>
+			<AddStat stat="22" amount="-8"/>
+			<AddStat stat="28" amount="-5"/>
+		</ActivateOnEquip>
+		<BagType>5</BagType>
+	</Object>
+	<Object type="0x5014" id="Worldbreaker Club">
+		<Class>Equipment</Class>
+		<Item/>
+		<Texture>
+			<File>communitySprites8x8</File>
+			<Index>7</Index>
+		</Texture>
+		<SlotType>1</SlotType>
+		<Description>Forged in the molten core of a dying realm, this legendary club pulverizes anything it touches. The ground itself trembles with each devastating blow.</Description>
+		<RateOfFire>0.45</RateOfFire>
+		<Sound>weapon/long_sword</Sound>
+		<NumProjectiles>1</NumProjectiles>
+		<Projectile>
+			<ObjectId>Earthshatter</ObjectId>
+			<Speed>60</Speed>
+			<MinDamage>350</MinDamage>
+			<MaxDamage>550</MaxDamage>
+			<LifetimeMS>380</LifetimeMS>
+			<ConditionEffect duration="3">Stunned</ConditionEffect>
+			<ConditionEffect duration="3">Slowed</ConditionEffect>
+		</Projectile>
+		<ActivateOnEquip>
+			<AddStat stat="20" amount="12"/>
+			<AddStat stat="21" amount="6"/>
+			<AddStat stat="0" amount="50"/>
+			<AddStat stat="22" amount="-10"/>
+			<AddStat stat="28" amount="-7"/>
+		</ActivateOnEquip>
+		<BagType>6</BagType>
+	</Object>
 </Objects>

@@ -573,10 +573,12 @@ public class MapUserInput
           case Parameters.data_.PCUI:
               if(stage.focus != null && stage.focus is TextField) {
                   var textField:TextField = stage.focus as TextField;
-                  // Only block if it's an input field (has type INPUT)
-                  if (textField.type == TextFieldType.INPUT) {
+                  // Only block if user is actively typing (input field with text)
+                  if (textField.type == TextFieldType.INPUT && textField.text.length > 0) {
                       return;
                   }
+                  // Empty input or non-input TextField — clear focus and proceed
+                  stage.focus = null;
               }
               if(!PCUIChecker) {
                   gs_.initializePCUI();
@@ -614,13 +616,12 @@ public class MapUserInput
               break;
               //777592
          case Parameters.data_.PCUIT:
-
             if(stage.focus != null && stage.focus is TextField) {
                var textField:TextField = stage.focus as TextField;
-               // Only block if it's an input field (has type INPUT)
-               if (textField.type == TextFieldType.INPUT) {
+               if (textField.type == TextFieldType.INPUT && textField.text.length > 0) {
                   return;
                }
+               stage.focus = null;
             }
             PCUITChecker = !PCUITChecker;
             trace("MapUserInput: PCUIT pressed, PCUITChecker now:", PCUITChecker);

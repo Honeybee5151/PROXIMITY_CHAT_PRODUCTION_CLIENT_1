@@ -11,6 +11,7 @@ import com.company.assembleegameclient.ui.options.Options;
 import com.company.assembleegameclient.sound.SFX;
 import com.company.util.AssetLibrary;
 
+import kabam.rotmg.assets.CommunityContentLoader;
 import kabam.rotmg.assets.EmbeddedAssets;
 import com.company.assembleegameclient.sound.SoundEffectLibrary;
 import flash.utils.ByteArray;
@@ -43,6 +44,8 @@ public class AssetLoader
       Options.refreshCursor();
       SFX.load();
       Emotes.load();
+
+      new CommunityContentLoader().load();
    }
 
    private function addImages():void

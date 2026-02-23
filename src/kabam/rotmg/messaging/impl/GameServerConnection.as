@@ -111,6 +111,7 @@ import kabam.rotmg.messaging.impl.incoming.Aoe;
 import kabam.rotmg.messaging.impl.incoming.BuyResult;
 import kabam.rotmg.messaging.impl.incoming.ClientStat;
 import kabam.rotmg.messaging.impl.incoming.CreateSuccess;
+import kabam.rotmg.messaging.impl.incoming.CustomGroundsMsg;
 import kabam.rotmg.messaging.impl.incoming.Damage;
 import kabam.rotmg.messaging.impl.incoming.Death;
 import kabam.rotmg.messaging.impl.incoming.EnemyShoot;
@@ -305,6 +306,7 @@ public class GameServerConnection
       public static const IMMINENT_ARENA_WAVE:int = 87;
       //777592
       public static const PROXIMITY_VOICE:int = 88;
+      public static const CUSTOM_GROUNDS:int = 89;
 
       private static const TO_MILLISECONDS:int = 1000;
 
@@ -510,6 +512,7 @@ public class GameServerConnection
          messages.map(IMMINENT_ARENA_WAVE).toMessage(ImminentArenaWave).toMethod(this.onImminentArenaWave);
          //777592
          messages.map(PROXIMITY_VOICE).toMessage(Message).toMethod(this.onProximityVoice); // Add this line
+         messages.map(CUSTOM_GROUNDS).toMessage(CustomGroundsMsg).toMethod(this.onCustomGrounds);
       }
 
       private function unmapMessages() : void {
@@ -601,6 +604,13 @@ public class GameServerConnection
          messages.unmap(IMMINENT_ARENA_WAVE);
          //777592
          messages.unmap(PROXIMITY_VOICE);
+         messages.unmap(CUSTOM_GROUNDS);
+      }
+
+      private function onCustomGrounds(msg:CustomGroundsMsg):void {
+         var xml:XML = XML(msg.groundsXml_);
+         GroundLibrary.parseFromXML(xml);
+         trace("[CustomGrounds] Loaded " + xml.Ground.length() + " custom ground tiles for this dungeon");
       }
 
       private function onSwitchMusic(sm:SwitchMusic):void {
