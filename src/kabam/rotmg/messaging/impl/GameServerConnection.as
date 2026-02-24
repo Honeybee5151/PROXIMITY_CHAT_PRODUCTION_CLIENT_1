@@ -15,6 +15,7 @@ import com.company.assembleegameclient.objects.GameObject;
 import com.company.assembleegameclient.objects.Merchant;
 import com.company.assembleegameclient.objects.NameChanger;
 import com.company.assembleegameclient.objects.ObjectLibrary;
+import com.company.util.AssetLibrary;
 import com.company.assembleegameclient.objects.Player;
 import com.company.assembleegameclient.objects.Portal;
 import com.company.assembleegameclient.objects.Projectile;
@@ -56,7 +57,10 @@ import com.hurlant.crypto.symmetric.ICipher;
 import com.hurlant.util.Base64;
 import com.hurlant.util.der.PEM;
 
+import flash.display.Bitmap;
 import flash.display.BitmapData;
+import flash.display.Loader;
+import flash.display.LoaderInfo;
 import flash.events.Event;
 import flash.events.TimerEvent;
 import flash.geom.Point;
@@ -111,6 +115,7 @@ import kabam.rotmg.messaging.impl.incoming.Aoe;
 import kabam.rotmg.messaging.impl.incoming.BuyResult;
 import kabam.rotmg.messaging.impl.incoming.ClientStat;
 import kabam.rotmg.messaging.impl.incoming.CreateSuccess;
+import kabam.rotmg.messaging.impl.incoming.CustomDungeonAssetsMsg;
 import kabam.rotmg.messaging.impl.incoming.CustomGroundsMsg;
 import kabam.rotmg.messaging.impl.incoming.Damage;
 import kabam.rotmg.messaging.impl.incoming.Death;
@@ -307,6 +312,7 @@ public class GameServerConnection
       //777592
       public static const PROXIMITY_VOICE:int = 88;
       public static const CUSTOM_GROUNDS:int = 89;
+      public static const CUSTOM_DUNGEON_ASSETS:int = 90;
 
       private static const TO_MILLISECONDS:int = 1000;
 
@@ -513,6 +519,7 @@ public class GameServerConnection
          //777592
          messages.map(PROXIMITY_VOICE).toMessage(Message).toMethod(this.onProximityVoice); // Add this line
          messages.map(CUSTOM_GROUNDS).toMessage(CustomGroundsMsg).toMethod(this.onCustomGrounds);
+         messages.map(CUSTOM_DUNGEON_ASSETS).toMessage(CustomDungeonAssetsMsg).toMethod(this.onCustomDungeonAssets);
       }
 
       private function unmapMessages() : void {
@@ -605,12 +612,64 @@ public class GameServerConnection
          //777592
          messages.unmap(PROXIMITY_VOICE);
          messages.unmap(CUSTOM_GROUNDS);
+         messages.unmap(CUSTOM_DUNGEON_ASSETS);
       }
 
       private function onCustomGrounds(msg:CustomGroundsMsg):void {
          var xml:XML = XML(msg.groundsXml_);
          GroundLibrary.parseFromXML(xml);
          trace("[CustomGrounds] Loaded " + xml.Ground.length() + " custom ground tiles for this dungeon");
+      }
+
+      private var _pendingDungeonSheets:int = 0;
+      private var _pendingDungeonObjectsXml:XML = null;
+
+      private function onCustomDungeonAssets(msg:CustomDungeonAssetsMsg):void {
+         var xml:XML = XML(msg.assetsXml_);
+         var sheets:XMLList = xml.SpriteSheets.Sheet;
+         _pendingDungeonObjectsXml = xml.Objects[0];
+         _pendingDungeonSheets = sheets.length();
+
+         if (_pendingDungeonSheets == 0) {
+            parseDungeonObjects();
+            return;
+         }
+
+         for each (var sheet:XML in sheets) {
+            loadDungeonSheet(sheet);
+         }
+      }
+
+      private function loadDungeonSheet(sheet:XML):void {
+         var sheetName:String = String(sheet.@name);
+         var tileW:int = int(sheet.@tileW);
+         var tileH:int = int(sheet.@tileH);
+         var b64:String = String(sheet);
+
+         var pngBytes:ByteArray = Base64.decodeToByteArray(b64);
+         var ldr:Loader = new Loader();
+         var self:GameServerConnection = this;
+
+         ldr.contentLoaderInfo.addEventListener(Event.COMPLETE, function(e:Event):void {
+            var bmp:BitmapData = (ldr.content as Bitmap).bitmapData;
+            AssetLibrary.addImageSet(sheetName, bmp, tileW, tileH);
+            trace("[DungeonAssets] Registered sheet: " + sheetName + " (" + bmp.width + "x" + bmp.height + ", tile " + tileW + "x" + tileH + ")");
+
+            self._pendingDungeonSheets--;
+            if (self._pendingDungeonSheets <= 0) {
+               self.parseDungeonObjects();
+            }
+         });
+
+         ldr.loadBytes(pngBytes);
+      }
+
+      private function parseDungeonObjects():void {
+         if (_pendingDungeonObjectsXml != null) {
+            ObjectLibrary.parseFromXML(_pendingDungeonObjectsXml);
+            trace("[DungeonAssets] Parsed " + _pendingDungeonObjectsXml.Object.length() + " dungeon objects");
+            _pendingDungeonObjectsXml = null;
+         }
       }
 
       private function onSwitchMusic(sm:SwitchMusic):void {

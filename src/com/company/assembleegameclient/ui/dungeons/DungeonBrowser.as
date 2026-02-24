@@ -52,6 +52,10 @@ public class DungeonBrowser extends Sprite
     private var filteredDungeons_:Array = [];
     private var listItems_:Vector.<DungeonListItem> = new Vector.<DungeonListItem>();
 
+    // Virtual scrolling: only render visible items
+    private var visibleCount_:int;
+    private var scrollOffset_:int = 0;
+
     private var loadingText_:SimpleText;
     private var ratePanel_:DungeonRatePanel;
 
@@ -353,9 +357,15 @@ public class DungeonBrowser extends Sprite
     {
         this.clearList();
         this.listContainer_.y = LIST_Y;
+        this.scrollOffset_ = 0;
 
+        // Calculate how many items fit on screen (+1 for partial visibility during scroll)
+        this.visibleCount_ = Math.ceil(LIST_HEIGHT / ITEM_HEIGHT) + 1;
+
+        // Create only the visible item slots
         var itemWidth:int = WIDTH - 65;
-        for (var i:int = 0; i < this.filteredDungeons_.length; i++)
+        var count:int = Math.min(this.visibleCount_, this.filteredDungeons_.length);
+        for (var i:int = 0; i < count; i++)
         {
             var item:DungeonListItem = new DungeonListItem(
                 this.filteredDungeons_[i], itemWidth, ITEM_HEIGHT, this
@@ -368,7 +378,7 @@ public class DungeonBrowser extends Sprite
         this.listContainer_.mask = null;
         this.listContainer_.mask = this.listMask_;
 
-        // Update scrollbar (setIndicatorSize dispatches CHANGE → onScroll)
+        // Update scrollbar
         var totalHeight:Number = this.filteredDungeons_.length * ITEM_HEIGHT;
         if (totalHeight > LIST_HEIGHT)
             this.scrollbar_.setIndicatorSize(LIST_HEIGHT, totalHeight);
@@ -376,7 +386,6 @@ public class DungeonBrowser extends Sprite
             this.scrollbar_.setIndicatorSize(LIST_HEIGHT, LIST_HEIGHT);
 
         // Safety: ensure container.y is correct after scrollbar fires onScroll
-        // (scrollbar.pos() returns NaN when indicator fills entire track)
         this.listContainer_.y = LIST_Y;
 
         if (this.filteredDungeons_.length == 0 && (!this.loadingText_ || !this.loadingText_.parent))
@@ -421,7 +430,47 @@ public class DungeonBrowser extends Sprite
         }
         var p:Number = this.scrollbar_.pos();
         if (isNaN(p)) p = 0;
-        this.listContainer_.y = LIST_Y - (p * maxScroll);
+
+        var scrollPixels:Number = p * maxScroll;
+        var newOffset:int = Math.floor(scrollPixels / ITEM_HEIGHT);
+        // Clamp so we don't go past the end
+        var maxOffset:int = Math.max(0, this.filteredDungeons_.length - this.visibleCount_);
+        if (newOffset > maxOffset) newOffset = maxOffset;
+
+        // Pixel offset within the top item for smooth scrolling
+        var pixelRemainder:Number = scrollPixels - (newOffset * ITEM_HEIGHT);
+        this.listContainer_.y = LIST_Y - pixelRemainder;
+
+        // Only rebuild items if the visible window shifted
+        if (newOffset != this.scrollOffset_)
+        {
+            this.scrollOffset_ = newOffset;
+            this.updateVisibleItems();
+        }
+    }
+
+    private function updateVisibleItems():void
+    {
+        // Remove old items
+        for (var r:int = 0; r < this.listItems_.length; r++)
+        {
+            if (this.listItems_[r].parent)
+                this.listContainer_.removeChild(this.listItems_[r]);
+        }
+        this.listItems_.length = 0;
+
+        var itemWidth:int = WIDTH - 65;
+        var count:int = Math.min(this.visibleCount_, this.filteredDungeons_.length - this.scrollOffset_);
+        for (var i:int = 0; i < count; i++)
+        {
+            var dataIndex:int = this.scrollOffset_ + i;
+            var item:DungeonListItem = new DungeonListItem(
+                this.filteredDungeons_[dataIndex], itemWidth, ITEM_HEIGHT, this
+            );
+            item.y = 4 + i * ITEM_HEIGHT;
+            this.listContainer_.addChild(item);
+            this.listItems_.push(item);
+        }
     }
 
     private function onCloseClick(e:MouseEvent):void

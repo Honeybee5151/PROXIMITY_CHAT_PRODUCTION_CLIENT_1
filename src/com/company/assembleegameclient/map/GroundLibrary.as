@@ -122,7 +122,15 @@ public class GroundLibrary
       if (!tileTypeColorDict_.hasOwnProperty(_arg_1))
       {
          _local_2 = xmlLibrary_[_arg_1];
-         if (_local_2.hasOwnProperty("Color"))
+         var _local_5:String = String(_local_2.@id);
+         // Custom grounds with GroundPixels: derive color from decoded texture
+         // (Color XML attribute may be red-shifted from collision resolution)
+         if (_local_5.indexOf("custom_") == 0 && _local_2.hasOwnProperty("GroundPixels"))
+         {
+            _local_4 = getBitmapData(_arg_1);
+            _local_3 = _local_4 != null ? BitmapUtil.mostCommonColor(_local_4) : uint(_local_2.Color);
+         }
+         else if (_local_2.hasOwnProperty("Color"))
          {
             _local_3 = uint(_local_2.Color);
          }
