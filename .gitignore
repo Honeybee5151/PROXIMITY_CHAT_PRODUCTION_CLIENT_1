@@ -1,3 +1,4 @@
 bin-debug/
 *.log
 .idea/
+*.p12
