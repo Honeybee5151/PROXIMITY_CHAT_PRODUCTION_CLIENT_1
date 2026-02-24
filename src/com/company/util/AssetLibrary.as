@@ -73,6 +73,25 @@ package com.company.util
          return images_[name];
       }
       
+      public static function removeImageSet(name:String) : void
+      {
+         var imageSet:ImageSet = imageSets_[name];
+         if (imageSet != null)
+         {
+            for (var i:int = 0; i < imageSet.images_.length; i++)
+            {
+               delete imageLookup_[imageSet.images_[i]];
+            }
+            delete imageSets_[name];
+         }
+         var bmp:BitmapData = images_[name];
+         if (bmp != null)
+         {
+            bmp.dispose();
+            delete images_[name];
+         }
+      }
+
       public static function getImageSet(name:String) : ImageSet
       {
          return imageSets_[name];

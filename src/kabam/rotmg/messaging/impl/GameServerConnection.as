@@ -623,8 +623,21 @@ public class GameServerConnection
 
       private var _pendingDungeonSheets:int = 0;
       private var _pendingDungeonObjectsXml:XML = null;
+      private var _loadedDungeonSheetNames:Vector.<String> = new Vector.<String>();
+
+      private function cleanupDungeonAssets():void {
+         // Remove previously loaded per-dungeon sprite sheets from memory
+         for each (var name:String in _loadedDungeonSheetNames) {
+            AssetLibrary.removeImageSet(name);
+            trace("[DungeonAssets] Unloaded sheet: " + name);
+         }
+         _loadedDungeonSheetNames.length = 0;
+      }
 
       private function onCustomDungeonAssets(msg:CustomDungeonAssetsMsg):void {
+         // Clean up previous dungeon's sheets before loading new ones
+         cleanupDungeonAssets();
+
          var xml:XML = XML(msg.assetsXml_);
          var sheets:XMLList = xml.SpriteSheets.Sheet;
          _pendingDungeonObjectsXml = xml.Objects[0];
@@ -645,6 +658,8 @@ public class GameServerConnection
          var tileW:int = int(sheet.@tileW);
          var tileH:int = int(sheet.@tileH);
          var b64:String = String(sheet);
+
+         _loadedDungeonSheetNames.push(sheetName);
 
          var pngBytes:ByteArray = Base64.decodeToByteArray(b64);
          var ldr:Loader = new Loader();
