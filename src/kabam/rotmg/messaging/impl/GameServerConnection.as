@@ -12,6 +12,7 @@ import com.company.assembleegameclient.map.mapoverlay.CharacterStatusText;
 import com.company.assembleegameclient.objects.Container;
 import com.company.assembleegameclient.objects.FlashDescription;
 import com.company.assembleegameclient.objects.GameObject;
+import com.company.assembleegameclient.objects.TextureData;
 import com.company.assembleegameclient.objects.Merchant;
 import com.company.assembleegameclient.objects.NameChanger;
 import com.company.assembleegameclient.objects.ObjectLibrary;
@@ -681,9 +682,35 @@ public class GameServerConnection
 
       private function parseDungeonObjects():void {
          if (_pendingDungeonObjectsXml != null) {
+            // Collect type codes being updated so we can refresh stale entities
+            var updatedTypes:Object = {};
+            for each (var obj:XML in _pendingDungeonObjectsXml.Object) {
+               updatedTypes[int(obj.@type)] = true;
+            }
+
             ObjectLibrary.parseFromXML(_pendingDungeonObjectsXml);
             trace("[DungeonAssets] Parsed " + _pendingDungeonObjectsXml.Object.length() + " dungeon objects");
             _pendingDungeonObjectsXml = null;
+
+            // Refresh existing entities created before assets loaded (race condition fix)
+            if (this.gs_ != null && this.gs_.map != null) {
+               var refreshed:int = 0;
+               for each (var go:GameObject in this.gs_.map.goDict_) {
+                  if (updatedTypes[go.objectType_]) {
+                     var td:TextureData = ObjectLibrary.typeToTextureData_[go.objectType_];
+                     if (td != null) {
+                        go.texture_ = td.texture_;
+                        go.mask_ = td.mask_;
+                        go.animatedChar_ = td.animatedChar_;
+                        go.randomTextureData_ = td.randomTextureData_;
+                        refreshed++;
+                     }
+                  }
+               }
+               if (refreshed > 0) {
+                  trace("[DungeonAssets] Refreshed " + refreshed + " existing entities with updated textures");
+               }
+            }
          }
       }
 
