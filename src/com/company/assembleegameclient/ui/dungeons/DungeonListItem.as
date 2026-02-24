@@ -7,6 +7,8 @@ import flash.display.Graphics;
 import flash.display.Sprite;
 import flash.events.MouseEvent;
 import flash.filters.DropShadowFilter;
+import flash.text.TextField;
+import flash.text.TextFormat;
 
 public class DungeonListItem extends Sprite
 {
@@ -38,42 +40,37 @@ public class DungeonListItem extends Sprite
         nameText.y = 8;
         addChild(nameText);
 
-        // Difficulty stars
-        var diffText:SimpleText = new SimpleText(12, 0xCCCCCC, false, 0, 0);
+        // Difficulty rating
+        var diffText:SimpleText = new SimpleText(12, 0xCCCCCC, false, 200, 0);
         var diff:Number = data.difficulty || 0;
-        var stars:String = "";
-        for (var i:int = 1; i <= 5; i++)
-        {
-            if (diff >= i)
-                stars += "\u2605"; // filled star
-            else if (diff >= i - 0.5)
-                stars += "\u2606"; // half/empty star
-            else
-                stars += "\u2606"; // empty star
-        }
-        diffText.text = "Difficulty: " + stars + " (" + diff.toFixed(1) + ")";
+        diffText.text = "Difficulty: " + diff.toFixed(1) + " / 10";
         diffText.updateMetrics();
         diffText.x = 15;
         diffText.y = 30;
         addChild(diffText);
 
-        // Like count
-        var likeText:SimpleText = new SimpleText(14, 0xFF6B8A, false, 0, 0);
-        likeText.setBold(true);
+        // Like count (device font for heart symbol)
         var likes:int = data.likes || 0;
-        likeText.text = "\u2665 " + likes;
-        likeText.updateMetrics();
-        likeText.x = 300;
-        likeText.y = 16;
-        addChild(likeText);
+        var likeField:TextField = new TextField();
+        likeField.embedFonts = false;
+        likeField.selectable = false;
+        likeField.mouseEnabled = false;
+        var likeFmt:TextFormat = new TextFormat("Arial", 14, 0xFF6B8A, true);
+        likeField.defaultTextFormat = likeFmt;
+        likeField.text = "\u2665 " + likes;
+        likeField.width = likeField.textWidth + 6;
+        likeField.height = likeField.textHeight + 4;
+        likeField.x = 300;
+        likeField.y = 8;
+        addChild(likeField);
 
         // Rating count
-        var rateCountText:SimpleText = new SimpleText(11, 0x888888, false, 0, 0);
+        var rateCountText:SimpleText = new SimpleText(12, 0x888888, false, 0, 0);
         var ratingCount:int = data.ratingCount || 0;
         rateCountText.text = ratingCount + " ratings";
         rateCountText.updateMetrics();
         rateCountText.x = 300;
-        rateCountText.y = 33;
+        rateCountText.y = 28;
         addChild(rateCountText);
 
         // Enter button

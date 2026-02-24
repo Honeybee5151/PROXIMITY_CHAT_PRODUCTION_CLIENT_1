@@ -7,7 +7,8 @@ public class DungeonBrowserNPC extends GameObject implements IInteractiveObject 
 
     public function DungeonBrowserNPC(xml:XML) {
         super(xml);
-        this.isInteractive_ = true;
+        isInteractive_ = true;
+        trace("[DungeonBrowserNPC] Created! isInteractive=" + isInteractive_ + " type=" + objectType_);
     }
 
     public function getPanel(gs:GameSprite):Panel {

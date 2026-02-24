@@ -24,12 +24,12 @@ public class DungeonRatePanel extends Sprite
 
     private var data_:Object;
     private var browser_:DungeonBrowser;
-    private var selectedDifficulty_:int = 0;
     private var liked_:Boolean = false;
-    private var stars_:Vector.<SimpleText>;
+    private var diffInput_:SimpleText;
     private var likeBtn_:TextButton;
     private var submitBtn_:TextButton;
     private var cancelBtn_:TextButton;
+    private var errorText_:SimpleText;
 
     public function DungeonRatePanel(data:Object, browser:DungeonBrowser)
     {
@@ -55,41 +55,53 @@ public class DungeonRatePanel extends Sprite
 
         // Difficulty label
         var diffLabel:SimpleText = new SimpleText(14, 0xCCCCCC, false, 0, 0);
-        diffLabel.text = "Difficulty:";
+        diffLabel.text = "Difficulty (1-10):";
         diffLabel.updateMetrics();
         diffLabel.x = 20;
-        diffLabel.y = 50;
+        diffLabel.y = 52;
         addChild(diffLabel);
 
-        // Stars
-        this.stars_ = new Vector.<SimpleText>();
-        for (var i:int = 0; i < 5; i++)
-        {
-            var star:SimpleText = new SimpleText(24, 0x555555, false, 0, 0);
-            star.text = "\u2605";
-            star.updateMetrics();
-            star.x = 110 + i * 30;
-            star.y = 44;
-            star.addEventListener(MouseEvent.CLICK, this.makeStarHandler(i + 1));
-            star.addEventListener(MouseEvent.MOUSE_OVER, this.makeStarHoverHandler(i + 1));
-            star.addEventListener(MouseEvent.ROLL_OUT, this.onStarRollOut);
-            addChild(star);
-            this.stars_.push(star);
-        }
+        // Difficulty input field background
+        var inputBg:Sprite = new Sprite();
+        inputBg.graphics.beginFill(0x0f0f1e, 1);
+        inputBg.graphics.lineStyle(1, 0x3a3a5c);
+        inputBg.graphics.drawRoundRect(170, 48, 50, 26, 6, 6);
+        inputBg.graphics.endFill();
+        addChild(inputBg);
+
+        // Difficulty text input
+        this.diffInput_ = new SimpleText(14, 0xFFFFFF, true, 40, 20);
+        this.diffInput_.x = 175;
+        this.diffInput_.y = 51;
+        this.diffInput_.border = false;
+        this.diffInput_.background = true;
+        this.diffInput_.backgroundColor = 0x0f0f1e;
+        this.diffInput_.maxChars = 2;
+        this.diffInput_.restrict = "0-9";
+        this.diffInput_.tabEnabled = false;
+        addChild(this.diffInput_);
 
         // Like label + button
         var likeLabel:SimpleText = new SimpleText(14, 0xCCCCCC, false, 0, 0);
-        likeLabel.text = "Like:";
+        likeLabel.text = "Like this dungeon?";
         likeLabel.updateMetrics();
         likeLabel.x = 20;
-        likeLabel.y = 92;
+        likeLabel.y = 95;
         addChild(likeLabel);
 
         this.likeBtn_ = new TextButton(16, "\u2665 No", 80);
-        this.likeBtn_.x = 110;
-        this.likeBtn_.y = 88;
+        this.likeBtn_.x = 170;
+        this.likeBtn_.y = 90;
         this.likeBtn_.addEventListener(MouseEvent.CLICK, this.onLikeToggle);
         addChild(this.likeBtn_);
+
+        // Error text (hidden by default)
+        this.errorText_ = new SimpleText(12, 0xFF4444, false, PANEL_W, 0);
+        this.errorText_.htmlText = "";
+        this.errorText_.updateMetrics();
+        this.errorText_.y = 125;
+        this.errorText_.visible = false;
+        addChild(this.errorText_);
 
         // Submit
         this.submitBtn_ = new TextButton(14, "Submit", 80);
@@ -106,41 +118,6 @@ public class DungeonRatePanel extends Sprite
         addChild(this.cancelBtn_);
     }
 
-    private function makeStarHandler(rating:int):Function
-    {
-        var self:DungeonRatePanel = this;
-        return function(e:MouseEvent):void
-        {
-            self.selectedDifficulty_ = rating;
-            self.updateStars(rating);
-        };
-    }
-
-    private function makeStarHoverHandler(rating:int):Function
-    {
-        var self:DungeonRatePanel = this;
-        return function(e:MouseEvent):void
-        {
-            self.updateStars(rating);
-        };
-    }
-
-    private function onStarRollOut(e:MouseEvent):void
-    {
-        this.updateStars(this.selectedDifficulty_);
-    }
-
-    private function updateStars(highlight:int):void
-    {
-        for (var i:int = 0; i < 5; i++)
-        {
-            if (i < highlight)
-                this.stars_[i].setColor(0xFFD700); // gold
-            else
-                this.stars_[i].setColor(0x555555); // grey
-        }
-    }
-
     private function onLikeToggle(e:MouseEvent):void
     {
         this.liked_ = !this.liked_;
@@ -149,8 +126,17 @@ public class DungeonRatePanel extends Sprite
 
     private function onSubmit(e:MouseEvent):void
     {
-        if (this.selectedDifficulty_ == 0)
-            return; // must select difficulty
+        var diffVal:int = parseInt(this.diffInput_.text);
+
+        if (isNaN(diffVal) || diffVal < 1 || diffVal > 10)
+        {
+            this.errorText_.htmlText = "<p align=\"center\">Enter a number between 1 and 10</p>";
+            this.errorText_.updateMetrics();
+            this.errorText_.visible = true;
+            return;
+        }
+
+        this.errorText_.visible = false;
 
         var setup:ApplicationSetup = StaticInjectorContext.getInjector().getInstance(ApplicationSetup);
         var account:Account = StaticInjectorContext.getInjector().getInstance(Account);
@@ -160,22 +146,29 @@ public class DungeonRatePanel extends Sprite
         vars.guid = account.getUserId();
         vars.password = account.getPassword();
         vars.dungeonName = this.data_.name;
-        vars.difficulty = this.selectedDifficulty_;
-        vars.liked = this.liked_;
+        vars.difficulty = String(diffVal);
+        vars.liked = this.liked_ ? "true" : "false";
 
         var request:URLRequest = new URLRequest(url);
         request.method = URLRequestMethod.POST;
         request.data = vars;
 
         var loader:URLLoader = new URLLoader();
-        loader.addEventListener(Event.COMPLETE, this.onRateResponse);
-        loader.addEventListener("ioError", this.onRateResponse);
+        var self:DungeonRatePanel = this;
+        loader.addEventListener(Event.COMPLETE, function(e:Event):void {
+            self.browser_.onRateComplete();
+        });
+        loader.addEventListener("ioError", function(e:Event):void {
+            self.errorText_.htmlText = "<p align=\"center\">Network error - try again</p>";
+            self.errorText_.updateMetrics();
+            self.errorText_.visible = true;
+        });
+        loader.addEventListener("securityError", function(e:Event):void {
+            self.errorText_.htmlText = "<p align=\"center\">Security error - try again</p>";
+            self.errorText_.updateMetrics();
+            self.errorText_.visible = true;
+        });
         loader.load(request);
-    }
-
-    private function onRateResponse(e:Event):void
-    {
-        this.browser_.onRateComplete();
     }
 
     private function onCancel(e:MouseEvent):void

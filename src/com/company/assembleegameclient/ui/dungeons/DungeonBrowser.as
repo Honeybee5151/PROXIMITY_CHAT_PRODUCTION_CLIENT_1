@@ -16,6 +16,8 @@ import flash.net.URLLoader;
 import flash.net.URLRequest;
 import flash.net.URLRequestMethod;
 import flash.net.URLVariables;
+import flash.utils.Timer;
+import flash.events.TimerEvent;
 
 import kabam.rotmg.account.core.Account;
 import kabam.rotmg.core.StaticInjectorContext;
@@ -28,7 +30,6 @@ public class DungeonBrowser extends Sprite
     private static const LIST_Y:int = 130;
     private static const LIST_HEIGHT:int = 330;
     private static const ITEM_HEIGHT:int = 55;
-    private static const ITEMS_VISIBLE:int = 6;
 
     private var gs_:GameSprite;
     private var background_:Sprite;
@@ -40,7 +41,7 @@ public class DungeonBrowser extends Sprite
     private var sortNewest_:TextButton;
     private var sortOldest_:TextButton;
     private var sortLiked_:TextButton;
-    private var sortDifficulty_:TextButton;
+    private var diffFilterInput_:SimpleText;
     private var activeSort_:String = "newest";
 
     private var listContainer_:Sprite;
@@ -50,10 +51,14 @@ public class DungeonBrowser extends Sprite
     private var allDungeons_:Array = [];
     private var filteredDungeons_:Array = [];
     private var listItems_:Vector.<DungeonListItem> = new Vector.<DungeonListItem>();
-    private var scrollPos_:Number = 0;
 
     private var loadingText_:SimpleText;
     private var ratePanel_:DungeonRatePanel;
+
+    // Timer-based text polling (avoids Flash ENTER_FRAME timing issues)
+    private var pollTimer_:Timer;
+    private var lastSearchText_:String = "";
+    private var lastDiffText_:String = "";
 
     public function DungeonBrowser(gs:GameSprite)
     {
@@ -83,9 +88,9 @@ public class DungeonBrowser extends Sprite
         this.background_ = new Sprite();
         var g:Graphics = this.background_.graphics;
 
-        // Full screen dim
+        // Full screen dim - oversized to cover any resolution/scaling
         g.beginFill(0x000000, 0.7);
-        g.drawRect(-this.x, -this.y, 800, 600);
+        g.drawRect(-2000, -2000, 4000, 4000);
         g.endFill();
 
         // Main panel
@@ -146,8 +151,9 @@ public class DungeonBrowser extends Sprite
         this.searchInput_.x = 85;
         this.searchInput_.y = 57;
         this.searchInput_.border = false;
-        this.searchInput_.background = false;
-        this.searchInput_.addEventListener(Event.CHANGE, this.onSearchChange);
+        this.searchInput_.background = true;
+        this.searchInput_.backgroundColor = 0x0f0f1e;
+        this.searchInput_.tabEnabled = false;
         addChild(this.searchInput_);
     }
 
@@ -181,11 +187,31 @@ public class DungeonBrowser extends Sprite
         this.sortLiked_.addEventListener(MouseEvent.CLICK, this.onSortLiked);
         addChild(this.sortLiked_);
 
-        this.sortDifficulty_ = new TextButton(12, "Hardest", 70);
-        this.sortDifficulty_.x = startX + 288;
-        this.sortDifficulty_.y = btnY;
-        this.sortDifficulty_.addEventListener(MouseEvent.CLICK, this.onSortDifficulty);
-        addChild(this.sortDifficulty_);
+        // Difficulty filter
+        var diffLabel:SimpleText = new SimpleText(12, 0x888888, false, 0, 0);
+        diffLabel.text = "Diff:";
+        diffLabel.updateMetrics();
+        diffLabel.x = startX + 295;
+        diffLabel.y = btnY + 3;
+        addChild(diffLabel);
+
+        var diffBg:Sprite = new Sprite();
+        diffBg.graphics.beginFill(0x0f0f1e, 1);
+        diffBg.graphics.lineStyle(1, 0x3a3a5c);
+        diffBg.graphics.drawRoundRect(startX + 330, btnY - 1, 45, 24, 6, 6);
+        diffBg.graphics.endFill();
+        addChild(diffBg);
+
+        this.diffFilterInput_ = new SimpleText(12, 0xFFFFFF, true, 37, 18);
+        this.diffFilterInput_.x = startX + 334;
+        this.diffFilterInput_.y = btnY + 2;
+        this.diffFilterInput_.border = false;
+        this.diffFilterInput_.background = true;
+        this.diffFilterInput_.backgroundColor = 0x0f0f1e;
+        this.diffFilterInput_.maxChars = 2;
+        this.diffFilterInput_.restrict = "0-9";
+        this.diffFilterInput_.tabEnabled = false;
+        addChild(this.diffFilterInput_);
     }
 
     private function drawListArea():void
@@ -281,13 +307,25 @@ public class DungeonBrowser extends Sprite
     private function applyFilterAndSort():void
     {
         var search:String = this.searchInput_.text.toLowerCase();
+        var diffText:String = this.diffFilterInput_.text;
+        var diffFilter:int = parseInt(diffText);
+        var hasDiffFilter:Boolean = diffText.length > 0 && !isNaN(diffFilter);
         this.filteredDungeons_ = [];
 
         for (var i:int = 0; i < this.allDungeons_.length; i++)
         {
             var d:Object = this.allDungeons_[i];
-            if (search.length == 0 || d.name.toLowerCase().indexOf(search) >= 0)
-                this.filteredDungeons_.push(d);
+            var dName:String = String(d.name);
+            if (search.length > 0 && dName.toLowerCase().indexOf(search) < 0)
+                continue;
+            if (hasDiffFilter)
+            {
+                var dungeonDiff:Number = Number(d.difficulty);
+                if (isNaN(dungeonDiff)) dungeonDiff = 0;
+                if (Math.round(dungeonDiff) != diffFilter)
+                    continue;
+            }
+            this.filteredDungeons_.push(d);
         }
 
         // Sort
@@ -300,45 +338,46 @@ public class DungeonBrowser extends Sprite
                 // already in order from file
                 break;
             case "liked":
-                this.filteredDungeons_.sortOn("likes", Array.NUMERIC | Array.DESCENDING);
-                break;
-            case "difficulty":
-                this.filteredDungeons_.sortOn("difficulty", Array.NUMERIC | Array.DESCENDING);
+                this.filteredDungeons_.sort(function(a:Object, b:Object):int {
+                    var aLikes:int = int(a.likes) || 0;
+                    var bLikes:int = int(b.likes) || 0;
+                    return bLikes - aLikes;
+                });
                 break;
         }
 
-        this.scrollPos_ = 0;
         this.rebuildList();
     }
 
     private function rebuildList():void
     {
-        // Clear old items
-        for (var i:int = 0; i < this.listItems_.length; i++)
-        {
-            if (this.listItems_[i].parent)
-                this.listContainer_.removeChild(this.listItems_[i]);
-        }
-        this.listItems_.length = 0;
+        this.clearList();
+        this.listContainer_.y = LIST_Y;
 
-        // Create items
         var itemWidth:int = WIDTH - 65;
-        for (i = 0; i < this.filteredDungeons_.length; i++)
+        for (var i:int = 0; i < this.filteredDungeons_.length; i++)
         {
             var item:DungeonListItem = new DungeonListItem(
                 this.filteredDungeons_[i], itemWidth, ITEM_HEIGHT, this
             );
-            item.y = i * ITEM_HEIGHT;
+            item.y = 4 + i * ITEM_HEIGHT;
             this.listContainer_.addChild(item);
             this.listItems_.push(item);
         }
 
-        // Update scrollbar
+        this.listContainer_.mask = null;
+        this.listContainer_.mask = this.listMask_;
+
+        // Update scrollbar (setIndicatorSize dispatches CHANGE → onScroll)
         var totalHeight:Number = this.filteredDungeons_.length * ITEM_HEIGHT;
         if (totalHeight > LIST_HEIGHT)
             this.scrollbar_.setIndicatorSize(LIST_HEIGHT, totalHeight);
         else
             this.scrollbar_.setIndicatorSize(LIST_HEIGHT, LIST_HEIGHT);
+
+        // Safety: ensure container.y is correct after scrollbar fires onScroll
+        // (scrollbar.pos() returns NaN when indicator fills entire track)
+        this.listContainer_.y = LIST_Y;
 
         if (this.filteredDungeons_.length == 0 && (!this.loadingText_ || !this.loadingText_.parent))
         {
@@ -352,11 +391,6 @@ public class DungeonBrowser extends Sprite
     }
 
     // --- Events ---
-
-    private function onSearchChange(e:Event):void
-    {
-        this.applyFilterAndSort();
-    }
 
     private function onSortNewest(e:MouseEvent):void
     {
@@ -376,17 +410,18 @@ public class DungeonBrowser extends Sprite
         this.applyFilterAndSort();
     }
 
-    private function onSortDifficulty(e:MouseEvent):void
-    {
-        this.activeSort_ = "difficulty";
-        this.applyFilterAndSort();
-    }
-
     private function onScroll(e:Event):void
     {
         var totalHeight:Number = this.filteredDungeons_.length * ITEM_HEIGHT;
         var maxScroll:Number = Math.max(0, totalHeight - LIST_HEIGHT);
-        this.listContainer_.y = LIST_Y - (this.scrollbar_.pos() * maxScroll);
+        if (maxScroll <= 0)
+        {
+            this.listContainer_.y = LIST_Y;
+            return;
+        }
+        var p:Number = this.scrollbar_.pos();
+        if (isNaN(p)) p = 0;
+        this.listContainer_.y = LIST_Y - (p * maxScroll);
     }
 
     private function onCloseClick(e:MouseEvent):void
@@ -396,21 +431,93 @@ public class DungeonBrowser extends Sprite
 
     private function onAddedToStage(e:Event):void
     {
+        // Listen on THIS sprite to intercept keys before they reach stage (MapUserInput)
+        // When text fields inside us have focus, events bubble: TextField → us → stage
+        // We stop propagation here so game handlers never see our keystrokes
+        addEventListener(KeyboardEvent.KEY_DOWN, this.onKeyDownLocal);
+        addEventListener(KeyboardEvent.KEY_UP, this.onKeyUpLocal);
+
+        // Stage listener for ESC when focus is null (keys go directly to stage)
         stage.addEventListener(KeyboardEvent.KEY_DOWN, this.onKeyDown);
+
+        // Listen for text changes
+        this.searchInput_.addEventListener(Event.CHANGE, this.onTextChanged);
+        this.diffFilterInput_.addEventListener(Event.CHANGE, this.onTextChanged);
+
+        // Backup timer poll (200ms)
+        this.pollTimer_ = new Timer(200);
+        this.pollTimer_.addEventListener(TimerEvent.TIMER, this.onPollTimer);
+        this.pollTimer_.start();
+
         stage.focus = this.searchInput_;
     }
 
     private function onRemovedFromStage(e:Event):void
     {
+        removeEventListener(KeyboardEvent.KEY_DOWN, this.onKeyDownLocal);
+        removeEventListener(KeyboardEvent.KEY_UP, this.onKeyUpLocal);
         stage.removeEventListener(KeyboardEvent.KEY_DOWN, this.onKeyDown);
+        this.searchInput_.removeEventListener(Event.CHANGE, this.onTextChanged);
+        this.diffFilterInput_.removeEventListener(Event.CHANGE, this.onTextChanged);
+
+        if (this.pollTimer_)
+        {
+            this.pollTimer_.stop();
+            this.pollTimer_.removeEventListener(TimerEvent.TIMER, this.onPollTimer);
+            this.pollTimer_ = null;
+        }
+    }
+
+    private function onKeyDownLocal(e:KeyboardEvent):void
+    {
+        // This fires when a text field inside us has focus (bubble phase)
+        if (e.keyCode == 27) // ESC
+        {
+            e.stopPropagation();
+            this.close();
+            return;
+        }
+        // Block ALL other keys from reaching game handlers (MapUserInput)
+        e.stopPropagation();
+    }
+
+    private function onKeyUpLocal(e:KeyboardEvent):void
+    {
+        // Block ALL key-ups from reaching game handlers
+        // MapUserInput.onKeyUp has NO global focus check — it processes interact,
+        // PCUI, movement etc. regardless, which steals focus from our text fields
+        e.stopPropagation();
     }
 
     private function onKeyDown(e:KeyboardEvent):void
     {
-        if (e.keyCode == 27) // ESC
+        // Stage-level: only handles ESC when focus is null (no text field active)
+        if (e.keyCode == 27)
         {
-            e.stopImmediatePropagation();
             this.close();
+        }
+    }
+
+    private function onTextChanged(e:Event):void
+    {
+        var curSearch:String = this.searchInput_.text;
+        var curDiff:String = this.diffFilterInput_.text;
+
+        this.lastSearchText_ = curSearch;
+        this.lastDiffText_ = curDiff;
+        this.applyFilterAndSort();
+    }
+
+    private function onPollTimer(e:TimerEvent):void
+    {
+        var curSearch:String = this.searchInput_.text;
+        var curDiff:String = this.diffFilterInput_.text;
+
+        if (curSearch != this.lastSearchText_ || curDiff != this.lastDiffText_)
+        {
+            this.lastSearchText_ = curSearch;
+            this.lastDiffText_ = curDiff;
+            this.applyFilterAndSort();
         }
     }
 
@@ -420,6 +527,7 @@ public class DungeonBrowser extends Sprite
         this.gs_.gsc_.playerText("/dungeon " + name);
         this.close();
     }
+
 
     public function showRatePanel(dungeonData:Object):void
     {
@@ -438,16 +546,74 @@ public class DungeonBrowser extends Sprite
             removeChild(this.ratePanel_);
         this.ratePanel_ = null;
 
+        // Show loading state while refreshing
+        this.clearList();
+        if (!this.loadingText_ || !this.loadingText_.parent)
+        {
+            this.loadingText_ = new SimpleText(16, 0x888888, false, WIDTH, 0);
+            this.loadingText_.htmlText = "<p align=\"center\">Refreshing...</p>";
+            this.loadingText_.updateMetrics();
+            this.loadingText_.y = LIST_Y + LIST_HEIGHT / 2 - 10;
+            addChild(this.loadingText_);
+        }
+
         // Refresh the list
         this.fetchDungeonList();
     }
 
+    private function clearList():void
+    {
+        for (var i:int = 0; i < this.listItems_.length; i++)
+        {
+            if (this.listItems_[i].parent)
+                this.listContainer_.removeChild(this.listItems_[i]);
+        }
+        this.listItems_.length = 0;
+
+        var oldEmpty:* = this.listContainer_.getChildByName("emptyText");
+        if (oldEmpty)
+            this.listContainer_.removeChild(oldEmpty);
+    }
+
     private function close():void
     {
+        // Stop timer
+        if (this.pollTimer_)
+        {
+            this.pollTimer_.stop();
+            this.pollTimer_.removeEventListener(TimerEvent.TIMER, this.onPollTimer);
+            this.pollTimer_ = null;
+        }
+
+        // Remove text change listeners
+        this.searchInput_.removeEventListener(Event.CHANGE, this.onTextChanged);
+        this.diffFilterInput_.removeEventListener(Event.CHANGE, this.onTextChanged);
+
+        // Remove keyboard listener
+        if (stage)
+        {
+            stage.removeEventListener(KeyboardEvent.KEY_DOWN, this.onKeyDown);
+            stage.focus = null;
+        }
+
+        // Clean up rate panel
         if (this.ratePanel_ && this.ratePanel_.parent)
             removeChild(this.ratePanel_);
-        stage.focus = null;
-        parent.removeChild(this);
+        this.ratePanel_ = null;
+
+        // Clean up list items
+        this.clearList();
+
+        // Remove button listeners
+        this.closeBtn_.removeEventListener(MouseEvent.CLICK, this.onCloseClick);
+        this.sortNewest_.removeEventListener(MouseEvent.CLICK, this.onSortNewest);
+        this.sortOldest_.removeEventListener(MouseEvent.CLICK, this.onSortOldest);
+        this.sortLiked_.removeEventListener(MouseEvent.CLICK, this.onSortLiked);
+        this.scrollbar_.removeEventListener(Event.CHANGE, this.onScroll);
+        this.background_.removeEventListener(MouseEvent.CLICK, this.onBackgroundClick);
+
+        if (parent)
+            parent.removeChild(this);
     }
 }
 }
