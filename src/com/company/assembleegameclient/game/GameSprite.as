@@ -224,7 +224,10 @@ public class GameSprite extends Sprite {
       if(this.map.name_ == "Tutorial")
          this.startTutorial();
       if (this.map.name_ == "Nexus")
+      {
          isNexus_ = true;
+         Parameters.data_.cameraAngle = 0;
+      }
       if (this.map.name_ == "Vault")
          isVault_ = true;
       if (this.map.name_ == "Arena")

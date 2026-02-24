@@ -386,7 +386,7 @@ public class MapUserInput
             this.moveRight_ = true;
             break;
          case Parameters.data_.rotateLeft:
-            if(!Parameters.data_.allowRotation)
+            if(!Parameters.data_.allowRotation || this.gs_.isNexus_)
             {
                break;
             }
@@ -394,7 +394,7 @@ public class MapUserInput
             this.rotateLeft_ = true;
             break;
          case Parameters.data_.rotateRight:
-            if(!Parameters.data_.allowRotation)
+            if(!Parameters.data_.allowRotation || this.gs_.isNexus_)
             {
                break;
             }

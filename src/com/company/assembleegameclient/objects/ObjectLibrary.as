@@ -153,6 +153,8 @@ public class ObjectLibrary
         var _local_8:int;
         for each (_local_3 in _arg_1.Object)
         {
+            try
+            {
             _local_4 = String(_local_3.@id);
             _local_5 = _local_4;
             if (_local_3.hasOwnProperty("DisplayId"))
@@ -223,6 +225,11 @@ public class ObjectLibrary
                 {
                     petSkinIdToPetType_[String(_local_3.DefaultSkin)] = _local_6;
                 }
+            }
+            }
+            catch (parseErr:Error)
+            {
+                trace("[ObjectLibrary] Failed to parse object '" + String(_local_3.@id) + "' type=0x" + int(_local_3.@type).toString(16) + ": " + parseErr.message);
             }
         }
     }
