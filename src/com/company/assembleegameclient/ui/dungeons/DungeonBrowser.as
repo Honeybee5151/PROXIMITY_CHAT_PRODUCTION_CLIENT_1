@@ -320,8 +320,16 @@ public class DungeonBrowser extends Sprite
         {
             var d:Object = this.allDungeons_[i];
             var dName:String = String(d.name);
-            if (search.length > 0 && dName.toLowerCase().indexOf(search) < 0)
-                continue;
+            if (search.length > 0)
+            {
+                var nameMatch:Boolean = dName.toLowerCase().indexOf(search) >= 0;
+                var ratingMatch:Boolean = false;
+                var dRating:Number = Number(d.difficulty);
+                if (!isNaN(dRating))
+                    ratingMatch = String(int(dRating)) == search;
+                if (!nameMatch && !ratingMatch)
+                    continue;
+            }
             if (hasDiffFilter)
             {
                 var dungeonDiff:Number = Number(d.difficulty);
