@@ -39,10 +39,12 @@ import com.company.assembleegameclient.objects.Player;
 
       override public function canHoldItemPlayer(player:Player, type:int) : Boolean
       {
-         // Community dungeon: classless, accept any item in any slot
-         if (player != null && player.map_ != null && player.map_.communityDungeon_)
+         if (type <= 0)
             return true;
-         return type <= 0 || this.itemType == ObjectLibrary.getSlotTypeFromType(type);
+         // Community dungeon: classless, but enforce category (weapon/ability/armor/ring)
+         if (player != null && player.map_ != null && player.map_.communityDungeon_)
+            return ObjectLibrary.getCommunityDungeonSlot(ObjectLibrary.getSlotTypeFromType(type)) == tileId;
+         return this.itemType == ObjectLibrary.getSlotTypeFromType(type);
       }
 
       public function setType(type:int, darken:Boolean = true) : void
@@ -157,6 +159,9 @@ import com.company.assembleegameclient.objects.Player;
          if(itemChanged)
          {
             this.backgroundDetail.visible = itemSprite.itemId <= 0;
+            // Hide class-specific background icons in community dungeon (classless)
+            if (ownerGrid && ownerGrid.curPlayer && ownerGrid.curPlayer.map_ && ownerGrid.curPlayer.map_.communityDungeon_)
+               this.backgroundDetail.visible = false;
             this.updateMinMana();
          }
          return itemChanged;
@@ -206,12 +211,17 @@ import com.company.assembleegameclient.objects.Player;
 
       override protected function beginDragCallback() : void
       {
-         this.backgroundDetail.visible = true;
+         if (ownerGrid && ownerGrid.curPlayer && ownerGrid.curPlayer.map_ && ownerGrid.curPlayer.map_.communityDungeon_)
+            this.backgroundDetail.visible = false;
+         else
+            this.backgroundDetail.visible = true;
       }
 
       override protected function endDragCallback() : void
       {
          this.backgroundDetail.visible = itemSprite.itemId <= 0;
+         if (ownerGrid && ownerGrid.curPlayer && ownerGrid.curPlayer.map_ && ownerGrid.curPlayer.map_.communityDungeon_)
+            this.backgroundDetail.visible = false;
       }
 
       protected var backgroundColor:int = 4539717;

@@ -415,7 +415,7 @@ public class ObjectLibrary
         return (-1);
     }
 
-    private static function getCommunityDungeonSlot(slotType:int):int
+    public static function getCommunityDungeonSlot(slotType:int):int
     {
         switch(slotType)
         {

@@ -156,11 +156,11 @@ public class TextBoxLine
             rankWord = "Chatter"; rankColor = 0xef4444; displayName = name.substr(10);
          }
          if (rankWord.length > 0) {
-            var whiteFormats:ElementFormats = new ElementFormats(0xFFFFFF);
             var rankFormats:ElementFormats = new ElementFormats(rankColor);
-            vec.push(new TextElement("<[", whiteFormats.exportFormat_));
+            vec.push(new TextElement("<", nameFormat));
+            vec.push(new TextElement("[", nameFormat));
             vec.push(new TextElement(rankWord, rankFormats.exportFormat_));
-            vec.push(new TextElement("] ", whiteFormats.exportFormat_));
+            vec.push(new TextElement("] ", nameFormat));
             vec.push(new TextElement(displayName + ">", nameFormat));
          } else {
             vec.push(new TextElement("<" + name + ">", nameFormat));

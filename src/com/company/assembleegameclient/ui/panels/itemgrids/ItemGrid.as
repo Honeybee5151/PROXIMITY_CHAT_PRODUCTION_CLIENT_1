@@ -77,7 +77,11 @@ package com.company.assembleegameclient.ui.panels.itemgrids
          {
             if(tile is EquipmentTile)
             {
-               itemName = ItemConstants.itemTypeToName((tile as EquipmentTile).itemType);
+               // Community dungeon: classless, show generic slot name
+               if (this.curPlayer && this.curPlayer.map_ && this.curPlayer.map_.communityDungeon_)
+                  itemName = "Equipment";
+               else
+                  itemName = ItemConstants.itemTypeToName((tile as EquipmentTile).itemType);
             }
             else
             {
