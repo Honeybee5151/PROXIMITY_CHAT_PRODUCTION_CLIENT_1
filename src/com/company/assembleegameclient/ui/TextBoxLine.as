@@ -143,7 +143,29 @@ public class TextBoxLine
       }
       if(name != "")
       {
-         vec.push(new TextElement("<" + name + ">",nameFormat),new TextElement(" ",sepFormat));
+         var rankWord:String = "";
+         var rankColor:uint = 0;
+         var displayName:String = name;
+         if (name.indexOf("[Owner] ") == 0) {
+            rankWord = "Owner"; rankColor = 0xFFFFFF; displayName = name.substr(8);
+         } else if (name.indexOf("[Mute] ") == 0) {
+            rankWord = "Mute"; rankColor = 0x6b7280; displayName = name.substr(7);
+         } else if (name.indexOf("[Whisperer] ") == 0) {
+            rankWord = "Whisperer"; rankColor = 0x8b5cf6; displayName = name.substr(12);
+         } else if (name.indexOf("[Chatter] ") == 0) {
+            rankWord = "Chatter"; rankColor = 0xef4444; displayName = name.substr(10);
+         }
+         if (rankWord.length > 0) {
+            var whiteFormats:ElementFormats = new ElementFormats(0xFFFFFF);
+            var rankFormats:ElementFormats = new ElementFormats(rankColor);
+            vec.push(new TextElement("<[", whiteFormats.exportFormat_));
+            vec.push(new TextElement(rankWord, rankFormats.exportFormat_));
+            vec.push(new TextElement("] ", whiteFormats.exportFormat_));
+            vec.push(new TextElement(displayName + ">", nameFormat));
+         } else {
+            vec.push(new TextElement("<" + name + ">", nameFormat));
+         }
+         vec.push(new TextElement(" ",sepFormat));
       }
       if (containsEmotes(this.text_))
       {

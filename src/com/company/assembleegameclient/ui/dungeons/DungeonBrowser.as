@@ -310,7 +310,7 @@ public class DungeonBrowser extends Sprite
 
     private function applyFilterAndSort():void
     {
-        var search:String = this.searchInput_.text.toLowerCase();
+        var search:String = this.searchInput_.text.replace(/^\s+|\s+$/g, "").toLowerCase();
         var diffText:String = this.diffFilterInput_.text;
         var diffFilter:int = parseInt(diffText);
         var hasDiffFilter:Boolean = diffText.length > 0 && !isNaN(diffFilter);
@@ -322,19 +322,14 @@ public class DungeonBrowser extends Sprite
             var dName:String = String(d.name);
             if (search.length > 0)
             {
-                var nameMatch:Boolean = dName.toLowerCase().indexOf(search) >= 0;
-                var ratingMatch:Boolean = false;
-                var dRating:Number = Number(d.difficulty);
-                if (!isNaN(dRating))
-                    ratingMatch = String(int(dRating)) == search;
-                if (!nameMatch && !ratingMatch)
+                if (dName.toLowerCase().indexOf(search) < 0)
                     continue;
             }
             if (hasDiffFilter)
             {
                 var dungeonDiff:Number = Number(d.difficulty);
                 if (isNaN(dungeonDiff)) dungeonDiff = 0;
-                if (Math.round(dungeonDiff) != diffFilter)
+                if (int(dungeonDiff) != diffFilter)
                     continue;
             }
             this.filteredDungeons_.push(d);
