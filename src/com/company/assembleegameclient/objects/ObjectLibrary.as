@@ -397,6 +397,11 @@ public class ObjectLibrary
         {
             _local_3 = xmlLibrary_[_arg_1];
             _local_4 = int(_local_3.SlotType);
+            // Community dungeon: classless, map item type to natural slot
+            if (_arg_2 != null && _arg_2.map_ != null && _arg_2.map_.communityDungeon_)
+            {
+                return getCommunityDungeonSlot(_local_4);
+            }
             _local_5 = 0;
             while (_local_5 < GeneralConstants.NUM_EQUIPMENT_SLOTS)
             {
@@ -410,9 +415,57 @@ public class ObjectLibrary
         return (-1);
     }
 
+    private static function getCommunityDungeonSlot(slotType:int):int
+    {
+        switch(slotType)
+        {
+            // Weapons -> slot 0
+            case ItemConstants.SWORD_TYPE:
+            case ItemConstants.DAGGER_TYPE:
+            case ItemConstants.BOW_TYPE:
+            case ItemConstants.WAND_TYPE:
+            case ItemConstants.STAFF_TYPE:
+            case ItemConstants.KATANA_TYPE:
+                return 0;
+            // Abilities -> slot 1
+            case ItemConstants.TOME_TYPE:
+            case ItemConstants.SHIELD_TYPE:
+            case ItemConstants.SPELL_TYPE:
+            case ItemConstants.SEAL_TYPE:
+            case ItemConstants.CLOAK_TYPE:
+            case ItemConstants.QUIVER_TYPE:
+            case ItemConstants.HELM_TYPE:
+            case ItemConstants.POISON_TYPE:
+            case ItemConstants.SKULL_TYPE:
+            case ItemConstants.TRAP_TYPE:
+            case ItemConstants.ORB_TYPE:
+            case ItemConstants.PRISM_TYPE:
+            case ItemConstants.SCEPTER_TYPE:
+            case ItemConstants.SHURIKEN_TYPE:
+            case ItemConstants.NEW_ABIL_TYPE:
+            case ItemConstants.LUTE_TYPE:
+                return 1;
+            // Armor -> slot 2
+            case ItemConstants.LEATHER_TYPE:
+            case ItemConstants.PLATE_TYPE:
+            case ItemConstants.ROBE_TYPE:
+                return 2;
+            // Ring -> slot 3
+            case ItemConstants.RING_TYPE:
+                return 3;
+            default:
+                return -1;
+        }
+    }
+
     public static function isUsableByPlayer(_arg_1:int, _arg_2:Player):Boolean
     {
         if (((_arg_2 == null) || (_arg_2.slotTypes_ == null)))
+        {
+            return (true);
+        }
+        // Community dungeon: classless, all equipment is usable
+        if (_arg_2.map_ != null && _arg_2.map_.communityDungeon_)
         {
             return (true);
         }

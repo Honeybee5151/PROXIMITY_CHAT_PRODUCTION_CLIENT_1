@@ -16,6 +16,7 @@ package kabam.rotmg.messaging.impl.incoming
       public var music:String;
       public var disableShooting_:Boolean;
       public var disableAbilitites_:Boolean;
+      public var communityDungeon_:Boolean;
 
       public function MapInfo(id:uint, callback:Function)
       {
@@ -36,6 +37,7 @@ package kabam.rotmg.messaging.impl.incoming
          this.music = data.readUTF();
          this.disableShooting_ = data.readBoolean();
          this.disableAbilitites_ = data.readBoolean();
+         this.communityDungeon_ = data.readBoolean();
       }
       
       override public function toString() : String

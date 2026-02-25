@@ -111,8 +111,9 @@ public class Map extends Sprite {
 
     public var disableShooting_:Boolean;
     public var disableAbilities_:Boolean;
+    public var communityDungeon_:Boolean;
 
-    public function setProps(width:int, height:int, name:String, back:int, allowPlayerTeleport:Boolean, showDisplays:Boolean, disableShooting:Boolean, disableAbilities:Boolean):void {
+    public function setProps(width:int, height:int, name:String, back:int, allowPlayerTeleport:Boolean, showDisplays:Boolean, disableShooting:Boolean, disableAbilities:Boolean, communityDungeon:Boolean = false):void {
         this.width_ = width;
         this.height_ = height;
         this.name_ = name;
@@ -121,6 +122,7 @@ public class Map extends Sprite {
         this.showDisplays_ = showDisplays;
         this.disableShooting_ = disableShooting;
         this.disableAbilities_ = disableAbilities;
+        this.communityDungeon_ = communityDungeon;
     }
 
     public function initialize():void {

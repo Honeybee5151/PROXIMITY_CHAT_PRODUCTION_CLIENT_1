@@ -39,6 +39,9 @@ import com.company.assembleegameclient.objects.Player;
 
       override public function canHoldItemPlayer(player:Player, type:int) : Boolean
       {
+         // Community dungeon: classless, accept any item in any slot
+         if (player != null && player.map_ != null && player.map_.communityDungeon_)
+            return true;
          return type <= 0 || this.itemType == ObjectLibrary.getSlotTypeFromType(type);
       }
 

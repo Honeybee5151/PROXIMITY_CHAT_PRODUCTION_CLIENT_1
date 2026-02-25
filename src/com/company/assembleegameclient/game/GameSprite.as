@@ -182,7 +182,7 @@ public class GameSprite extends Sprite {
 
    public function applyMapInfo(mapInfo:MapInfo) : void
    {
-      this.map.setProps(mapInfo.width_,mapInfo.height_,mapInfo.name_,mapInfo.background_,mapInfo.allowPlayerTeleport_,mapInfo.showDisplays_,mapInfo.disableShooting_,mapInfo.disableAbilitites_);
+      this.map.setProps(mapInfo.width_,mapInfo.height_,mapInfo.name_,mapInfo.background_,mapInfo.allowPlayerTeleport_,mapInfo.showDisplays_,mapInfo.disableShooting_,mapInfo.disableAbilitites_,mapInfo.communityDungeon_);
       this.showPreloader(mapInfo);
    }
 

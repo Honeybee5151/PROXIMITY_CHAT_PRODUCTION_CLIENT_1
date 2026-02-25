@@ -1347,6 +1347,14 @@ public class GameServerConnection
             map.player_ = player;
             this.gs_.setFocus(player);
             this.setGameFocus.dispatch(this.playerId_.toString());
+            // Community dungeon: override slotTypes to classless (all zeros)
+            if(map.communityDungeon_ && player.slotTypes_ != null)
+            {
+               for(var i:int = 0; i < player.slotTypes_.length; i++)
+               {
+                  player.slotTypes_[i] = 0;
+               }
+            }
          }
       }
 
