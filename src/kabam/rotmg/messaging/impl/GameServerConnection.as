@@ -124,6 +124,7 @@ import kabam.rotmg.messaging.impl.incoming.ClientStat;
 import kabam.rotmg.messaging.impl.incoming.CreateSuccess;
 import kabam.rotmg.messaging.impl.incoming.CustomDungeonAssetsMsg;
 import kabam.rotmg.messaging.impl.incoming.CustomGroundsMsg;
+import kabam.rotmg.messaging.impl.incoming.CustomObjectsMsg;
 import kabam.rotmg.messaging.impl.incoming.Damage;
 import kabam.rotmg.messaging.impl.incoming.Death;
 import kabam.rotmg.messaging.impl.incoming.EnemyShoot;
@@ -320,6 +321,7 @@ public class GameServerConnection
       public static const PROXIMITY_VOICE:int = 88;
       public static const CUSTOM_GROUNDS:int = 89;
       public static const CUSTOM_DUNGEON_ASSETS:int = 90;
+      public static const CUSTOM_OBJECTS:int = 91;
 
       private static const TO_MILLISECONDS:int = 1000;
 
@@ -526,6 +528,7 @@ public class GameServerConnection
          //777592
          messages.map(PROXIMITY_VOICE).toMessage(Message).toMethod(this.onProximityVoice); // Add this line
          messages.map(CUSTOM_GROUNDS).toMessage(CustomGroundsMsg).toMethod(this.onCustomGrounds);
+         messages.map(CUSTOM_OBJECTS).toMessage(CustomObjectsMsg).toMethod(this.onCustomObjects);
          messages.map(CUSTOM_DUNGEON_ASSETS).toMessage(CustomDungeonAssetsMsg).toMethod(this.onCustomDungeonAssets);
       }
 
@@ -619,6 +622,7 @@ public class GameServerConnection
          //777592
          messages.unmap(PROXIMITY_VOICE);
          messages.unmap(CUSTOM_GROUNDS);
+         messages.unmap(CUSTOM_OBJECTS);
          messages.unmap(CUSTOM_DUNGEON_ASSETS);
       }
 
@@ -671,10 +675,33 @@ public class GameServerConnection
             // Process synchronously - chunks are small (500 entries) so no freeze
             var loaded:int = GroundLibrary.loadBinaryCustomGrounds(data);
             trace("[CustomGrounds] Loaded " + loaded + " tiles (binary)");
+            // Clear ByteArray so pooled message doesn't retain large data
+            msg.binaryData_.clear();
+            msg.binaryData_ = null;
          }
          catch (e:Error)
          {
             trace("[CustomGrounds] ERROR in onCustomGrounds: " + e.message);
+         }
+      }
+
+      private function onCustomObjects(msg:CustomObjectsMsg):void {
+         try
+         {
+            var data:ByteArray = msg.binaryData_;
+            if (data == null)
+            {
+               trace("[CustomObjects] ERROR: binaryData_ is null (parseFromInput failed)");
+               return;
+            }
+            var loaded:int = ObjectLibrary.loadBinaryCustomObjects(data);
+            trace("[CustomObjects] Loaded " + loaded + " custom objects (binary)");
+            msg.binaryData_.clear();
+            msg.binaryData_ = null;
+         }
+         catch (e:Error)
+         {
+            trace("[CustomObjects] ERROR in onCustomObjects: " + e.message);
          }
       }
 
@@ -2160,6 +2187,10 @@ public class GameServerConnection
 
       private function onMapInfo(mapInfo:MapInfo) : void
       {
+         // Clean up previous dungeon's custom data to prevent cross-dungeon memory leak
+         GroundLibrary.cleanupCustomGrounds();
+         ObjectLibrary.cleanupCustomObjects();
+
          this.gs_.applyMapInfo(mapInfo);
          this.rand_ = new Random(mapInfo.fp_);
          Music.load(mapInfo.music);

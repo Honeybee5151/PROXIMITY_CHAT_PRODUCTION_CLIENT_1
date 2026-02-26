@@ -89,20 +89,17 @@ public class GroundLibrary
       {
          var typeCode:int = data.readUnsignedShort();
 
-         // Read 192 raw RGB bytes into 8x8 BitmapData
+         // Read 192 raw RGB bytes into 8x8 BitmapData using setVector (batch, faster than setPixel)
          var bmd:BitmapData = new BitmapData(8, 8, false, 0);
-         bmd.lock();
-         for (var py:int = 0; py < 8; py++)
+         var pixelVec:Vector.<uint> = new Vector.<uint>(64);
+         for (var pi:int = 0; pi < 64; pi++)
          {
-            for (var px:int = 0; px < 8; px++)
-            {
-               var r:uint = data.readUnsignedByte();
-               var g:uint = data.readUnsignedByte();
-               var b:uint = data.readUnsignedByte();
-               bmd.setPixel(px, py, (r << 16) | (g << 8) | b);
-            }
+            var r:uint = data.readUnsignedByte();
+            var g:uint = data.readUnsignedByte();
+            var b:uint = data.readUnsignedByte();
+            pixelVec[pi] = 0xFF000000 | (r << 16) | (g << 8) | b;
          }
-         bmd.unlock();
+         bmd.setVector(bmd.rect, pixelVec);
 
          // Dispose old texture if exists
          var oldTd:TextureDataConcrete = typeToTextureData_[typeCode];
@@ -120,6 +117,28 @@ public class GroundLibrary
       }
 
       return count;
+   }
+
+   /**
+    * Clean up custom ground entries (type codes 0x8000+) to prevent cross-dungeon memory leak.
+    * Call on map change before new custom grounds arrive.
+    */
+   public static function cleanupCustomGrounds():void
+   {
+      for (var key:* in typeToTextureData_)
+      {
+         var tc:int = int(key);
+         if (tc >= 0x8000)
+         {
+            var td:TextureDataConcrete = typeToTextureData_[tc];
+            if (td != null && td.texture_ != null)
+               td.texture_.dispose();
+            delete typeToTextureData_[tc];
+            delete propsLibrary_[tc];
+            delete xmlLibrary_[tc];
+            delete tileTypeColorDict_[tc];
+         }
+      }
    }
 
    private static function decodeGroundPixels(b64:String):BitmapData

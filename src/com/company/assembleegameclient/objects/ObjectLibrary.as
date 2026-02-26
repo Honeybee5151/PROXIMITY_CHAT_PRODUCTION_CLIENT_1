@@ -9,6 +9,7 @@ package com.company.assembleegameclient.objects
 import com.company.assembleegameclient.ui.tooltip.TooltipHelper;
 
 import flash.utils.Dictionary;
+import flash.utils.ByteArray;
 import com.company.assembleegameclient.objects.animation.AnimationsData;
 import kabam.rotmg.assets.EmbeddedData;
 import flash.utils.getDefinitionByName;
@@ -588,6 +589,113 @@ public class ObjectLibrary
     public static function getPetDataXMLByType(_arg_1:int):XML
     {
         return (petXMLDataLibrary_[_arg_1]);
+    }
+
+    /**
+     * Load custom objects from binary data (sent per-dungeon, like custom grounds).
+     * Format: int32 count + (uint16 typeCode + byte[192] RGB pixels + byte classFlag) per entry
+     * classFlag: 0=Wall, 1=DestructibleWall, 2=Decoration
+     */
+    public static function loadBinaryCustomObjects(data:ByteArray):int
+    {
+        var count:int = data.readInt();
+
+        for (var i:int = 0; i < count; i++)
+        {
+            var typeCode:int = data.readUnsignedShort();
+
+            // Read 192 raw RGB bytes into 8x8 BitmapData using setVector (batch, faster than setPixel)
+            var bmd:BitmapData = new BitmapData(8, 8, false, 0);
+            var pixelVec:Vector.<uint> = new Vector.<uint>(64);
+            for (var pi:int = 0; pi < 64; pi++)
+            {
+                var r:uint = data.readUnsignedByte();
+                var g:uint = data.readUnsignedByte();
+                var b:uint = data.readUnsignedByte();
+                pixelVec[pi] = 0xFF000000 | (r << 16) | (g << 8) | b;
+            }
+            bmd.setVector(bmd.rect, pixelVec);
+
+            var classFlag:int = data.readUnsignedByte();
+
+            // Build XML for this custom object based on class type
+            var objId:String = "cobj_" + typeCode.toString(16);
+            var objXml:XML;
+
+            if (classFlag == 1) // DestructibleWall
+            {
+                objXml = <Object/>;
+                objXml.@type = "0x" + typeCode.toString(16);
+                objXml.@id = objId;
+                objXml.appendChild(<Class>Wall</Class>);
+                objXml.appendChild(<Static/>);
+                objXml.appendChild(<FullOccupy/>);
+                objXml.appendChild(<BlocksSight/>);
+                objXml.appendChild(<OccupySquare/>);
+                objXml.appendChild(<EnemyOccupySquare/>);
+                objXml.appendChild(<Enemy/>);
+                objXml.appendChild(<MaxHitPoints>100</MaxHitPoints>);
+            }
+            else if (classFlag == 2) // Decoration
+            {
+                objXml = <Object/>;
+                objXml.@type = "0x" + typeCode.toString(16);
+                objXml.@id = objId;
+                objXml.appendChild(<Class>Wall</Class>);
+                objXml.appendChild(<Static/>);
+            }
+            else // Wall (default)
+            {
+                objXml = <Object/>;
+                objXml.@type = "0x" + typeCode.toString(16);
+                objXml.@id = objId;
+                objXml.appendChild(<Class>Wall</Class>);
+                objXml.appendChild(<Static/>);
+                objXml.appendChild(<FullOccupy/>);
+                objXml.appendChild(<BlocksSight/>);
+                objXml.appendChild(<OccupySquare/>);
+                objXml.appendChild(<EnemyOccupySquare/>);
+            }
+
+            // Register in ObjectLibrary
+            propsLibrary_[typeCode] = new ObjectProperties(objXml);
+            xmlLibrary_[typeCode] = objXml;
+            idToType_[objId] = typeCode;
+            typeToDisplayId_[typeCode] = objId;
+
+            // Create texture: use a shared dummy XML for TextureDataConcrete, then override texture_
+            var dummyXml:XML = <Object type={"0x" + typeCode.toString(16)} id={objId}>
+                <Texture><File>lofiObj3</File><Index>0xff</Index></Texture>
+            </Object>;
+            var td:TextureDataConcrete = new TextureDataConcrete(dummyXml);
+            td.texture_ = bmd;
+            typeToTextureData_[typeCode] = td;
+        }
+
+        return count;
+    }
+
+    /**
+     * Clean up custom object entries (type codes 0x9000+) to prevent cross-dungeon memory leak.
+     * Call on map change before new custom objects arrive.
+     */
+    public static function cleanupCustomObjects():void
+    {
+        for (var key:* in typeToTextureData_)
+        {
+            var tc:int = int(key);
+            if (tc >= 0x9000)
+            {
+                var td:TextureDataConcrete = typeToTextureData_[tc];
+                if (td != null && td.texture_ != null)
+                    td.texture_.dispose();
+                delete typeToTextureData_[tc];
+                delete propsLibrary_[tc];
+                delete xmlLibrary_[tc];
+                delete idToType_["cobj_" + tc.toString(16)];
+                delete typeToDisplayId_[tc];
+            }
+        }
     }
 
 
