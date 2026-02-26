@@ -23,6 +23,10 @@ public class GroundLibrary
    public static var defaultProps_:GroundProperties;
    public static var GROUND_CATEGORY:String = "Ground";
 
+   // Shared objects for binary custom grounds (created once, reused for all entries)
+   private static var _sharedCustomProps:GroundProperties = null;
+   private static var _sharedCustomXml:XML = null;
+
 
    public static function parseFromXML(_arg_1:XML):void
    {
@@ -64,6 +68,58 @@ public class GroundLibrary
          idToType_[_local_5] = _local_3;
       }
       defaultProps_ = propsLibrary_[0xFF];
+   }
+
+   /**
+    * Load custom grounds from binary data. Much faster than XML for large tile counts.
+    * Format: int32 count + (uint16 typeCode + byte[192] RGB pixels) per entry
+    */
+   public static function loadBinaryCustomGrounds(data:ByteArray):int
+   {
+      // Create shared props/xml once (all custom grounds are walkable, speed 1, no damage)
+      if (_sharedCustomXml == null)
+      {
+         _sharedCustomXml = <Ground type="0x8000" id="custom_shared"><Texture><File>lofiEnvironment2</File><Index>0x0b</Index></Texture></Ground>;
+         _sharedCustomProps = new GroundProperties(_sharedCustomXml);
+      }
+
+      var count:int = data.readInt();
+
+      for (var i:int = 0; i < count; i++)
+      {
+         var typeCode:int = data.readUnsignedShort();
+
+         // Read 192 raw RGB bytes into 8x8 BitmapData
+         var bmd:BitmapData = new BitmapData(8, 8, false, 0);
+         bmd.lock();
+         for (var py:int = 0; py < 8; py++)
+         {
+            for (var px:int = 0; px < 8; px++)
+            {
+               var r:uint = data.readUnsignedByte();
+               var g:uint = data.readUnsignedByte();
+               var b:uint = data.readUnsignedByte();
+               bmd.setPixel(px, py, (r << 16) | (g << 8) | b);
+            }
+         }
+         bmd.unlock();
+
+         // Dispose old texture if exists
+         var oldTd:TextureDataConcrete = typeToTextureData_[typeCode];
+         if (oldTd != null && oldTd.texture_ != null)
+            oldTd.texture_.dispose();
+
+         // Create TextureDataConcrete with shared XML, override texture with our BitmapData
+         var td:TextureDataConcrete = new TextureDataConcrete(_sharedCustomXml);
+         td.texture_ = bmd;
+
+         propsLibrary_[typeCode] = _sharedCustomProps;
+         xmlLibrary_[typeCode] = null;
+         typeToTextureData_[typeCode] = td;
+         delete tileTypeColorDict_[typeCode];
+      }
+
+      return count;
    }
 
    private static function decodeGroundPixels(b64:String):BitmapData
@@ -122,22 +178,31 @@ public class GroundLibrary
       if (!tileTypeColorDict_.hasOwnProperty(_arg_1))
       {
          _local_2 = xmlLibrary_[_arg_1];
-         var _local_5:String = String(_local_2.@id);
-         // Custom grounds with GroundPixels: derive color from decoded texture
-         // (Color XML attribute may be red-shifted from collision resolution)
-         if (_local_5.indexOf("custom_") == 0 && _local_2.hasOwnProperty("GroundPixels"))
+
+         // Binary custom grounds have no XML - derive color from texture
+         if (_local_2 == null)
          {
             _local_4 = getBitmapData(_arg_1);
-            _local_3 = _local_4 != null ? BitmapUtil.mostCommonColor(_local_4) : uint(_local_2.Color);
-         }
-         else if (_local_2.hasOwnProperty("Color"))
-         {
-            _local_3 = uint(_local_2.Color);
+            _local_3 = _local_4 != null ? BitmapUtil.mostCommonColor(_local_4) : 0x000000;
          }
          else
          {
-            _local_4 = getBitmapData(_arg_1);
-            _local_3 = BitmapUtil.mostCommonColor(_local_4);
+            var _local_5:String = String(_local_2.@id);
+            // Custom grounds with GroundPixels: derive color from decoded texture
+            if (_local_5.indexOf("custom_") == 0 && _local_2.hasOwnProperty("GroundPixels"))
+            {
+               _local_4 = getBitmapData(_arg_1);
+               _local_3 = _local_4 != null ? BitmapUtil.mostCommonColor(_local_4) : uint(_local_2.Color);
+            }
+            else if (_local_2.hasOwnProperty("Color"))
+            {
+               _local_3 = uint(_local_2.Color);
+            }
+            else
+            {
+               _local_4 = getBitmapData(_arg_1);
+               _local_3 = BitmapUtil.mostCommonColor(_local_4);
+            }
          }
          tileTypeColorDict_[_arg_1] = _local_3;
       }
@@ -147,4 +212,3 @@ public class GroundLibrary
 
 }
 }//package com.company.assembleegameclient.map
-

@@ -60,6 +60,11 @@ import com.hurlant.util.der.PEM;
 
 import flash.display.Bitmap;
 import flash.display.BitmapData;
+import flash.display.Shape;
+import flash.display.Sprite;
+import flash.text.TextField;
+import flash.text.TextFormat;
+import flash.text.TextFormatAlign;
 import flash.display.Loader;
 import flash.display.LoaderInfo;
 import flash.events.Event;
@@ -70,6 +75,7 @@ import flash.utils.ByteArray;
 import flash.utils.IDataInput;
 import flash.utils.Timer;
 import flash.utils.getTimer;
+import flash.utils.setTimeout;
 
 import io.decagames.rotmg.ui.popups.signals.ShowPopupSignal;
 
@@ -616,10 +622,60 @@ public class GameServerConnection
          messages.unmap(CUSTOM_DUNGEON_ASSETS);
       }
 
+      private var _groundsLoadingOverlay:Sprite = null;
+
+      private function showGroundsLoading(total:int):void {
+         _groundsLoadingOverlay = new Sprite();
+         var bg:Shape = new Shape();
+         bg.graphics.beginFill(0x000000, 0.85);
+         bg.graphics.drawRect(0, 0, 800, 600);
+         bg.graphics.endFill();
+         _groundsLoadingOverlay.addChild(bg);
+
+         var tf:TextField = new TextField();
+         tf.defaultTextFormat = new TextFormat("_sans", 22, 0xFFFFFF, true, null, null, null, null, TextFormatAlign.CENTER);
+         tf.text = "Loading dungeon tiles... (" + total + " tiles)";
+         tf.width = 800;
+         tf.y = 270;
+         tf.selectable = false;
+         tf.mouseEnabled = false;
+         _groundsLoadingOverlay.addChild(tf);
+
+         if (this.gs_ && this.gs_.stage)
+         {
+            this.gs_.stage.addChild(_groundsLoadingOverlay);
+         }
+         else if (this.gs_)
+         {
+            this.gs_.addChild(_groundsLoadingOverlay);
+         }
+      }
+
+      private function hideGroundsLoading():void {
+         if (_groundsLoadingOverlay && _groundsLoadingOverlay.parent)
+         {
+            _groundsLoadingOverlay.parent.removeChild(_groundsLoadingOverlay);
+         }
+         _groundsLoadingOverlay = null;
+      }
+
       private function onCustomGrounds(msg:CustomGroundsMsg):void {
-         var xml:XML = XML(msg.groundsXml_);
-         GroundLibrary.parseFromXML(xml);
-         trace("[CustomGrounds] Loaded " + xml.Ground.length() + " custom ground tiles for this dungeon");
+         try
+         {
+            var data:ByteArray = msg.binaryData_;
+            if (data == null)
+            {
+               trace("[CustomGrounds] ERROR: binaryData_ is null (parseFromInput failed)");
+               return;
+            }
+            // Process synchronously - chunks are small (500 entries) so no freeze
+            var loaded:int = GroundLibrary.loadBinaryCustomGrounds(data);
+            trace("[CustomGrounds] Loaded " + loaded + " tiles (binary)");
+         }
+         catch (e:Error)
+         {
+            trace("[CustomGrounds] ERROR in onCustomGrounds: " + e.message);
+         }
       }
 
       private var _pendingDungeonSheets:int = 0;

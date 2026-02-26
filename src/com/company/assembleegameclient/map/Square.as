@@ -91,6 +91,8 @@ package com.company.assembleegameclient.map
       {
          this.tileType_ = tileType;
          this.props_ = GroundLibrary.propsLibrary_[this.tileType_];
+         if (this.props_ == null)
+            this.props_ = GroundLibrary.defaultProps_;
          this.texture_ = GroundLibrary.getBitmapData(this.tileType_,hash(this.x_,this.y_));
          this.baseTexMatrix_ = new TextureMatrix(this.texture_,UVT);
          this.faces_.length = 0;
