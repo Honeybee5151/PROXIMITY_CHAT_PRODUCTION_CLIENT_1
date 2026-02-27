@@ -98,6 +98,7 @@ public class GameSprite extends Sprite {
    public var forceScaledLayer:Sprite;
    //777592
    public var proximityChatManager:PCManager;
+   public var pcTutorialOverlay:Sprite;
 
 
    public function GameSprite(server:Server, gameId:int, createCharacter:Boolean, charId:int, keyTime:int, key:ByteArray, model:PlayerModel, mapJSON:String) {
@@ -137,6 +138,59 @@ public class GameSprite extends Sprite {
       addChild(proximityChatManager);
    }
 
+
+   public function showPCTutorial():void {
+      pcTutorialOverlay = new Sprite();
+
+      // Dark background
+      var bg:Sprite = new Sprite();
+      bg.graphics.beginFill(0x000000, 0.85);
+      bg.graphics.drawRect(0, 0, 800, 600);
+      bg.graphics.endFill();
+      pcTutorialOverlay.addChild(bg);
+
+      // Title
+      var title:SimpleText = new SimpleText(28, 0xFFFFFF, false, 400, 0);
+      title.setBold(true);
+      title.htmlText = "<p align=\"center\">Proximity Chat</p>";
+      title.updateMetrics();
+      title.filters = [new DropShadowFilter(0, 0, 0, 1, 6, 6, 1)];
+      title.x = 200;
+      title.y = 200;
+      pcTutorialOverlay.addChild(title);
+
+      // Body text
+      var body:SimpleText = new SimpleText(18, 0xCCCCCC, false, 500, 0);
+      body.multiline = true;
+      body.wordWrap = true;
+      body.htmlText = "<p align=\"center\">" +
+         "This game has <font color=\"#FFD700\">proximity voice chat</font>!\n\n" +
+         "Press <font color=\"#FFD700\">U</font> to open the voice chat panel\n" +
+         "Push-to-Talk is set to <font color=\"#FFD700\">Shift</font>\n\n" +
+         "<font color=\"#888888\">Press U to continue</font>" +
+         "</p>";
+      body.updateMetrics();
+      body.filters = [new DropShadowFilter(0, 0, 0, 1, 4, 4, 1)];
+      body.x = 150;
+      body.y = 260;
+      pcTutorialOverlay.addChild(body);
+
+      addChild(pcTutorialOverlay);
+      mui_.enablePlayerInput_ = false;
+   }
+
+   public function dismissPCTutorial():void {
+      if (pcTutorialOverlay) {
+         if (pcTutorialOverlay.parent)
+            removeChild(pcTutorialOverlay);
+         pcTutorialOverlay = null;
+      }
+      mui_.enablePlayerInput_ = true;
+
+      // Mark tutorial done on server
+      if (gsc_)
+         gsc_.playerText("/tutorialdone");
+   }
 
    public function addBossBar():void
    {
@@ -227,6 +281,8 @@ public class GameSprite extends Sprite {
       {
          isNexus_ = true;
          Parameters.data_.cameraAngle = 0;
+         if (this.model && this.model.charList && !this.model.charList.tutorialDone_)
+            showPCTutorial();
       }
       if (this.map.name_ == "Vault")
          isVault_ = true;

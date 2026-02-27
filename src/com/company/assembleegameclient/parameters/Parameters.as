@@ -180,8 +180,8 @@ public class Parameters {
         setDefault("fps", 60);
         setDefault("ProximityToggle", false);
         //777592
-        setDefaultKey("PCUI", KeyCodes.UNSET);
-        setDefaultKey("PCTALK", KeyCodes.UNSET);
+        setDefaultKey("PCUI", KeyCodes.U);
+        setDefaultKey("PCTALK", KeyCodes.SHIFT);
 
     }
 

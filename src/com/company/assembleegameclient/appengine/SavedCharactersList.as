@@ -38,6 +38,7 @@ package com.company.assembleegameclient.appengine
       public var news_:Vector.<SavedNewsItem>;
       public var myPos_:LatLong;
       public var hasPlayerDied:Boolean = false;
+      public var tutorialDone_:Boolean = false;
       public var classAvailability:Object;
       public var menuMusic_:String;
       public var deadMusic_:String;
@@ -102,6 +103,7 @@ package com.company.assembleegameclient.appengine
          this.nextCharSlotPrice_ = int(accountXML.NextCharSlotPrice);
          this.nextCharSlotCurrency_ = int(accountXML.NextCharSlotCurrency);
          this.hasPlayerDied = !accountXML.hasOwnProperty("isFirstDeath");
+         this.tutorialDone_ = accountXML.hasOwnProperty("TutorialDone");
          this.menuMusic_ = accountXML.MenuMusic;
          this.deadMusic_ = accountXML.DeadMusic;
       }

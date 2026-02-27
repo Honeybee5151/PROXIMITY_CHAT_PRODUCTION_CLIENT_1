@@ -580,6 +580,10 @@ public class MapUserInput
                   // Empty input or non-input TextField — clear focus and proceed
                   stage.focus = null;
               }
+              // Dismiss tutorial overlay if showing
+              if (gs_.pcTutorialOverlay) {
+                  gs_.dismissPCTutorial();
+              }
               if(!PCUIChecker) {
                   gs_.initializePCUI();
                   PCUIChecker = true; // Set this FIRST
