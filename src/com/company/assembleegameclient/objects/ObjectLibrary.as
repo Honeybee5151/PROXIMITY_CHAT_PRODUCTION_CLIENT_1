@@ -610,14 +610,22 @@ public class ObjectLibrary
             if (spriteSize > 0)
             {
                 var totalPixels:int = spriteSize * spriteSize;
-                bmd = new BitmapData(spriteSize, spriteSize, false, 0);
+                bmd = new BitmapData(spriteSize, spriteSize, true, 0x00000000);
                 var pixelVec:Vector.<uint> = new Vector.<uint>(totalPixels);
                 for (var pi:int = 0; pi < totalPixels; pi++)
                 {
                     var r:uint = data.readUnsignedByte();
                     var g:uint = data.readUnsignedByte();
                     var b:uint = data.readUnsignedByte();
-                    pixelVec[pi] = 0xFF000000 | (r << 16) | (g << 8) | b;
+                    // Near-black (0x2a2a2a) = placeholder for transparent pixels
+                    if (r <= 0x2a && g <= 0x2a && b <= 0x2a)
+                    {
+                        pixelVec[pi] = 0x00000000;
+                    }
+                    else
+                    {
+                        pixelVec[pi] = 0xFF000000 | (r << 16) | (g << 8) | b;
+                    }
                 }
                 bmd.setVector(bmd.rect, pixelVec);
             }
