@@ -26,6 +26,8 @@ public class GroundLibrary
    // Shared objects for binary custom grounds (created once, reused for all entries)
    private static var _sharedCustomProps:GroundProperties = null;
    private static var _sharedCustomXml:XML = null;
+   private static var _sharedNoWalkProps:GroundProperties = null;
+   private static var _sharedNoWalkXml:XML = null;
 
 
    public static function parseFromXML(_arg_1:XML):void
@@ -72,15 +74,18 @@ public class GroundLibrary
 
    /**
     * Load custom grounds from binary data. Much faster than XML for large tile counts.
-    * Format: int32 count + (uint16 typeCode + byte[192] RGB pixels) per entry
+    * Format: int32 count + (uint16 typeCode + byte[192] RGB pixels + byte flags) per entry
+    * Flags: bit 0 = NoWalk
     */
    public static function loadBinaryCustomGrounds(data:ByteArray):int
    {
-      // Create shared props/xml once (all custom grounds are walkable, speed 1, no damage)
+      // Create shared props/xml once
       if (_sharedCustomXml == null)
       {
          _sharedCustomXml = <Ground type="0x8000" id="custom_shared"><Texture><File>lofiEnvironment2</File><Index>0x0b</Index></Texture></Ground>;
          _sharedCustomProps = new GroundProperties(_sharedCustomXml);
+         _sharedNoWalkXml = <Ground type="0x8001" id="custom_nowalk"><Texture><File>lofiEnvironment2</File><Index>0x0b</Index></Texture><NoWalk/></Ground>;
+         _sharedNoWalkProps = new GroundProperties(_sharedNoWalkXml);
       }
 
       var count:int = data.readInt();
@@ -101,6 +106,10 @@ public class GroundLibrary
          }
          bmd.setVector(bmd.rect, pixelVec);
 
+         // Read flags byte: bit 0 = NoWalk
+         var flags:uint = data.readUnsignedByte();
+         var noWalk:Boolean = (flags & 1) != 0;
+
          // Dispose old texture if exists
          var oldTd:TextureDataConcrete = typeToTextureData_[typeCode];
          if (oldTd != null && oldTd.texture_ != null)
@@ -110,7 +119,7 @@ public class GroundLibrary
          var td:TextureDataConcrete = new TextureDataConcrete(_sharedCustomXml);
          td.texture_ = bmd;
 
-         propsLibrary_[typeCode] = _sharedCustomProps;
+         propsLibrary_[typeCode] = noWalk ? _sharedNoWalkProps : _sharedCustomProps;
          xmlLibrary_[typeCode] = null;
          typeToTextureData_[typeCode] = td;
          delete tileTypeColorDict_[typeCode];
