@@ -138,7 +138,10 @@ package com.company.assembleegameclient.objects
          }
          if(this.wallSize_ > 1)
          {
-            // Multi-tile wall: check full edge for face culling
+            // Multi-tile wall: check edges for wall culling AND player proximity
+            var px:Number = map_.player_.x_;
+            var py:Number = map_.player_.y_;
+            var s:int = this.wallSize_;
             for(var mf:int = 0; mf < this.faces_.length; mf++)
             {
                face = this.faces_[mf];
@@ -148,8 +151,29 @@ package com.company.assembleegameclient.objects
                }
                else
                {
-                  face.blackOut_ = false;
-                  if(animations_ != null)
+                  // Hide face if player is touching that edge
+                  var hideForPlayer:Boolean = false;
+                  switch(mf)
+                  {
+                     case 0: // North face — player at y-1, within x range
+                        if(py >= y_ - 1 && py < y_ && px >= x_ - 0.5 && px < x_ + s + 0.5)
+                           hideForPlayer = true;
+                        break;
+                     case 1: // East face — player at x+s, within y range
+                        if(px >= x_ + s && px < x_ + s + 1 && py >= y_ - 0.5 && py < y_ + s + 0.5)
+                           hideForPlayer = true;
+                        break;
+                     case 2: // South face — player at y+s, within x range
+                        if(py >= y_ + s && py < y_ + s + 1 && px >= x_ - 0.5 && px < x_ + s + 0.5)
+                           hideForPlayer = true;
+                        break;
+                     case 3: // West face — player at x-1, within y range
+                        if(px >= x_ - 1 && px < x_ && py >= y_ - 0.5 && py < y_ + s + 0.5)
+                           hideForPlayer = true;
+                        break;
+                  }
+                  face.blackOut_ = hideForPlayer;
+                  if(!hideForPlayer && animations_ != null)
                   {
                      face.setTexture(texture);
                   }
