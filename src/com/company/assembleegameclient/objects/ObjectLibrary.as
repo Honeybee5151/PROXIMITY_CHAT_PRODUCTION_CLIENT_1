@@ -671,6 +671,9 @@ public class ObjectLibrary
             var td:TextureDataConcrete = new TextureDataConcrete(dummyXml);
             td.texture_ = bmd;
             typeToTextureData_[typeCode] = td;
+
+            // Wall class needs a top texture — reuse same texture for custom objects
+            typeToTopTextureData_[typeCode] = td;
         }
 
         return count;
