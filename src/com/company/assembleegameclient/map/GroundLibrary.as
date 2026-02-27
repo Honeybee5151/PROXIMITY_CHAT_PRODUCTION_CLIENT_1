@@ -76,7 +76,7 @@ public class GroundLibrary
     */
    public static function loadBinaryCustomGrounds(data:ByteArray):int
    {
-      // Create shared props/xml once (all custom grounds are walkable, speed 1, no damage)
+      // Create shared props/xml once
       if (_sharedCustomXml == null)
       {
          _sharedCustomXml = <Ground type="0x8000" id="custom_shared"><Texture><File>lofiEnvironment2</File><Index>0x0b</Index></Texture></Ground>;

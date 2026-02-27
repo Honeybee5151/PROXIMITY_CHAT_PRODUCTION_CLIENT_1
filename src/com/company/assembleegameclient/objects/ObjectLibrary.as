@@ -623,12 +623,12 @@ public class ObjectLibrary
             var objId:String = "cobj_" + typeCode.toString(16);
             var objXml:XML;
 
-            if (classFlag == 1) // DestructibleWall
+            if (classFlag == 1) // Destructible
             {
                 objXml = <Object/>;
                 objXml.@type = "0x" + typeCode.toString(16);
                 objXml.@id = objId;
-                objXml.appendChild(<Class>Wall</Class>);
+                objXml.appendChild(<Class>GameObject</Class>);
                 objXml.appendChild(<Static/>);
                 objXml.appendChild(<FullOccupy/>);
                 objXml.appendChild(<BlocksSight/>);
@@ -642,15 +642,15 @@ public class ObjectLibrary
                 objXml = <Object/>;
                 objXml.@type = "0x" + typeCode.toString(16);
                 objXml.@id = objId;
-                objXml.appendChild(<Class>Wall</Class>);
+                objXml.appendChild(<Class>GameObject</Class>);
                 objXml.appendChild(<Static/>);
             }
-            else // Wall (default)
+            else // Wall (default) — 2D flat, blocks movement
             {
                 objXml = <Object/>;
                 objXml.@type = "0x" + typeCode.toString(16);
                 objXml.@id = objId;
-                objXml.appendChild(<Class>Wall</Class>);
+                objXml.appendChild(<Class>GameObject</Class>);
                 objXml.appendChild(<Static/>);
                 objXml.appendChild(<FullOccupy/>);
                 objXml.appendChild(<BlocksSight/>);
@@ -671,9 +671,6 @@ public class ObjectLibrary
             var td:TextureDataConcrete = new TextureDataConcrete(dummyXml);
             td.texture_ = bmd;
             typeToTextureData_[typeCode] = td;
-
-            // Wall class needs a top texture — reuse same texture for custom objects
-            typeToTopTextureData_[typeCode] = td;
         }
 
         return count;
