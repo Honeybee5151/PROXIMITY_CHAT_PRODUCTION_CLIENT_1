@@ -603,75 +603,56 @@ public class ObjectLibrary
         for (var i:int = 0; i < count; i++)
         {
             var typeCode:int = data.readUnsignedShort();
-            var spriteSize:int = data.readUnsignedByte(); // 0=blocker, 8, 16, or 32
 
-            // Read pixel data based on sprite size
-            var bmd:BitmapData = null;
-            if (spriteSize > 0)
+            // Read 192 raw RGB bytes into 8x8 BitmapData using setVector (batch, faster than setPixel)
+            var bmd:BitmapData = new BitmapData(8, 8, false, 0);
+            var pixelVec:Vector.<uint> = new Vector.<uint>(64);
+            for (var pi:int = 0; pi < 64; pi++)
             {
-                var totalPixels:int = spriteSize * spriteSize;
-                bmd = new BitmapData(spriteSize, spriteSize, false, 0);
-                var pixelVec:Vector.<uint> = new Vector.<uint>(totalPixels);
-                for (var pi:int = 0; pi < totalPixels; pi++)
-                {
-                    var r:uint = data.readUnsignedByte();
-                    var g:uint = data.readUnsignedByte();
-                    var b:uint = data.readUnsignedByte();
-                    pixelVec[pi] = 0xFF000000 | (r << 16) | (g << 8) | b;
-                }
-                bmd.setVector(bmd.rect, pixelVec);
+                var r:uint = data.readUnsignedByte();
+                var g:uint = data.readUnsignedByte();
+                var b:uint = data.readUnsignedByte();
+                pixelVec[pi] = 0xFF000000 | (r << 16) | (g << 8) | b;
             }
+            bmd.setVector(bmd.rect, pixelVec);
 
-            // 0=Object(2D solid), 1=Destructible(3D), 2=Decoration(2D), 3=Wall(3D), 4=Blocker(invisible)
             var classFlag:int = data.readUnsignedByte();
 
+            // Build XML for this custom object based on class type
             var objId:String = "cobj_" + typeCode.toString(16);
-            var objXml:XML = <Object/>;
-            objXml.@type = "0x" + typeCode.toString(16);
-            objXml.@id = objId;
-            objXml.appendChild(<Static/>);
+            var objXml:XML;
 
-            if (classFlag == 4) // Blocker — invisible, blocks movement (multi-tile padding)
+            if (classFlag == 1) // DestructibleWall
             {
-                objXml.appendChild(<Class>GameObject</Class>);
-                objXml.appendChild(<OccupySquare/>);
-                objXml.appendChild(<EnemyOccupySquare/>);
-                // No texture — create a 1x1 transparent BitmapData
-                bmd = new BitmapData(1, 1, true, 0x00000000);
-            }
-            else if (classFlag == 3) // Wall — 3D solid cube
-            {
+                objXml = <Object/>;
+                objXml.@type = "0x" + typeCode.toString(16);
+                objXml.@id = objId;
                 objXml.appendChild(<Class>Wall</Class>);
-                objXml.appendChild(<FullOccupy/>);
-                objXml.appendChild(<BlocksSight/>);
-                objXml.appendChild(<OccupySquare/>);
-                objXml.appendChild(<EnemyOccupySquare/>);
-                if (spriteSize > 8)
-                {
-                    objXml.appendChild(XML("<WallSize>" + int(spriteSize / 8) + "</WallSize>"));
-                }
-            }
-            else if (classFlag == 1) // Destructible — 3D breakable cube
-            {
-                objXml.appendChild(<Class>Wall</Class>);
+                objXml.appendChild(<Static/>);
                 objXml.appendChild(<FullOccupy/>);
                 objXml.appendChild(<BlocksSight/>);
                 objXml.appendChild(<OccupySquare/>);
                 objXml.appendChild(<EnemyOccupySquare/>);
                 objXml.appendChild(<Enemy/>);
                 objXml.appendChild(<MaxHitPoints>100</MaxHitPoints>);
-                if (spriteSize > 8)
-                {
-                    objXml.appendChild(XML("<WallSize>" + int(spriteSize / 8) + "</WallSize>"));
-                }
             }
-            else if (classFlag == 2) // Decoration — 2D flat, walk-through
+            else if (classFlag == 2) // Decoration
             {
-                objXml.appendChild(<Class>GameObject</Class>);
+                objXml = <Object/>;
+                objXml.@type = "0x" + typeCode.toString(16);
+                objXml.@id = objId;
+                objXml.appendChild(<Class>Wall</Class>);
+                objXml.appendChild(<Static/>);
             }
-            else // 0 = Object — 2D flat, solid (blocks movement)
+            else // Wall (default)
             {
-                objXml.appendChild(<Class>GameObject</Class>);
+                objXml = <Object/>;
+                objXml.@type = "0x" + typeCode.toString(16);
+                objXml.@id = objId;
+                objXml.appendChild(<Class>Wall</Class>);
+                objXml.appendChild(<Static/>);
+                objXml.appendChild(<FullOccupy/>);
+                objXml.appendChild(<BlocksSight/>);
                 objXml.appendChild(<OccupySquare/>);
                 objXml.appendChild(<EnemyOccupySquare/>);
             }
@@ -682,14 +663,13 @@ public class ObjectLibrary
             idToType_[objId] = typeCode;
             typeToDisplayId_[typeCode] = objId;
 
-            // Create texture
+            // Create texture: use a shared dummy XML for TextureDataConcrete, then override texture_
             var dummyXml:XML = <Object type={"0x" + typeCode.toString(16)} id={objId}>
                 <Texture><File>lofiObj3</File><Index>0xff</Index></Texture>
             </Object>;
             var td:TextureDataConcrete = new TextureDataConcrete(dummyXml);
             td.texture_ = bmd;
             typeToTextureData_[typeCode] = td;
-            typeToTopTextureData_[typeCode] = td;
         }
 
         return count;
@@ -710,7 +690,6 @@ public class ObjectLibrary
                 if (td != null && td.texture_ != null)
                     td.texture_.dispose();
                 delete typeToTextureData_[tc];
-                delete typeToTopTextureData_[tc];
                 delete propsLibrary_[tc];
                 delete xmlLibrary_[tc];
                 delete idToType_["cobj_" + tc.toString(16)];
