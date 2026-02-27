@@ -50,6 +50,23 @@ package com.company.assembleegameclient.objects
          return BitmapUtil.mostCommonColor(this.topTexture_);
       }
 
+      override public function computeSortVal(camera:Camera) : void
+      {
+         if(this.wallSize_ > 1)
+         {
+            // Sort by bottom-right edge so wall draws AFTER objects in front of it
+            posW_.length = 0;
+            posW_.push(x_ + wallSize_, y_ + wallSize_, 0, x_ + wallSize_, y_ + wallSize_, z_);
+            posS_.length = 0;
+            camera.wToS_.transformVectors(posW_, posS_);
+            sortVal_ = int(posS_[1]);
+         }
+         else
+         {
+            super.computeSortVal(camera);
+         }
+      }
+
       // Check if ALL tiles along a face edge are blocked by walls
       private function isEdgeBlocked(faceIndex:int) : Boolean
       {
