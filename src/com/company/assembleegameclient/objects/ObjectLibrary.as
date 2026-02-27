@@ -285,7 +285,8 @@ public class ObjectLibrary
         }
         catch(e:Error)
         {
-            throw (new Error(("Type: 0x" + objectType.toString(16))));
+            trace("ObjectLibrary: unknown type 0x" + objectType.toString(16));
+            return null;
         }
         var typeClass:Class = ((TYPE_MAP[typeReference]) || (makeClass(typeReference)));
         return (new (typeClass)(objectXML));
