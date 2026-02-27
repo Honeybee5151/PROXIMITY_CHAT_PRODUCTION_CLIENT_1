@@ -139,51 +139,73 @@ public class GameSprite extends Sprite {
    }
 
 
+   private var tutorialTitle:SimpleText;
+   private var tutorialBody:SimpleText;
+
    public function showPCTutorial():void {
       pcTutorialOverlay = new Sprite();
 
       // Dark background
-      var bg:Sprite = new Sprite();
-      bg.graphics.beginFill(0x000000, 0.85);
-      bg.graphics.drawRect(0, 0, 800, 600);
-      bg.graphics.endFill();
-      pcTutorialOverlay.addChild(bg);
+      pcTutorialOverlay.graphics.beginFill(0x000000, 0.85);
+      pcTutorialOverlay.graphics.drawRect(0, 0, 800, 600);
+      pcTutorialOverlay.graphics.endFill();
 
       // Title
-      var title:SimpleText = new SimpleText(28, 0xFFFFFF, false, 400, 0);
-      title.setBold(true);
-      title.htmlText = "<p align=\"center\">Proximity Chat</p>";
-      title.updateMetrics();
-      title.filters = [new DropShadowFilter(0, 0, 0, 1, 6, 6, 1)];
-      title.x = 200;
-      title.y = 200;
-      pcTutorialOverlay.addChild(title);
+      tutorialTitle = new SimpleText(28, 0xFFFFFF, false, 400, 0);
+      tutorialTitle.setBold(true);
+      tutorialTitle.htmlText = "<p align=\"center\">Proximity Chat</p>";
+      tutorialTitle.updateMetrics();
+      tutorialTitle.filters = [new DropShadowFilter(0, 0, 0, 1, 6, 6, 1)];
+      tutorialTitle.y = 200;
+      pcTutorialOverlay.addChild(tutorialTitle);
 
       // Body text
-      var body:SimpleText = new SimpleText(18, 0xCCCCCC, false, 500, 0);
-      body.multiline = true;
-      body.wordWrap = true;
-      body.htmlText = "<p align=\"center\">" +
+      tutorialBody = new SimpleText(18, 0xCCCCCC, false, 500, 0);
+      tutorialBody.multiline = true;
+      tutorialBody.wordWrap = true;
+      tutorialBody.htmlText = "<p align=\"center\">" +
          "This game has <font color=\"#FFD700\">proximity voice chat</font>!\n\n" +
          "Press <font color=\"#FFD700\">U</font> to open the voice chat panel\n" +
          "Push-to-Talk is set to <font color=\"#FFD700\">Shift</font>\n\n" +
          "<font color=\"#888888\">Press U to continue</font>" +
          "</p>";
-      body.updateMetrics();
-      body.filters = [new DropShadowFilter(0, 0, 0, 1, 4, 4, 1)];
-      body.x = 150;
-      body.y = 260;
-      pcTutorialOverlay.addChild(body);
+      tutorialBody.updateMetrics();
+      tutorialBody.filters = [new DropShadowFilter(0, 0, 0, 1, 4, 4, 1)];
+      tutorialBody.y = 260;
+      pcTutorialOverlay.addChild(tutorialBody);
 
       addChild(pcTutorialOverlay);
       mui_.enablePlayerInput_ = false;
+
+      scaleTutorialText();
+      WebMain.STAGE.addEventListener(Event.RESIZE, onTutorialResize);
+   }
+
+   private function onTutorialResize(e:Event):void {
+      scaleTutorialText();
+   }
+
+   private function scaleTutorialText():void {
+      if (!tutorialTitle || !tutorialBody) return;
+      var w:Number = WebMain.STAGE.stageWidth;
+      var h:Number = WebMain.STAGE.stageHeight;
+      var sx:Number = (h * 800) / (w * 600);
+
+      tutorialTitle.scaleX = sx;
+      tutorialTitle.x = 400 - (400 * sx) / 2;
+
+      tutorialBody.scaleX = sx;
+      tutorialBody.x = 400 - (500 * sx) / 2;
    }
 
    public function dismissPCTutorial():void {
       if (pcTutorialOverlay) {
+         WebMain.STAGE.removeEventListener(Event.RESIZE, onTutorialResize);
          if (pcTutorialOverlay.parent)
             removeChild(pcTutorialOverlay);
          pcTutorialOverlay = null;
+         tutorialTitle = null;
+         tutorialBody = null;
       }
       mui_.enablePlayerInput_ = true;
 
