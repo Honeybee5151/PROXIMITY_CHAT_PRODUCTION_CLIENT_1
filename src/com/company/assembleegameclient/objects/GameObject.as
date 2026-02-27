@@ -390,6 +390,20 @@ public class GameObject extends BasicObject {
         return true;
     }
 
+    override public function computeSortVal(camera:Camera):void {
+        if (this.sizeMult_ > 1 && this.props_.static_) {
+            // Offset render position to center of NxN tile block
+            var off:Number = (this.sizeMult_ - 1) * 0.5;
+            this.posW_.length = 0;
+            this.posW_.push(this.x_ + off, this.y_ + off, 0, this.x_ + off, this.y_ + off, this.z_);
+            this.posS_.length = 0;
+            camera.wToS_.transformVectors(this.posW_, this.posS_);
+            this.sortVal_ = int(this.posS_[1]);
+        } else {
+            super.computeSortVal(camera);
+        }
+    }
+
     override public function draw3d(graphicsData3d:Vector.<Object3DStage3D>):void {
         if (this.object3d_ != null) {
             graphicsData3d.push(this.object3d_);
