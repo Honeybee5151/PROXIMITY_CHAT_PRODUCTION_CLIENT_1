@@ -50,6 +50,53 @@ package com.company.assembleegameclient.objects
          return BitmapUtil.mostCommonColor(this.topTexture_);
       }
 
+      // Check if ALL tiles along a face edge are blocked by walls
+      private function isEdgeBlocked(faceIndex:int) : Boolean
+      {
+         var s:int = this.wallSize_;
+         var xi:int = x_;
+         var yi:int = y_;
+         var sq:Square = null;
+         var i:int;
+
+         switch(faceIndex)
+         {
+            case 0: // North face — check tiles at y-1, from x to x+s-1
+               for(i = 0; i < s; i++)
+               {
+                  sq = map_.lookupSquare(xi + i, yi - 1);
+                  if(sq == null || sq.obj_ == null || !(sq.obj_ is Wall) || sq.obj_.dead_)
+                     return false;
+               }
+               return true;
+            case 1: // East face — check tiles at x+s, from y to y+s-1
+               for(i = 0; i < s; i++)
+               {
+                  sq = map_.lookupSquare(xi + s, yi + i);
+                  if(sq == null || sq.obj_ == null || !(sq.obj_ is Wall) || sq.obj_.dead_)
+                     return false;
+               }
+               return true;
+            case 2: // South face — check tiles at y+s, from x to x+s-1
+               for(i = 0; i < s; i++)
+               {
+                  sq = map_.lookupSquare(xi + i, yi + s);
+                  if(sq == null || sq.obj_ == null || !(sq.obj_ is Wall) || sq.obj_.dead_)
+                     return false;
+               }
+               return true;
+            case 3: // West face — check tiles at x-1, from y to y+s-1
+               for(i = 0; i < s; i++)
+               {
+                  sq = map_.lookupSquare(xi - 1, yi + i);
+                  if(sq == null || sq.obj_ == null || !(sq.obj_ is Wall) || sq.obj_.dead_)
+                     return false;
+               }
+               return true;
+         }
+         return false;
+      }
+
       override public function draw(graphicsData:Vector.<IGraphicsData>, camera:Camera, time:int) : void
       {
          var animTexture:BitmapData = null;
@@ -74,14 +121,21 @@ package com.company.assembleegameclient.objects
          }
          if(this.wallSize_ > 1)
          {
-            // Multi-tile wall: always draw all faces (no face culling)
+            // Multi-tile wall: check full edge for face culling
             for(var mf:int = 0; mf < this.faces_.length; mf++)
             {
                face = this.faces_[mf];
-               face.blackOut_ = false;
-               if(animations_ != null)
+               if(this.isEdgeBlocked(mf))
                {
-                  face.setTexture(texture);
+                  face.blackOut_ = true;
+               }
+               else
+               {
+                  face.blackOut_ = false;
+                  if(animations_ != null)
+                  {
+                     face.setTexture(texture);
+                  }
                }
                face.draw(graphicsData, camera);
             }
