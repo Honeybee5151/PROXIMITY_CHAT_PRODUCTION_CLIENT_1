@@ -34,10 +34,6 @@ public class TextBoxLine
       this.time_ = time;
       this.name_ = name;
       this.playerObjectId = objectId;
-      if(numStars >= 0)
-      {
-         this.rankIcon_ = FameUtil.numStarsToIcon(numStars);
-      }
       this.recipient_ = recipient;
       this.toMe_ = toMe;
       this.text_ = text;

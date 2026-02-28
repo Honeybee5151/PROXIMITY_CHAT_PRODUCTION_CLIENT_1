@@ -64,10 +64,7 @@ package kabam.rotmg.classes.view
       private function setCharacterData() : void
       {
          var fame:int = this.playerModel.charList.bestFame(this.character.id);
-         var stars:int = FameUtil.numStars(fame);
-         this.view.setData(this.character.name,this.character.description,stars,this.playerModel.charList.bestLevel(this.character.id),fame);
-         var nextStarFame:int = FameUtil.nextStarFame(fame,0);
-         this.view.setNextGoal(this.character.name,nextStarFame);
+         this.view.setData(this.character.name,this.character.description,0,this.playerModel.charList.bestLevel(this.character.id),fame);
       }
       
       private function onFocusSet(skin:CharacterSkin = null) : void

@@ -70,12 +70,6 @@ package kabam.rotmg.classes.view
          this.classDescriptionText.defaultTextFormat = tf;
          this.classDescriptionText.setTextFormat(tf);
          addChild(this.classDescriptionText);
-         this.questCompletionText = new SimpleText(14,16777215,false,0,0);
-         this.questCompletionText.filters = [dropShadowFilter];
-         this.questCompletionText.text = "Class Quests Completed";
-         this.questCompletionText.setBold(true);
-         this.questCompletionText.updateMetrics();
-         addChild(this.questCompletionText);
          this.levelTitleText = new SimpleText(14,16777215,false,0,0);
          this.levelTitleText.filters = [dropShadowFilter];
          this.levelTitleText.text = "Highest Level Achieved";
@@ -99,19 +93,6 @@ package kabam.rotmg.classes.view
          this.fameIcon = new Bitmap(FameUtil.getFameIcon());
          this.fameIcon.filters = [dropShadowFilter];
          addChild(this.fameIcon);
-         this.nextGoalText = new SimpleText(14,16777215,false,0,0);
-         this.nextGoalText.setBold(true);
-         this.nextGoalText.filters = [dropShadowFilter];
-         this.nextGoalText.text = "Next Goal:";
-         this.nextGoalText.updateMetrics();
-         this.nextGoalText.visible = false;
-         addChild(this.nextGoalText);
-         this.nextGoalDetailText = new SimpleText(14,16777215,false,0,0);
-         this.nextGoalDetailText.filters = [dropShadowFilter];
-         this.nextGoalDetailText.visible = false;
-         addChild(this.nextGoalDetailText);
-         this.questCompletedStars = new StarsView();
-         addChild(this.questCompletedStars);
       }
       
       public function setData(name:String, description:String, stars:int, highestLevel:int, highestFame:int) : void
@@ -120,7 +101,6 @@ package kabam.rotmg.classes.view
          this.classDescriptionText.text = description;
          this.levelText.text = String(highestLevel);
          this.levelText.updateMetrics();
-         this.questCompletedStars.setStars(stars);
          this.fameText.text = String(highestFame);
          this.fameText.updateMetrics();
          this.layout();
@@ -128,15 +108,6 @@ package kabam.rotmg.classes.view
       
       public function setNextGoal(name:String, nextGoal:int) : void
       {
-         this.nextGoalText.visible = nextGoal != -1;
-         this.nextGoalDetailText.visible = nextGoal != -1;
-         if(nextGoal != -1)
-         {
-            this.nextGoalDetailText.text = "Earn " + String(nextGoal) + " Fame with a " + String(name);
-            this.nextGoalDetailText.updateMetrics();
-            this.nextGoalDetailText.y = this.nextGoalText.y + this.nextGoalText.height;
-            this.nextGoalDetailText.x = WIDTH / 2 - this.nextGoalDetailText.width / 2;
-         }
       }
       
       public function setWalkingAnimation(value:Animation) : void
@@ -165,11 +136,7 @@ package kabam.rotmg.classes.view
          this.classNameText.y = 110;
          this.classDescriptionText.y = this.classNameText.y + this.classNameText.textHeight + 5;
          this.classDescriptionText.x = WIDTH / 2 - this.classDescriptionText.width / 2;
-         this.questCompletionText.y = this.classDescriptionText.y + this.classDescriptionText.textHeight + 20;
-         this.questCompletionText.x = RIGHT_JUSTIFICATION_STATS - this.questCompletionText.width;
-         this.questCompletedStars.y = this.questCompletionText.y;
-         this.questCompletedStars.x = RIGHT_JUSTIFICATION_STATS + 18;
-         this.levelTitleText.y = this.questCompletionText.y + this.questCompletionText.height + 5;
+         this.levelTitleText.y = this.classDescriptionText.y + this.classDescriptionText.textHeight + 20;
          this.levelTitleText.x = RIGHT_JUSTIFICATION_STATS - this.levelTitleText.width;
          this.levelText.y = this.levelTitleText.y;
          this.levelText.x = RIGHT_JUSTIFICATION_STATS + 18;
@@ -179,10 +146,6 @@ package kabam.rotmg.classes.view
          this.fameText.x = RIGHT_JUSTIFICATION_STATS + 18;
          this.fameIcon.y = this.fameTitleText.y - 7;
          this.fameIcon.x = this.fameText.x + this.fameText.textWidth - 3;
-         this.nextGoalText.y = this.fameTitleText.y + this.fameTitleText.height + 17;
-         this.nextGoalText.x = WIDTH / 2 - this.nextGoalText.width / 2;
-         this.nextGoalDetailText.y = this.nextGoalText.y + this.nextGoalText.height;
-         this.nextGoalDetailText.x = WIDTH / 2 - this.nextGoalDetailText.width / 2;
       }
    }
 }

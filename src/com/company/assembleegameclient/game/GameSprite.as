@@ -333,7 +333,6 @@ public class GameSprite extends Sprite {
 
    private function showSafeAreaDisplays() : void
    {
-      this.showRankText();
       this.showGuildText();
    }
 
@@ -343,15 +342,6 @@ public class GameSprite extends Sprite {
       this.guildText_.x = 64;
       this.guildText_.y = 6;
       addChild(this.guildText_);
-   }
-
-   private function showRankText() : void
-   {
-      this.rankText_ = new RankText(-1,true,false);
-      this.rankText_.x = 8;
-      this.rankText_.y = this.displaysPosY;
-      this.displaysPosY = this.displaysPosY + UIUtils.NOTIFICATION_SPACE;
-      addChild(this.rankText_);
    }
 
    private function showArenaMenu():void
@@ -698,7 +688,6 @@ public class GameSprite extends Sprite {
          this.drawCharacterWindow.dispatch(player); // might be causing leak
          if(this.map.showDisplays_)
          {
-            this.rankText_.draw(player.numStars_);
             this.guildText_.draw(player.guildName_,player.guildRank_);
          }
          if(player.isPaused())

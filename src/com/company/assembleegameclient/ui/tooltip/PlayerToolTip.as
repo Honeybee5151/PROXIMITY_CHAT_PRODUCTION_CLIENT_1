@@ -37,11 +37,6 @@ package com.company.assembleegameclient.ui.tooltip
          this.playerPanel_ = new GameObjectListItem(11776947,true,this.player_, false, true, true);
          addChild(this.playerPanel_);
          yOffset = 34;
-         this.rankText_ = new RankText(this.player_.numStars_,false,true);
-         this.rankText_.x = 6;
-         this.rankText_.y = yOffset;
-         addChild(this.rankText_);
-         yOffset = yOffset + 30;
          if(player.guildName_ != null && player.guildName_ != "")
          {
             this.guildText_ = new GuildText(this.player_.guildName_,this.player_.guildRank_,136);
@@ -80,7 +75,6 @@ package com.company.assembleegameclient.ui.tooltip
          this.hpBar_.draw(this.player_.hp_,this.player_.maxHP_,this.player_.maxHPBoost_,this.player_.maxHPMax_);
          this.mpBar_.draw(this.player_.mp_,this.player_.maxMP_,this.player_.maxMPBoost_,this.player_.maxMPMax_);
          this.eGrid.setItems(this.player_.equipment_, this.player_.equipData_);
-         this.rankText_.draw(this.player_.numStars_);
          super.draw();
       }
    }

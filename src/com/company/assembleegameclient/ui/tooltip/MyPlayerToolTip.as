@@ -111,25 +111,13 @@ public class MyPlayerToolTip extends ToolTip
          this.lineBreak_.x = 7;
          this.lineBreak_.y = _loc3_ - 7;
          addChild(this.lineBreak_);
-         var numStars:int = charStats == null?int(0):int(charStats.numStars());
          this.bestLevel_ = new SimpleText(14,6206769,false,0,0);
-         this.bestLevel_.text = numStars + " of 5 Class Quests Completed\n" + "Best Level Achieved: " + (charStats != null?charStats.bestLevel():0).toString() + "\n" + "Best Fame Achieved: " + (charStats != null?charStats.bestFame():0).toString();
+         this.bestLevel_.text = "Best Level Achieved: " + (charStats != null?charStats.bestLevel():0).toString() + "\n" + "Best Fame Achieved: " + (charStats != null?charStats.bestFame():0).toString();
          this.bestLevel_.updateMetrics();
          this.bestLevel_.filters = [new DropShadowFilter(0,0,0)];
          this.bestLevel_.x = 6;
          this.bestLevel_.y = height;
          addChild(this.bestLevel_);
-         var nextStarFame:int = FameUtil.nextStarFame(charStats == null?int(0):int(charStats.bestFame()),0);
-         if(nextStarFame > 0)
-         {
-            this.nextClassQuest_ = new SimpleText(13,16549442,false,174,0);
-            this.nextClassQuest_.text = "Next Goal: Earn " + nextStarFame + " Fame\n" + "  with a " + playerXML.@id;
-            this.nextClassQuest_.updateMetrics();
-            this.nextClassQuest_.filters = [new DropShadowFilter(0,0,0)];
-            this.nextClassQuest_.x = 8;
-            this.nextClassQuest_.y = height - 2;
-            addChild(this.nextClassQuest_);
-         }
       }
       
       override public function draw() : void

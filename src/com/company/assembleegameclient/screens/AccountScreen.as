@@ -96,19 +96,6 @@ import kabam.rotmg.account.core.view.AccountInfoView;
       
       public function setRank(stars:int) : void
       {
-         this.stars = stars;
-         this.makeRankText();
-      }
-      
-      private function makeRankText() : void
-      {
-         this.rankText = new RankText(this.stars,true,false);
-         this.rankText.x = 36;
-         this.rankText.y = 4;
-         this.rankText.mouseEnabled = true;
-         this.rankText.addEventListener(MouseEvent.MOUSE_OVER,this.onMouseOver);
-         this.rankText.addEventListener(MouseEvent.ROLL_OUT,this.onRollOut);
-         this.rankLayer.addChild(this.rankText);
       }
       
       public function setAccountInfo(accountInfo:AccountInfoView) : void

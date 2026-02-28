@@ -85,11 +85,6 @@ package com.company.assembleegameclient.screens
          this.setStatusButton();
          if(this.available_)
          {
-            stars = this.getStars(FameUtil.numStars(model.getBestFame(this.objectType())),FameUtil.STARS.length);
-            stars.y = 60;
-            stars.x = this.graphic_.width / 2 - stars.width / 2;
-            stars.filters = [new DropShadowFilter(0,0,0,1,4,4)];
-            this.graphicContainer_.addChild(stars);
             this.classNameText_.y = 74;
          }
          else
@@ -131,11 +126,6 @@ package com.company.assembleegameclient.screens
             {
                removeChild(this.lock_);
             }
-            stars = this.getStars(FameUtil.numStars(this.model.getBestFame(this.objectType())),FameUtil.STARS.length);
-            stars.y = 60;
-            stars.x = this.graphic_.width / 2 - stars.width / 2;
-            stars.filters = [new DropShadowFilter(0,0,0,1,4,4)];
-            addChild(stars);
             this.classNameText_.y = 74;
             if(!this.unlockedText_)
             {

@@ -317,8 +317,6 @@ public class Player extends Character {
         var nameBitmapData:BitmapData = new BitmapData(nameText.width + 20, 64, true, 0);
         nameBitmapData.draw(nameText, NAME_OFFSET_MATRIX);
         nameBitmapData.applyFilter(nameBitmapData, nameBitmapData.rect, PointUtil.ORIGIN, new GlowFilter(0, 1, 3, 3, 2, 1));
-        var rankIcon:Sprite = FameUtil.numStarsToIcon(this.numStars_);
-        nameBitmapData.draw(rankIcon, RANK_OFFSET_MATRIX);
         return nameBitmapData;
     }
 
