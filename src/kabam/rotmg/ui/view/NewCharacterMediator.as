@@ -3,7 +3,10 @@ package kabam.rotmg.ui.view
    import com.company.assembleegameclient.screens.CharacterSelectionAndNewsScreen;
    import com.company.assembleegameclient.screens.NewCharacterScreen;
    import flash.display.Sprite;
+   import kabam.rotmg.classes.model.CharacterClass;
+   import kabam.rotmg.classes.model.CharacterSkinState;
    import kabam.rotmg.classes.model.ClassesModel;
+   import kabam.rotmg.classes.view.CharacterSkinView;
    import kabam.rotmg.core.model.PlayerModel;
    import kabam.rotmg.core.signals.BuyCharacterPendingSignal;
    import kabam.rotmg.core.signals.HideTooltipsSignal;
@@ -85,14 +88,31 @@ package kabam.rotmg.ui.view
       
       private function onSelected(objectType:int) : void
       {
-         this.classesModel.getCharacterClass(objectType).setIsSelected(true);
-         // Skip skin selection — go straight to game with default skin
-         var game:GameInitData = new GameInitData();
-         game.createCharacter = true;
-         game.charId = this.playerModel.getNextCharId();
-         game.keyTime = -1;
-         game.isNewGame = true;
-         this.playGame.dispatch(game);
+         var charClass:CharacterClass = this.classesModel.getCharacterClass(objectType);
+         charClass.setIsSelected(true);
+
+         // Check if player owns any skins beyond the default
+         var ownedCount:int = 0;
+         for (var i:int = 0; i < charClass.skins.getCount(); i++)
+         {
+            var skin:* = charClass.skins.getSkinAt(i);
+            if (skin.getState() == CharacterSkinState.OWNED && skin != charClass.skins.getDefaultSkin())
+               ownedCount++;
+         }
+
+         if (ownedCount > 0)
+         {
+            this.setScreen.dispatch(new CharacterSkinView());
+         }
+         else
+         {
+            var game:GameInitData = new GameInitData();
+            game.createCharacter = true;
+            game.charId = this.playerModel.getNextCharId();
+            game.keyTime = -1;
+            game.isNewGame = true;
+            this.playGame.dispatch(game);
+         }
       }
       
       private function onTooltip(sprite:Sprite) : void

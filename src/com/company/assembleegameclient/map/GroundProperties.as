@@ -17,6 +17,7 @@ public class GroundProperties
    public var id_:String;
    public var displayId_:String;
    public var noWalk_:Boolean = true;
+   public var hole_:Boolean = false;
    public var minDamage_:int = 0;
    public var maxDamage_:int = 0;
    public var animate_:AnimateProperties = new AnimateProperties();
@@ -49,6 +50,7 @@ public class GroundProperties
          this.displayId_ = String(_arg_1.DisplayId);
       }
       this.noWalk_ = _arg_1.hasOwnProperty("NoWalk");
+      this.hole_ = _arg_1.hasOwnProperty("Hole");
       if (_arg_1.hasOwnProperty("MinDamage"))
       {
          this.minDamage_ = int(_arg_1.MinDamage);

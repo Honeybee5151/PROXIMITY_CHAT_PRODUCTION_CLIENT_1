@@ -96,6 +96,14 @@ package com.company.assembleegameclient.map
          this.texture_ = GroundLibrary.getBitmapData(this.tileType_,hash(this.x_,this.y_));
          this.baseTexMatrix_ = new TextureMatrix(this.texture_,UVT);
          this.faces_.length = 0;
+
+         // Hole tiles: lower Z vertices to create sunken pit visual
+         var holeZ:Number = this.props_.hole_ ? -1 : 0;
+         this.vin_[2] = holeZ;
+         this.vin_[5] = holeZ;
+         this.vin_[8] = holeZ;
+         this.vin_[11] = holeZ;
+         this.center_.z = holeZ;
       }
       
       public function isWalkable() : Boolean

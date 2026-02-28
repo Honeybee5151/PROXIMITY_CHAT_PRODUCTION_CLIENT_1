@@ -28,6 +28,10 @@ public class GroundLibrary
    private static var _sharedCustomXml:XML = null;
    private static var _sharedNoWalkProps:GroundProperties = null;
    private static var _sharedNoWalkXml:XML = null;
+   private static var _sharedHoleProps:GroundProperties = null;
+   private static var _sharedHoleXml:XML = null;
+   private static var _sharedNoWalkHoleProps:GroundProperties = null;
+   private static var _sharedNoWalkHoleXml:XML = null;
 
 
    public static function parseFromXML(_arg_1:XML):void
@@ -86,6 +90,10 @@ public class GroundLibrary
          _sharedCustomProps = new GroundProperties(_sharedCustomXml);
          _sharedNoWalkXml = <Ground type="0x8001" id="custom_nowalk"><Texture><File>lofiEnvironment2</File><Index>0x0b</Index></Texture><NoWalk/></Ground>;
          _sharedNoWalkProps = new GroundProperties(_sharedNoWalkXml);
+         _sharedHoleXml = <Ground type="0x8002" id="custom_hole"><Texture><File>lofiEnvironment2</File><Index>0x0b</Index></Texture><Hole/></Ground>;
+         _sharedHoleProps = new GroundProperties(_sharedHoleXml);
+         _sharedNoWalkHoleXml = <Ground type="0x8003" id="custom_nowalk_hole"><Texture><File>lofiEnvironment2</File><Index>0x0b</Index></Texture><NoWalk/><Hole/></Ground>;
+         _sharedNoWalkHoleProps = new GroundProperties(_sharedNoWalkHoleXml);
       }
 
       var count:int = data.readInt();
@@ -106,9 +114,10 @@ public class GroundLibrary
          }
          bmd.setVector(bmd.rect, pixelVec);
 
-         // Read flags byte: bit 0 = NoWalk
+         // Read flags byte: bit 0 = NoWalk, bit 1 = Hole
          var flags:uint = data.readUnsignedByte();
          var noWalk:Boolean = (flags & 1) != 0;
+         var hole:Boolean = (flags & 2) != 0;
 
          // Dispose old texture if exists
          var oldTd:TextureDataConcrete = typeToTextureData_[typeCode];
@@ -119,7 +128,10 @@ public class GroundLibrary
          var td:TextureDataConcrete = new TextureDataConcrete(_sharedCustomXml);
          td.texture_ = bmd;
 
-         propsLibrary_[typeCode] = noWalk ? _sharedNoWalkProps : _sharedCustomProps;
+         if (noWalk && hole) propsLibrary_[typeCode] = _sharedNoWalkHoleProps;
+         else if (hole) propsLibrary_[typeCode] = _sharedHoleProps;
+         else if (noWalk) propsLibrary_[typeCode] = _sharedNoWalkProps;
+         else propsLibrary_[typeCode] = _sharedCustomProps;
          xmlLibrary_[typeCode] = null;
          typeToTextureData_[typeCode] = td;
          delete tileTypeColorDict_[typeCode];
