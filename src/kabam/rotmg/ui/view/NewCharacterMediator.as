@@ -4,7 +4,6 @@ package kabam.rotmg.ui.view
    import com.company.assembleegameclient.screens.NewCharacterScreen;
    import flash.display.Sprite;
    import kabam.rotmg.classes.model.ClassesModel;
-   import kabam.rotmg.classes.view.CharacterSkinView;
    import kabam.rotmg.core.model.PlayerModel;
    import kabam.rotmg.core.signals.BuyCharacterPendingSignal;
    import kabam.rotmg.core.signals.HideTooltipsSignal;
@@ -12,6 +11,7 @@ package kabam.rotmg.ui.view
    import kabam.rotmg.core.signals.SetScreenSignal;
    import kabam.rotmg.core.signals.ShowTooltipSignal;
    import kabam.rotmg.core.signals.UpdateNewCharacterScreenSignal;
+   import kabam.rotmg.game.model.GameInitData;
    import kabam.rotmg.game.signals.PlayGameSignal;
    import robotlegs.bender.bundles.mvcs.Mediator;
    
@@ -86,7 +86,13 @@ package kabam.rotmg.ui.view
       private function onSelected(objectType:int) : void
       {
          this.classesModel.getCharacterClass(objectType).setIsSelected(true);
-         this.setScreen.dispatch(new CharacterSkinView());
+         // Skip skin selection — go straight to game with default skin
+         var game:GameInitData = new GameInitData();
+         game.createCharacter = true;
+         game.charId = this.playerModel.getNextCharId();
+         game.keyTime = -1;
+         game.isNewGame = true;
+         this.playGame.dispatch(game);
       }
       
       private function onTooltip(sprite:Sprite) : void
