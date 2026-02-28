@@ -1,6 +1,7 @@
 package com.company.assembleegameclient.objects {
 import com.company.assembleegameclient.map.Camera;
 import com.company.assembleegameclient.map.Square;
+import com.company.assembleegameclient.screens.TitleIcons;
 import com.company.assembleegameclient.map.mapoverlay.CharacterStatusText;
 import com.company.assembleegameclient.objects.particles.HealingEffect;
 import com.company.assembleegameclient.objects.particles.LevelUpEffect;
@@ -432,13 +433,21 @@ public class Player extends Character {
     }
 
     override public function getPortrait():BitmapData {
-        var image:MaskedImage = null;
-        var size:int = 0;
         if (portrait_ == null) {
-            image = animatedChar_.imageFromDir(AnimatedChar.RIGHT, AnimatedChar.STAND, 0);
-            size = 4 / image.image_.width * 100;
-            portrait_ = TextureRedrawer.resize(image.image_, image.mask_, size, true, tex1Id_, tex2Id_);
-            portrait_ = GlowRedrawer.outlineGlow(portrait_, 0);
+            var rankIndex:int = 0;
+            for (var i:int = 0; i < ObjectLibrary.playerChars_.length; i++) {
+                if (int(ObjectLibrary.playerChars_[i].@type) == objectType_) {
+                    rankIndex = i;
+                    break;
+                }
+            }
+            var iconSize:int = 34;
+            var canvasSize:int = 48;
+            var icon:BitmapData = TitleIcons.getIcon(rankIndex, iconSize);
+            var canvas:BitmapData = new BitmapData(canvasSize, canvasSize, true, 0x00000000);
+            var offset:int = (canvasSize - iconSize) / 2;
+            canvas.copyPixels(icon, icon.rect, new Point(offset, offset));
+            portrait_ = canvas;
         }
         return portrait_;
     }

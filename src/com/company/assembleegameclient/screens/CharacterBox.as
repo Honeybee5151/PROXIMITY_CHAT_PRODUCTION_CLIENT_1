@@ -2,6 +2,7 @@ package com.company.assembleegameclient.screens
 {
    import com.company.assembleegameclient.appengine.CharacterStats;
    import com.company.assembleegameclient.appengine.SavedCharacter;
+   import com.company.assembleegameclient.objects.ObjectLibrary;
    import com.company.assembleegameclient.ui.tooltip.ClassToolTip;
    import com.company.assembleegameclient.ui.tooltip.ToolTip;
    import com.company.assembleegameclient.util.AnimatedChar;
@@ -14,6 +15,7 @@ package com.company.assembleegameclient.screens
    import com.company.util.AssetLibrary;
    import com.gskinner.motion.GTween;
    import flash.display.Bitmap;
+   import flash.display.BitmapData;
    import flash.display.Sprite;
    import flash.events.Event;
    import flash.events.KeyboardEvent;
@@ -51,7 +53,8 @@ package com.company.assembleegameclient.screens
       public var poseStart_:int = -2147483648;
       public var poseDir_:int;
       public var poseAction_:int;
-      
+      private var rankIndex_:int;
+
       public function CharacterBox(playerXML:XML, charStats:CharacterStats, model:PlayerModel, overrideIsAvailable:Boolean = false)
       {
          var stars:Sprite = null;
@@ -59,6 +62,7 @@ package com.company.assembleegameclient.screens
          this.model = model;
          this.playerXML_ = playerXML;
          this.charStats_ = charStats;
+         this.rankIndex_ = this.findRankIndex();
          this.available_ = overrideIsAvailable || model.isLevelRequirementsMet(this.objectType());
          if(!this.available_)
          {
@@ -73,7 +77,7 @@ package com.company.assembleegameclient.screens
          this.graphicContainer_.addChild(this.graphic_);
          this.characterSelectClicked_ = new NativeSignal(this.graphicContainer_,MouseEvent.CLICK,MouseEvent);
          this.bitmap_ = new Bitmap(null);
-         this.setImage(AnimatedChar.DOWN,AnimatedChar.STAND,0);
+         this.setTitleIcon();
          this.graphic_.addChild(this.bitmap_);
          this.classNameText_ = new SimpleText(14,16777215,false,0,0);
          this.classNameText_.setBold(true);
@@ -115,7 +119,7 @@ package com.company.assembleegameclient.screens
             this.graphicContainer_.removeChild(this.graphic_);
             this.graphic_ = new FullCharBoxGraphic();
             this.graphicContainer_.addChild(this.graphic_);
-            this.setImage(AnimatedChar.DOWN,AnimatedChar.STAND,0);
+            this.setTitleIcon();
             this.graphic_.addChild(this.bitmap_);
             this.graphic_.addChild(this.classNameText_);
             if(contains(this.statusText_))
@@ -202,10 +206,30 @@ package com.company.assembleegameclient.screens
          }
       }
       
+      private function setTitleIcon() : void
+      {
+         var iconBd:BitmapData = TitleIcons.getIcon(this.rankIndex_, 64);
+         this.bitmap_.bitmapData = iconBd;
+         this.bitmap_.x = this.graphic_.width / 2 - iconBd.width / 2;
+         this.bitmap_.y = 4;
+      }
+
+      private function findRankIndex() : int
+      {
+         var objType:int = this.objectType();
+         for (var i:int = 0; i < ObjectLibrary.playerChars_.length; i++)
+         {
+            if (int(ObjectLibrary.playerChars_[i].@type) == objType)
+            {
+               return i;
+            }
+         }
+         return 0;
+      }
+
       private function setImage(dir:int, action:int, p:Number) : void
       {
-         this.bitmap_.bitmapData = SavedCharacter.getImage(null,this.playerXML_,dir,action,p,this.available_,false);
-         this.bitmap_.x = this.graphic_.width / 2 - this.bitmap_.bitmapData.width / 2;
+         this.setTitleIcon();
       }
       
       private function getStars(full:int, total:int) : Sprite

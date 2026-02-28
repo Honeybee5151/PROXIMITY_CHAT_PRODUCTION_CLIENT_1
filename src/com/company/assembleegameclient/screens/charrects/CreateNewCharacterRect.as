@@ -1,12 +1,10 @@
 package com.company.assembleegameclient.screens.charrects
 {
-   import com.company.assembleegameclient.appengine.SavedCharacter;
    import com.company.assembleegameclient.objects.ObjectLibrary;
-   import com.company.assembleegameclient.util.AnimatedChar;
+   import com.company.assembleegameclient.screens.TitleIcons;
    import com.company.assembleegameclient.util.FameUtil;
    import com.company.rotmg.graphics.StarGraphic;
    import com.company.ui.SimpleText;
-   import com.company.util.BitmapUtil;
    import flash.display.Bitmap;
    import flash.display.BitmapData;
    import flash.display.Sprite;
@@ -30,12 +28,11 @@ package com.company.assembleegameclient.screens.charrects
       {
          super(5526612,7829367);
          makeContainer();
-         var playerXML:XML = ObjectLibrary.playerChars_[int(ObjectLibrary.playerChars_.length * Math.random())];
-         var bd:BitmapData = SavedCharacter.getImage(null,playerXML,AnimatedChar.RIGHT,AnimatedChar.STAND,0,false,false);
-         bd = BitmapUtil.cropToBitmapData(bd,6,6,bd.width - 12,bd.height - 6);
-         this.bitmap_ = new Bitmap();
-         this.bitmap_.bitmapData = bd;
+         var randomIndex:int = int(ObjectLibrary.playerChars_.length * Math.random());
+         var bd:BitmapData = TitleIcons.getIcon(randomIndex, 48);
+         this.bitmap_ = new Bitmap(bd);
          this.bitmap_.x = 3;
+         this.bitmap_.y = 3;
          selectContainer.addChild(this.bitmap_);
          this.classNameText_ = new SimpleText(18,16777215,false,0,0);
          this.classNameText_.setBold(true);

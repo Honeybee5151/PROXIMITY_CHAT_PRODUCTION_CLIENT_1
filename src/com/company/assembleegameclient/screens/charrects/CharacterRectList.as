@@ -2,9 +2,11 @@ package com.company.assembleegameclient.screens.charrects
 {
    import com.company.assembleegameclient.appengine.CharacterStats;
    import com.company.assembleegameclient.appengine.SavedCharacter;
-import com.company.assembleegameclient.parameters.Parameters;
+   import com.company.assembleegameclient.objects.ObjectLibrary;
+   import com.company.assembleegameclient.screens.TitleIcons;
+   import com.company.assembleegameclient.parameters.Parameters;
 
-import flash.display.Bitmap;
+   import flash.display.Bitmap;
    import flash.display.BitmapData;
    import flash.display.DisplayObject;
    import flash.display.Sprite;
@@ -75,9 +77,17 @@ import flash.display.Bitmap;
       
       private function getIcon(savedChar:SavedCharacter) : DisplayObject
       {
-         var type:CharacterClass = this.classes.getCharacterClass(savedChar.objectType());
-         var skin:CharacterSkin = type.skins.getSkin(savedChar.skinType()) || type.skins.getDefaultSkin();
-         var data:BitmapData = this.assetFactory.makeIcon(skin.template,skin.is16x16 ? 50 : 100,savedChar.tex1(),savedChar.tex2());
+         var objType:int = savedChar.objectType();
+         var rankIndex:int = 0;
+         for (var i:int = 0; i < ObjectLibrary.playerChars_.length; i++)
+         {
+            if (int(ObjectLibrary.playerChars_[i].@type) == objType)
+            {
+               rankIndex = i;
+               break;
+            }
+         }
+         var data:BitmapData = TitleIcons.getIcon(rankIndex, 48);
          return new Bitmap(data);
       }
       

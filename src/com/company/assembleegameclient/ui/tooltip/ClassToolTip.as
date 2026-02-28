@@ -1,11 +1,9 @@
 package com.company.assembleegameclient.ui.tooltip
 {
    import com.company.assembleegameclient.appengine.CharacterStats;
+   import com.company.assembleegameclient.objects.ObjectLibrary;
+   import com.company.assembleegameclient.screens.TitleIcons;
    import com.company.assembleegameclient.ui.LineBreakDesign;
-   import com.company.assembleegameclient.util.AnimatedChar;
-   import com.company.assembleegameclient.util.AnimatedChars;
-   import com.company.assembleegameclient.util.MaskedImage;
-   import com.company.assembleegameclient.util.TextureRedrawer;
    import com.company.ui.SimpleText;
    import flash.display.Bitmap;
    import flash.display.BitmapData;
@@ -29,12 +27,9 @@ package com.company.assembleegameclient.ui.tooltip
       public function ClassToolTip(playerXML:XML, model:PlayerModel, charStats:CharacterStats)
       {
          super(3552822,1,16777215,1);
-         var animatedChar:AnimatedChar = AnimatedChars.getAnimatedChar(String(playerXML.AnimatedTexture.File),int(playerXML.AnimatedTexture.Index));
-         var image:MaskedImage = animatedChar.imageFromDir(AnimatedChar.RIGHT,AnimatedChar.STAND,0);
-         var size:int = 4 / image.width() * 100;
-         var bd:BitmapData = TextureRedrawer.redraw(image.image_,size,true,0);
-         this.portrait_ = new Bitmap();
-         this.portrait_.bitmapData = bd;
+         var rankIndex:int = findRankIndex(playerXML);
+         var bd:BitmapData = TitleIcons.getIcon(rankIndex, 40);
+         this.portrait_ = new Bitmap(bd);
          this.portrait_.x = -4;
          this.portrait_.y = -4;
          addChild(this.portrait_);
@@ -68,6 +63,19 @@ package com.company.assembleegameclient.ui.tooltip
          addChild(this.bestLevel_);
       }
       
+      private static function findRankIndex(playerXML:XML) : int
+      {
+         var objType:int = int(playerXML.@type);
+         for (var i:int = 0; i < ObjectLibrary.playerChars_.length; i++)
+         {
+            if (int(ObjectLibrary.playerChars_[i].@type) == objType)
+            {
+               return i;
+            }
+         }
+         return 0;
+      }
+
       override public function draw() : void
       {
          this.lineBreak_.setWidthColor(width - 10,1842204);
