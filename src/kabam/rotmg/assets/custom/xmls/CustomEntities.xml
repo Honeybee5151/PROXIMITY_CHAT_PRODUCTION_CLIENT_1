@@ -142,4 +142,14 @@
 		<NoMiniMap/>
 		<ShadowSize>0</ShadowSize>
 	</Object>
+	<Object type="0x49b0" id="Sandstorm Effect">
+		<Class>GameObject</Class>
+		<Effect>Sandstorm</Effect>
+		<Texture>
+			<File>lofiEnvironment2</File>
+			<Index>0x96</Index>
+		</Texture>
+		<Size>0</Size>
+		<NoMiniMap/>
+	</Object>
 </Objects>

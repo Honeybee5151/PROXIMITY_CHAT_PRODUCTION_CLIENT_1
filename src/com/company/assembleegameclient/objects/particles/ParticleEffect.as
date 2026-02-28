@@ -58,6 +58,8 @@ package com.company.assembleegameclient.objects.particles
                     return (new VortexEffect(_arg_2, _arg_1));
                 case "XMLEffect":
                     return (new XMLEffect(_arg_2, _arg_1));
+                case "Sandstorm":
+                    return (new SandstormEffect(_arg_2));
                 case "CustomParticles":
                     return (ParticleGenerator.attachParticleGenerator(_arg_1, _arg_2));
             }

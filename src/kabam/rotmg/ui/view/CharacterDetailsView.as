@@ -86,11 +86,11 @@ import com.company.assembleegameclient.ui.IconButton;
       private function createNameText(name:String) : void
       {
          this.nameText_.setBold(true);
-         this.nameText_.x = 36;
          this.nameText_.y = 0;
          this.nameText_.filters = [new DropShadowFilter(0,0,0)];
          this.nameText_.text = name;
          this.nameText_.updateMetrics();
+         this.nameText_.x = 36 + (136 - this.nameText_.width) / 2;
          addChild(this.nameText_);
       }
       
@@ -109,7 +109,7 @@ import com.company.assembleegameclient.ui.IconButton;
                this.portrait_.x = 13;
             }
             if (this.nameText_) {
-               this.nameText_.x = 47;
+               this.nameText_.x = 47 + (125 - this.nameText_.width) / 2;
             }
             this.boostPanelButton.x = 6;
             this.boostPanelButton.y = 5;
@@ -120,7 +120,7 @@ import com.company.assembleegameclient.ui.IconButton;
                removeChild(this.boostPanelButton);
                this.boostPanelButton = null;
                this.portrait_.x = -2;
-               this.nameText_.x = 36;
+               this.nameText_.x = 36 + (136 - this.nameText_.width) / 2;
             }
          }
       }
@@ -138,6 +138,8 @@ import com.company.assembleegameclient.ui.IconButton;
       public function setName(name:String) : void
       {
          this.nameText_.text = name;
+         this.nameText_.updateMetrics();
+         this.nameText_.x = 36 + (136 - this.nameText_.width) / 2;
       }
    }
 }

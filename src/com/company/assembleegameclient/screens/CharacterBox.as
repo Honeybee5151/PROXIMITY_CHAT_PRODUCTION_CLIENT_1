@@ -85,6 +85,7 @@ package com.company.assembleegameclient.screens
          this.classNameText_.autoSize = TextFieldAutoSize.CENTER;
          this.classNameText_.updateMetrics();
          this.classNameText_.filters = [new DropShadowFilter(0,0,0,1,4,4)];
+         this.classNameText_.x = this.graphic_.width / 2 - this.classNameText_.width / 2;
          this.graphic_.addChild(this.classNameText_);
          this.setStatusButton();
          if(this.available_)
