@@ -78,8 +78,8 @@ public class GroundLibrary
 
    /**
     * Load custom grounds from binary data. Much faster than XML for large tile counts.
-    * Format: int32 count + (uint16 typeCode + byte[192] RGB pixels + byte flags) per entry
-    * Flags: bit 0 = NoWalk
+    * Format: int32 count + (uint16 typeCode + byte[192] RGB pixels + byte flags + sbyte blendPriority) per entry
+    * Flags: bit 0 = NoWalk, bit 1 = Hole
     */
    public static function loadBinaryCustomGrounds(data:ByteArray):int
    {
@@ -119,6 +119,9 @@ public class GroundLibrary
          var noWalk:Boolean = (flags & 1) != 0;
          var hole:Boolean = (flags & 2) != 0;
 
+         // Read blend priority: sbyte (-1 = default/lowest, higher wins at edges)
+         var blendPriority:int = data.readByte();
+
          // Dispose old texture if exists
          var oldTd:TextureDataConcrete = typeToTextureData_[typeCode];
          if (oldTd != null && oldTd.texture_ != null)
@@ -128,7 +131,18 @@ public class GroundLibrary
          var td:TextureDataConcrete = new TextureDataConcrete(_sharedCustomXml);
          td.texture_ = bmd;
 
-         if (noWalk && hole) propsLibrary_[typeCode] = _sharedNoWalkHoleProps;
+         // If blend priority is set, build per-tile props with all flags combined
+         if (blendPriority != -1)
+         {
+            var tileXml:XML = <Ground type={"0x" + typeCode.toString(16)} id={"custom_" + typeCode.toString(16)}>
+               <Texture><File>lofiEnvironment2</File><Index>0x0b</Index></Texture>
+               <BlendPriority>{blendPriority}</BlendPriority>
+            </Ground>;
+            if (noWalk) tileXml.appendChild(<NoWalk/>);
+            if (hole) tileXml.appendChild(<Hole/>);
+            propsLibrary_[typeCode] = new GroundProperties(tileXml);
+         }
+         else if (noWalk && hole) propsLibrary_[typeCode] = _sharedNoWalkHoleProps;
          else if (hole) propsLibrary_[typeCode] = _sharedHoleProps;
          else if (noWalk) propsLibrary_[typeCode] = _sharedNoWalkProps;
          else propsLibrary_[typeCode] = _sharedCustomProps;
