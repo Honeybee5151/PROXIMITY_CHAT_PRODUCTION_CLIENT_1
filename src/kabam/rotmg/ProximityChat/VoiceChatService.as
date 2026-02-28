@@ -532,6 +532,10 @@ public class VoiceChatService {
         return true;
     }
 
+    public function isProcessRunning():Boolean {
+        return audioBridge != null;
+    }
+
     // UPDATED: Enhanced dispose with settings cleanup
     public function dispose(onComplete:Function = null):void {
         if (settings) {

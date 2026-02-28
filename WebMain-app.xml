@@ -1,6 +1,6 @@
 <application xmlns="http://ns.adobe.com/air/application/51.2">
   <id>betterSkillys</id>
-  <filename>betterSkillys</filename>
+  <filename>WebMain</filename>
   <name>betterSkillys</name>
   <versionNumber>1.0.0</versionNumber>
   <initialWindow>
@@ -10,7 +10,4 @@
     <renderMode>direct</renderMode>
     <depthAndStencil>true</depthAndStencil>
   </initialWindow>
-  <icon>
-    <image32x32>moe.png</image32x32>
-  </icon>
 </application>

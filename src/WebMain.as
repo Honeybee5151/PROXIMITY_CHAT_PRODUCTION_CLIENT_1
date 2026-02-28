@@ -159,10 +159,19 @@ public class WebMain extends Sprite {
     }
     //777592
     private function onApplicationExiting(e:Event):void {
-        e.preventDefault(); // Wait for C# to exit
-
-        var voiceService:VoiceChatService = VoiceChatService.getInstance();
-        voiceService.dispose(onCSharpExited); // Pass callback
+        try {
+            var voiceService:VoiceChatService = VoiceChatService.getInstance();
+            if (voiceService.isProcessRunning()) {
+                // C# is running — block exit, wait for it to close
+                e.preventDefault();
+                voiceService.dispose(onCSharpExited);
+            } else {
+                // C# never started — just clean up and let AIR close
+                voiceService.dispose(null);
+            }
+        } catch (err:Error) {
+            // VoiceChatService not initialized — let AIR close normally
+        }
     }
     //777592
     private function onCSharpExited(e:Event):void {
