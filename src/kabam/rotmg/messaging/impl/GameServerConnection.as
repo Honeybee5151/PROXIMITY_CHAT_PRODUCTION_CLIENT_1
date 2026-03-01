@@ -2,6 +2,8 @@ package kabam.rotmg.messaging.impl
 {
 import by.blooddy.crypto.MD5;
 
+import com.company.assembleegameclient.util.AnimatedChar;
+import com.company.assembleegameclient.util.AnimatedChars;
 import com.company.assembleegameclient.game.GameSprite;
 import com.company.assembleegameclient.game.events.GuildResultEvent;
 import com.company.assembleegameclient.game.events.NameResultEvent;
@@ -708,6 +710,7 @@ public class GameServerConnection
       private var _pendingDungeonSheets:int = 0;
       private var _pendingDungeonObjectsXml:XML = null;
       private var _loadedDungeonSheetNames:Vector.<String> = new Vector.<String>();
+      private var _loadedDungeonAnimSheetNames:Vector.<String> = new Vector.<String>();
 
       private function cleanupDungeonAssets():void {
          // Remove previously loaded per-dungeon sprite sheets from memory
@@ -716,6 +719,12 @@ public class GameServerConnection
             trace("[DungeonAssets] Unloaded sheet: " + name);
          }
          _loadedDungeonSheetNames.length = 0;
+         // Remove animated sheets from AnimatedChars
+         for each (var animName:String in _loadedDungeonAnimSheetNames) {
+            delete AnimatedChars.nameMap_[animName];
+            trace("[DungeonAssets] Unloaded animated sheet: " + animName);
+         }
+         _loadedDungeonAnimSheetNames.length = 0;
       }
 
       private function onCustomDungeonAssets(msg:CustomDungeonAssetsMsg):void {
@@ -741,9 +750,14 @@ public class GameServerConnection
          var sheetName:String = String(sheet.@name);
          var tileW:int = int(sheet.@tileW);
          var tileH:int = int(sheet.@tileH);
+         var isAnimated:Boolean = (String(sheet.@animated) == "true");
          var b64:String = String(sheet);
 
-         _loadedDungeonSheetNames.push(sheetName);
+         if (isAnimated) {
+            _loadedDungeonAnimSheetNames.push(sheetName);
+         } else {
+            _loadedDungeonSheetNames.push(sheetName);
+         }
 
          var pngBytes:ByteArray = Base64.decodeToByteArray(b64);
          var ldr:Loader = new Loader();
@@ -751,8 +765,14 @@ public class GameServerConnection
 
          ldr.contentLoaderInfo.addEventListener(Event.COMPLETE, function(e:Event):void {
             var bmp:BitmapData = (ldr.content as Bitmap).bitmapData;
-            AssetLibrary.addImageSet(sheetName, bmp, tileW, tileH);
-            trace("[DungeonAssets] Registered sheet: " + sheetName + " (" + bmp.width + "x" + bmp.height + ", tile " + tileW + "x" + tileH + ")");
+            if (isAnimated) {
+               // Register as animated character sheet (7-frame walk/attack layout)
+               AnimatedChars.add(sheetName, bmp, null, tileW, tileH, bmp.width, bmp.height, AnimatedChar.RIGHT);
+               trace("[DungeonAssets] Registered animated sheet: " + sheetName + " (" + bmp.width + "x" + bmp.height + ", tile " + tileW + "x" + tileH + ")");
+            } else {
+               AssetLibrary.addImageSet(sheetName, bmp, tileW, tileH);
+               trace("[DungeonAssets] Registered sheet: " + sheetName + " (" + bmp.width + "x" + bmp.height + ", tile " + tileW + "x" + tileH + ")");
+            }
 
             self._pendingDungeonSheets--;
             if (self._pendingDungeonSheets <= 0) {
