@@ -96,7 +96,17 @@ package com.company.assembleegameclient.objects
                 case "Texture":
                     try
                     {
-                        texture_ = AssetLibrary.getImageFromSet(String(xml.File), int(xml.Index));
+                        var texFile:String = String(xml.File);
+                        var texIdx:int = int(xml.Index);
+                        if (texFile.indexOf("dungeon_") == 0) {
+                            trace("[TextureDebug] Texture lookup: id='" + id + "' file='" + texFile + "' idx=" + texIdx);
+                            var texSet:* = AssetLibrary.getImageSet(texFile);
+                            trace("[TextureDebug]   ImageSet exists=" + (texSet != null) + (texSet != null ? " tiles=" + texSet.images_.length : ""));
+                        }
+                        texture_ = AssetLibrary.getImageFromSet(texFile, texIdx);
+                        if (texFile.indexOf("dungeon_") == 0) {
+                            trace("[TextureDebug]   Result: texture=" + (texture_ != null ? texture_.width + "x" + texture_.height : "NULL"));
+                        }
                     }
                     catch(error:Error)
                     {
@@ -110,16 +120,30 @@ package com.company.assembleegameclient.objects
                     effectProps_ = new EffectProperties(xml);
                     return;
                 case "AnimatedTexture":
-                    animatedChar_ = AnimatedChars.getAnimatedChar(String(xml.File), int(xml.Index));
+                    var animFile:String = String(xml.File);
+                    var animIdx:int = int(xml.Index);
+                    if (animFile.indexOf("dungeon_") == 0) {
+                        trace("[TextureDebug] AnimatedTexture lookup: id='" + id + "' file='" + animFile + "' idx=" + animIdx);
+                        var animChars:* = AnimatedChars.nameMap_[animFile];
+                        trace("[TextureDebug]   AnimatedChars entry exists=" + (animChars != null) + (animChars != null ? " length=" + animChars.length : ""));
+                    }
+                    animatedChar_ = AnimatedChars.getAnimatedChar(animFile, animIdx);
+                    if (animFile.indexOf("dungeon_") == 0) {
+                        trace("[TextureDebug]   getAnimatedChar result=" + (animatedChar_ != null ? "OK" : "NULL"));
+                    }
                     try
                     {
                         image = animatedChar_.imageFromAngle(0, AnimatedChar.STAND, 0);
                         texture_ = image.image_;
                         mask_ = image.mask_;
+                        if (animFile.indexOf("dungeon_") == 0) {
+                            trace("[TextureDebug]   AnimatedTexture result: texture=" + (texture_ != null ? texture_.width + "x" + texture_.height : "NULL"));
+                        }
                     }
                     catch(error:Error)
                     {
-                        throw (new Error(((((("Error loading AnimatedTexture for " + id) + " - name: ") + String(xml.File)) + " - idx: ") + int(xml.Index))));
+                        trace("[TextureDebug] ERROR AnimatedTexture for " + id + " - file='" + animFile + "' idx=" + animIdx + ": " + error.message);
+                        throw (new Error(((((("Error loading AnimatedTexture for " + id) + " - name: ") + animFile) + " - idx: ") + animIdx)));
                     }
                     return;
                 case "RandomTexture":

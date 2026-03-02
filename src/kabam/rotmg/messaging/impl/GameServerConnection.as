@@ -19,6 +19,7 @@ import com.company.assembleegameclient.objects.Merchant;
 import com.company.assembleegameclient.objects.NameChanger;
 import com.company.assembleegameclient.objects.ObjectLibrary;
 import com.company.util.AssetLibrary;
+import com.company.util.ImageSet;
 import com.company.assembleegameclient.objects.Player;
 import com.company.assembleegameclient.objects.Portal;
 import com.company.assembleegameclient.objects.Projectile;
@@ -70,6 +71,7 @@ import flash.text.TextFormatAlign;
 import flash.display.Loader;
 import flash.display.LoaderInfo;
 import flash.events.Event;
+import flash.events.IOErrorEvent;
 import flash.events.TimerEvent;
 import flash.geom.Point;
 import flash.net.FileReference;
@@ -736,6 +738,12 @@ public class GameServerConnection
          _pendingDungeonObjectsXml = xml.Objects[0];
          _pendingDungeonSheets = sheets.length();
 
+         trace("[DungeonAssets] Received assets: " + sheets.length() + " sheets, " +
+               (_pendingDungeonObjectsXml != null ? _pendingDungeonObjectsXml.Object.length() : 0) + " objects");
+         for each (var obj:XML in _pendingDungeonObjectsXml.Object) {
+            trace("[DungeonAssets]   Object: type=0x" + int(obj.@type).toString(16) + " id='" + String(obj.@id) + "' class=" + String(obj.Class));
+         }
+
          if (_pendingDungeonSheets == 0) {
             parseDungeonObjects();
             return;
@@ -753,6 +761,8 @@ public class GameServerConnection
          var isAnimated:Boolean = (String(sheet.@animated) == "true");
          var b64:String = String(sheet);
 
+         trace("[DungeonAssets] Loading sheet: " + sheetName + " tileW=" + tileW + " tileH=" + tileH + " animated=" + isAnimated + " b64len=" + b64.length);
+
          if (isAnimated) {
             _loadedDungeonAnimSheetNames.push(sheetName);
          } else {
@@ -760,20 +770,37 @@ public class GameServerConnection
          }
 
          var pngBytes:ByteArray = Base64.decodeToByteArray(b64);
+         trace("[DungeonAssets]   Decoded PNG bytes: " + pngBytes.length);
          var ldr:Loader = new Loader();
          var self:GameServerConnection = this;
 
          ldr.contentLoaderInfo.addEventListener(Event.COMPLETE, function(e:Event):void {
             var bmp:BitmapData = (ldr.content as Bitmap).bitmapData;
+            trace("[DungeonAssets]   Sheet decoded: " + sheetName + " -> " + bmp.width + "x" + bmp.height);
+
             if (isAnimated) {
-               // Register as animated character sheet (7-frame walk/attack layout)
                AnimatedChars.add(sheetName, bmp, null, tileW, tileH, bmp.width, bmp.height, AnimatedChar.RIGHT);
-               trace("[DungeonAssets] Registered animated sheet: " + sheetName + " (" + bmp.width + "x" + bmp.height + ", tile " + tileW + "x" + tileH + ")");
+               trace("[DungeonAssets] Registered ANIMATED sheet: " + sheetName + " (" + bmp.width + "x" + bmp.height + ", tile " + tileW + "x" + tileH + ")");
+               // Verify registration
+               var testChars:Vector.<AnimatedChar> = AnimatedChars.nameMap_[sheetName];
+               trace("[DungeonAssets]   AnimatedChars verification: " + (testChars != null ? testChars.length + " chars" : "NULL - REGISTRATION FAILED"));
             } else {
                AssetLibrary.addImageSet(sheetName, bmp, tileW, tileH);
-               trace("[DungeonAssets] Registered sheet: " + sheetName + " (" + bmp.width + "x" + bmp.height + ", tile " + tileW + "x" + tileH + ")");
+               trace("[DungeonAssets] Registered STATIC sheet: " + sheetName + " (" + bmp.width + "x" + bmp.height + ", tile " + tileW + "x" + tileH + ")");
+               // Verify registration
+               var testSet:ImageSet = AssetLibrary.getImageSet(sheetName);
+               trace("[DungeonAssets]   AssetLibrary verification: " + (testSet != null ? testSet.images_.length + " tiles" : "NULL - REGISTRATION FAILED"));
             }
 
+            self._pendingDungeonSheets--;
+            trace("[DungeonAssets]   Remaining sheets: " + self._pendingDungeonSheets);
+            if (self._pendingDungeonSheets <= 0) {
+               self.parseDungeonObjects();
+            }
+         });
+
+         ldr.contentLoaderInfo.addEventListener(IOErrorEvent.IO_ERROR, function(e:IOErrorEvent):void {
+            trace("[DungeonAssets] ERROR loading sheet " + sheetName + ": " + e.text);
             self._pendingDungeonSheets--;
             if (self._pendingDungeonSheets <= 0) {
                self.parseDungeonObjects();
@@ -784,6 +811,7 @@ public class GameServerConnection
       }
 
       private function parseDungeonObjects():void {
+         trace("[DungeonAssets] parseDungeonObjects called, xml=" + (_pendingDungeonObjectsXml != null ? "present" : "NULL"));
          if (_pendingDungeonObjectsXml != null) {
             // Collect type codes being updated so we can refresh stale entities
             var updatedTypes:Object = {};
@@ -791,8 +819,37 @@ public class GameServerConnection
                updatedTypes[int(obj.@type)] = true;
             }
 
+            // Log each object's texture info before parsing
+            for each (var debugObj:XML in _pendingDungeonObjectsXml.Object) {
+               var texInfo:String = "";
+               if (debugObj.hasOwnProperty("AnimatedTexture")) {
+                  var atFile:String = String(debugObj.AnimatedTexture.File);
+                  var atIdx:int = int(debugObj.AnimatedTexture.Index);
+                  var acExists:Boolean = AnimatedChars.nameMap_[atFile] != null;
+                  texInfo = "AnimatedTexture file='" + atFile + "' idx=" + atIdx + " sheetRegistered=" + acExists;
+               } else if (debugObj.hasOwnProperty("Texture")) {
+                  var tFile:String = String(debugObj.Texture.File);
+                  var tIdx:int = int(debugObj.Texture.Index);
+                  var isExists:Boolean = AssetLibrary.getImageSet(tFile) != null;
+                  texInfo = "Texture file='" + tFile + "' idx=" + tIdx + " sheetRegistered=" + isExists;
+               } else {
+                  texInfo = "NO TEXTURE TAG";
+               }
+               trace("[DungeonAssets]   Parsing: type=0x" + int(debugObj.@type).toString(16) + " id='" + String(debugObj.@id) + "' " + texInfo);
+            }
+
             ObjectLibrary.parseFromXML(_pendingDungeonObjectsXml);
             trace("[DungeonAssets] Parsed " + _pendingDungeonObjectsXml.Object.length() + " dungeon objects");
+
+            // Verify registration
+            for each (var verObj:XML in _pendingDungeonObjectsXml.Object) {
+               var vType:int = int(verObj.@type);
+               var vTd:TextureData = ObjectLibrary.typeToTextureData_[vType];
+               trace("[DungeonAssets]   Verify: 0x" + vType.toString(16) + " '" + String(verObj.@id) + "' -> TextureData=" + (vTd != null ? "OK" : "NULL") +
+                     (vTd != null ? " texture=" + (vTd.texture_ != null ? vTd.texture_.width + "x" + vTd.texture_.height : "null") +
+                      " animChar=" + (vTd.animatedChar_ != null ? "yes" : "no") : ""));
+            }
+
             _pendingDungeonObjectsXml = null;
 
             // Refresh existing entities created before assets loaded (race condition fix)

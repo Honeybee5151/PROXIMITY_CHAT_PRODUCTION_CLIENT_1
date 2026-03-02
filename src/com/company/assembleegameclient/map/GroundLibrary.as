@@ -125,6 +125,16 @@ public class GroundLibrary
          // Read speed multiplier: float (1.0 = normal)
          var speed:Number = data.readFloat();
 
+         // Read advanced properties
+         var minDamage:int = data.readShort();
+         var maxDamage:int = data.readShort();
+         var sink:Boolean = data.readBoolean();
+         var animType:uint = data.readUnsignedByte(); // 0=none, 1=Wave, 2=Flow
+         var animDx:Number = data.readFloat();
+         var animDy:Number = data.readFloat();
+         var push:Boolean = data.readBoolean();
+         var slideAmount:Number = data.readFloat();
+
          // Dispose old texture if exists
          var oldTd:TextureDataConcrete = typeToTextureData_[typeCode];
          if (oldTd != null && oldTd.texture_ != null)
@@ -134,8 +144,12 @@ public class GroundLibrary
          var td:TextureDataConcrete = new TextureDataConcrete(_sharedCustomXml);
          td.texture_ = bmd;
 
+         // Check if any non-default properties are set
+         var hasAdvanced:Boolean = blendPriority != -1 || speed != 1.0 ||
+            minDamage > 0 || maxDamage > 0 || sink || animType != 0 || push || slideAmount != 0;
+
          // If any special properties set, build per-tile props with all flags combined
-         if (blendPriority != -1 || speed != 1.0)
+         if (hasAdvanced)
          {
             var tileXml:XML = <Ground type={"0x" + typeCode.toString(16)} id={"custom_" + typeCode.toString(16)}>
                <Texture><File>lofiEnvironment2</File><Index>0x0b</Index></Texture>
@@ -144,6 +158,13 @@ public class GroundLibrary
             if (speed != 1.0) tileXml.appendChild(<Speed>{speed}</Speed>);
             if (noWalk) tileXml.appendChild(<NoWalk/>);
             if (hole) tileXml.appendChild(<Hole/>);
+            if (minDamage > 0) tileXml.appendChild(<MinDamage>{minDamage}</MinDamage>);
+            if (maxDamage > 0) tileXml.appendChild(<MaxDamage>{maxDamage}</MaxDamage>);
+            if (sink) tileXml.appendChild(<Sink/>);
+            if (animType == 1) tileXml.appendChild(<Animate dx={animDx} dy={animDy}>Wave</Animate>);
+            else if (animType == 2) tileXml.appendChild(<Animate dx={animDx} dy={animDy}>Flow</Animate>);
+            if (push) tileXml.appendChild(<Push/>);
+            if (slideAmount != 0) tileXml.appendChild(<SlideAmount>{slideAmount}</SlideAmount>);
             propsLibrary_[typeCode] = new GroundProperties(tileXml);
          }
          else if (noWalk && hole) propsLibrary_[typeCode] = _sharedNoWalkHoleProps;
