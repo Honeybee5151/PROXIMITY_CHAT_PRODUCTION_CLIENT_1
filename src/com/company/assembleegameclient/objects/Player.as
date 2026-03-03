@@ -7,6 +7,9 @@ import com.company.assembleegameclient.objects.particles.HealingEffect;
 import com.company.assembleegameclient.objects.particles.LevelUpEffect;
 import com.company.assembleegameclient.parameters.Parameters;
 import com.company.assembleegameclient.sound.SoundEffectLibrary;
+import flash.media.Sound;
+import flash.media.SoundChannel;
+import flash.media.SoundTransform;
 import com.company.assembleegameclient.tutorial.Tutorial;
 import com.company.assembleegameclient.tutorial.doneAction;
 import com.company.assembleegameclient.util.AnimatedChar;
@@ -174,6 +177,10 @@ public class Player extends Character {
     public var nextAltAttack_:int = 0;
     public var nextTeleportAt_:int = 0;
     public var isDefaultAnimatedChar:Boolean = true;
+    //editor8182381 — Heartbeat sound when low HP (independent of SFX toggle)
+    private var lastHeartbeatTime_:int = 0;
+    private static var heartbeatSound_:Sound = null;
+    private var heartbeatChannel_:SoundChannel = null;
     protected var rotate_:Number = 0;
     protected var relMoveVec_:Point = null;
     protected var moveMultiplier_:Number = 1;
@@ -302,6 +309,26 @@ public class Player extends Character {
             map_.gs_.gsc_.groundDamage(time, x_, y_);
             square_.lastDamage_ = time;
         }
+
+        //editor8182381 — Heartbeat sound when low HP (plays independently of SFX toggle)
+        if (map_.player_ == this && Parameters.data_.playHeartbeat && hp_ > 0 && maxHP_ > 0 && hp_ < maxHP_ * 0.3) {
+            var hpRatio:Number = hp_ / (maxHP_ * 0.3);
+            var beatInterval:int = 300 + hpRatio * 700;
+            if (time - this.lastHeartbeatTime_ >= beatInterval) {
+                var hbVol:Number = Parameters.data_.heartbeatVolume * (0.6 + (1 - hpRatio) * 0.4);
+                if (heartbeatSound_ == null) {
+                    heartbeatSound_ = SoundEffectLibrary.load("heartbeat");
+                }
+                try {
+                    this.heartbeatChannel_ = heartbeatSound_.play(0, 0, new SoundTransform(hbVol));
+                } catch (e:Error) {}
+                this.lastHeartbeatTime_ = time;
+            }
+        } else if (this.heartbeatChannel_ != null) {
+            this.heartbeatChannel_.stop();
+            this.heartbeatChannel_ = null;
+        }
+
         return true;
     }
 

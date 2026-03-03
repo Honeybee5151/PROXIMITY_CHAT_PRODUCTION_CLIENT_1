@@ -544,7 +544,7 @@ public class Map extends Sprite {
             if (dzDist > this.darknessZoneInnerRadius_) {
                 var dzRange:Number = this.darknessZoneOuterRadius_ - this.darknessZoneInnerRadius_;
                 var dzT:Number = Math.min((dzDist - this.darknessZoneInnerRadius_) / dzRange, 1.0);
-                this.darknessOverlay_.alpha = dzT * 0.95;
+                this.darknessOverlay_.alpha = dzT;
                 this.darknessOverlay_.visible = true;
                 this.darknessOverlay_.x = screenRect.left;
                 this.darknessOverlay_.y = screenRect.top;

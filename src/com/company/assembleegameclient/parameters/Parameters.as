@@ -157,6 +157,8 @@ public class Parameters {
         setDefault("musicVolume", 0.5);
         setDefault("playSFX", true);
         setDefault("playPewPew", true);
+        setDefault("playHeartbeat", true); //editor8182381
+        setDefault("heartbeatVolume", 1.0); //editor8182381
         setDefault("centerOnPlayer", true);
         setDefault("preferredServer", null);
         setDefault("cameraAngle", 7 * Math.PI / 4);

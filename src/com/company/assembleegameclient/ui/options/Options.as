@@ -502,6 +502,10 @@ public class Options extends Sprite
       this.addOption(new ChoiceOption("playSFX",new <String>["On","Off"],[true,false],"Play Sound Effects","This toggles whether sound effects are played",this.onPlaySoundEffectsChange));
       this.addOption(new Sprite());
       this.addOption(new ChoiceOption("playPewPew",new <String>["On","Off"],[true,false],"Play Weapon Sounds","This toggles whether weapon sounds are played",null));
+      //editor8182381 — Heartbeat volume
+      this.addOption(new ChoiceOption("playHeartbeat",new <String>["On","Off"],[true,false],"Play Heartbeat","Plays a heartbeat sound when HP is low",null));
+      this.addOption(new Sprite());
+      this.addOption(new SliderOption("heartbeatVolume"), 90, 15);
    }
 
    private function onPlayMusicChange() : void
