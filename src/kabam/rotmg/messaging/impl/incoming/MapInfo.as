@@ -18,6 +18,12 @@ package kabam.rotmg.messaging.impl.incoming
       public var disableAbilitites_:Boolean;
       public var communityDungeon_:Boolean;
 
+      //editor8182381 — Darkness zone fields
+      public var darknessZoneCenterX_:Number = 0;
+      public var darknessZoneCenterY_:Number = 0;
+      public var darknessZoneInnerRadius_:Number = 0;
+      public var darknessZoneOuterRadius_:Number = 0;
+
       public function MapInfo(id:uint, callback:Function)
       {
          super(id,callback);
@@ -38,6 +44,11 @@ package kabam.rotmg.messaging.impl.incoming
          this.disableShooting_ = data.readBoolean();
          this.disableAbilitites_ = data.readBoolean();
          this.communityDungeon_ = data.readBoolean();
+         //editor8182381 — Darkness zone
+         this.darknessZoneCenterX_ = data.readFloat();
+         this.darknessZoneCenterY_ = data.readFloat();
+         this.darknessZoneInnerRadius_ = data.readFloat();
+         this.darknessZoneOuterRadius_ = data.readFloat();
       }
       
       override public function toString() : String

@@ -259,6 +259,11 @@ public class GameSprite extends Sprite {
    public function applyMapInfo(mapInfo:MapInfo) : void
    {
       this.map.setProps(mapInfo.width_,mapInfo.height_,mapInfo.name_,mapInfo.background_,mapInfo.allowPlayerTeleport_,mapInfo.showDisplays_,mapInfo.disableShooting_,mapInfo.disableAbilitites_,mapInfo.communityDungeon_);
+      //editor8182381 — Darkness zone
+      this.map.darknessZoneCenterX_ = mapInfo.darknessZoneCenterX_;
+      this.map.darknessZoneCenterY_ = mapInfo.darknessZoneCenterY_;
+      this.map.darknessZoneInnerRadius_ = mapInfo.darknessZoneInnerRadius_;
+      this.map.darknessZoneOuterRadius_ = mapInfo.darknessZoneOuterRadius_;
       this.showPreloader(mapInfo);
    }
 

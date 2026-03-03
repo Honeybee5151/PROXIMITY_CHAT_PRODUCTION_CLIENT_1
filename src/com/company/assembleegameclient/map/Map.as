@@ -60,6 +60,7 @@ public class Map extends Sprite {
         this.gs_ = gs;
         this.hurtOverlay_ = new HurtOverlay();
         this.gradientOverlay_ = new GradientOverlay();
+        this.darknessOverlay_ = new DarknessOverlay();
         this.mapOverlay_ = new MapOverlay();
         this.partyOverlay_ = new PartyOverlay(this);
         this.party_ = new Party(this);
@@ -82,6 +83,7 @@ public class Map extends Sprite {
     public var map_:Sprite;
     public var hurtOverlay_:HurtOverlay = null;
     public var gradientOverlay_:GradientOverlay = null;
+    public var darknessOverlay_:DarknessOverlay = null; //editor8182381
     public var mapOverlay_:MapOverlay = null;
     public var partyOverlay_:PartyOverlay = null;
     public var squareList_:Vector.<Square>;
@@ -113,6 +115,12 @@ public class Map extends Sprite {
     public var disableAbilities_:Boolean;
     public var communityDungeon_:Boolean;
 
+    //editor8182381 — Darkness zone config
+    public var darknessZoneCenterX_:Number = 0;
+    public var darknessZoneCenterY_:Number = 0;
+    public var darknessZoneInnerRadius_:Number = 0;
+    public var darknessZoneOuterRadius_:Number = 0;
+
     public function setProps(width:int, height:int, name:String, back:int, allowPlayerTeleport:Boolean, showDisplays:Boolean, disableShooting:Boolean, disableAbilities:Boolean, communityDungeon:Boolean = false):void {
         this.width_ = width;
         this.height_ = height;
@@ -134,6 +142,7 @@ public class Map extends Sprite {
         addChild(this.map_);
         addChild(this.hurtOverlay_);
         addChild(this.gradientOverlay_);
+        addChild(this.darknessOverlay_); //editor8182381
         addChild(this.mapOverlay_);
         addChild(this.partyOverlay_);
     }
@@ -525,6 +534,25 @@ public class Map extends Sprite {
         }
         else {
             this.gradientOverlay_.visible = false;
+        }
+
+        //editor8182381 — Progressive darkness zone
+        if (this.player_ != null && this.darknessZoneOuterRadius_ > 0) {
+            var dzDx:Number = this.player_.x_ - this.darknessZoneCenterX_;
+            var dzDy:Number = this.player_.y_ - this.darknessZoneCenterY_;
+            var dzDist:Number = Math.sqrt(dzDx * dzDx + dzDy * dzDy);
+            if (dzDist > this.darknessZoneInnerRadius_) {
+                var dzRange:Number = this.darknessZoneOuterRadius_ - this.darknessZoneInnerRadius_;
+                var dzT:Number = Math.min((dzDist - this.darknessZoneInnerRadius_) / dzRange, 1.0);
+                this.darknessOverlay_.alpha = dzT * 0.95;
+                this.darknessOverlay_.visible = true;
+                this.darknessOverlay_.x = screenRect.left;
+                this.darknessOverlay_.y = screenRect.top;
+            } else {
+                this.darknessOverlay_.visible = false;
+            }
+        } else {
+            this.darknessOverlay_.visible = false;
         }
 
         // draw hw capable screen filters
