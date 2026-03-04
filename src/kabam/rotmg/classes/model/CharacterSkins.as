@@ -13,6 +13,7 @@ package kabam.rotmg.classes.model
       private var selectedSkin:CharacterSkin;
       
       private var maxLevelAchieved:int;
+      private var accountRank:int = 0; //editor8182381
       
       public function CharacterSkins()
       {
@@ -69,10 +70,11 @@ package kabam.rotmg.classes.model
          }
       }
       
-      public function updateSkins(maxLevelAchieved:int) : void
+      public function updateSkins(maxLevelAchieved:int, accountRank:int = 0) : void
       {
          var skin:CharacterSkin = null;
          this.maxLevelAchieved = maxLevelAchieved;
+         this.accountRank = accountRank; //editor8182381
          for each(skin in this.skins)
          {
             this.updateSkinState(skin);
@@ -89,7 +91,8 @@ package kabam.rotmg.classes.model
       
       private function getSkinState(skin:CharacterSkin) : CharacterSkinState
       {
-         if(this.maxLevelAchieved >= skin.unlockLevel)
+         //editor8182381 — check both level and donation rank
+         if(this.maxLevelAchieved >= skin.unlockLevel && this.accountRank >= skin.requiredRank)
          {
             return CharacterSkinState.PURCHASABLE;
          }

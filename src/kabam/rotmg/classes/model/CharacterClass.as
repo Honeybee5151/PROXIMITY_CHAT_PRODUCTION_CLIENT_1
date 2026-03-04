@@ -77,10 +77,10 @@ package kabam.rotmg.classes.model
          return this.maxLevelAchieved;
       }
       
-      public function setMaxLevelAchieved(maxLevel:int) : void
+      public function setMaxLevelAchieved(maxLevel:int, accountRank:int = 0) : void
       {
          this.maxLevelAchieved = maxLevel;
-         this.skins.updateSkins(this.maxLevelAchieved);
+         this.skins.updateSkins(this.maxLevelAchieved, accountRank); //editor8182381
       }
       
       public function getStats() : CharacterStats

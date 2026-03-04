@@ -35,6 +35,7 @@ package com.company.assembleegameclient.appengine
       public var name_:String = null;
       public var nameChosen_:Boolean;
       public var isAdmin_:Boolean;
+      public var rank_:int = 0; //editor8182381 — donation rank (0=regular, 1=donator, 2=supporter, 3=sponsor)
       public var news_:Vector.<SavedNewsItem>;
       public var myPos_:LatLong;
       public var hasPlayerDied:Boolean = false;
@@ -96,6 +97,7 @@ package com.company.assembleegameclient.appengine
          this.name_ = accountXML.Name;
          this.nameChosen_ = accountXML.hasOwnProperty("NameChosen");
          this.isAdmin_ = accountXML.hasOwnProperty("Admin");
+         this.rank_ = int(accountXML.Rank); //editor8182381
          this.totalFame_ = int(accountXML.Stats.TotalFame);
          this.fame_ = int(accountXML.Stats.Fame);
          this.bestCharFame_ = int(accountXML.Stats.BestCharFame);

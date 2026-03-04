@@ -2122,7 +2122,7 @@ public class GameServerConnection
                   type = this.classesModel.getCharacterClass(player.objectType_);
                   if(type.getMaxLevelAchieved() < player.level_)
                   {
-                     type.setMaxLevelAchieved(player.level_);
+                     type.setMaxLevelAchieved(player.level_, player.rank); //editor8182381
                   }
                }
                else

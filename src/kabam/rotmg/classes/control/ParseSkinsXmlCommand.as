@@ -40,6 +40,7 @@ import kabam.rotmg.assets.model.CharacterTemplate;
          skin.name = xml.@id;
          skin.unlockLevel = xml.UnlockLevel;
          skin.cost = xml.Cost || 300;
+         skin.requiredRank = xml.RequiredRank || 0; //editor8182381
          skin.template = new CharacterTemplate(file,index);
          var character:CharacterClass = this.model.getCharacterClass(xml.PlayerClassType);
          if (file.indexOf("16") >= 0)

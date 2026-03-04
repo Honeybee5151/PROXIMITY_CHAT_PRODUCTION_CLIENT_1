@@ -35,11 +35,12 @@ package kabam.rotmg.classes.control
       {
          var maxLevel:XML = null;
          var character:CharacterClass = null;
+         var accountRank:int = int(this.data.Account.Rank); //editor8182381
          var maxLevels:XMLList = this.data.MaxClassLevelList.MaxClassLevel;
          for each(maxLevel in maxLevels)
          {
             character = this.model.getCharacterClass(maxLevel.@classType);
-            character.setMaxLevelAchieved(maxLevel.@maxLevel);
+            character.setMaxLevelAchieved(maxLevel.@maxLevel, accountRank); //editor8182381
          }
       }
       
