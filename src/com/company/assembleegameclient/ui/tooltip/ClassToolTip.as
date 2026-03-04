@@ -2,7 +2,6 @@ package com.company.assembleegameclient.ui.tooltip
 {
    import com.company.assembleegameclient.appengine.CharacterStats;
    import com.company.assembleegameclient.objects.ObjectLibrary;
-   import com.company.assembleegameclient.screens.TitleIcons;
    import com.company.assembleegameclient.ui.LineBreakDesign;
    import com.company.ui.SimpleText;
    import flash.display.Bitmap;
@@ -10,9 +9,9 @@ package com.company.assembleegameclient.ui.tooltip
    import flash.filters.DropShadowFilter;
    import kabam.rotmg.core.model.PlayerModel;
 
+   //editor8182381 — Classless: removed rank icon, use skin portrait
    public class ClassToolTip extends ToolTip
    {
-
 
       private var portrait_:Bitmap;
 
@@ -27,9 +26,11 @@ package com.company.assembleegameclient.ui.tooltip
       public function ClassToolTip(playerXML:XML, model:PlayerModel, charStats:CharacterStats)
       {
          super(3552822,1,16777215,1);
-         var rankIndex:int = findRankIndex(playerXML);
-         var bd:BitmapData = TitleIcons.getIcon(rankIndex, 40);
+         var objType:int = int(playerXML.@type);
+         var bd:BitmapData = ObjectLibrary.getRedrawnTextureFromType(objType, 100, true, true, 5);
          this.portrait_ = new Bitmap(bd);
+         this.portrait_.scaleX = 3;
+         this.portrait_.scaleY = 3;
          this.portrait_.x = -4;
          this.portrait_.y = -4;
          addChild(this.portrait_);
@@ -61,19 +62,6 @@ package com.company.assembleegameclient.ui.tooltip
          this.bestLevel_.x = 8;
          this.bestLevel_.y = height - 2;
          addChild(this.bestLevel_);
-      }
-      
-      private static function findRankIndex(playerXML:XML) : int
-      {
-         var objType:int = int(playerXML.@type);
-         for (var i:int = 0; i < ObjectLibrary.playerChars_.length; i++)
-         {
-            if (int(ObjectLibrary.playerChars_[i].@type) == objType)
-            {
-               return i;
-            }
-         }
-         return 0;
       }
 
       override public function draw() : void

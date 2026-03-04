@@ -42,7 +42,7 @@ package com.company.assembleegameclient.ui.tooltip
          this.howToText_ = new SimpleText(13,11776947,false,174,0);
          this.howToText_.wordWrap = true;
          this.howToText_.multiline = true;
-         this.howToText_.text = "You can earn more by completing Class Quests.";
+         this.howToText_.text = "Earn more by gaining fame with your characters.";
          this.howToText_.updateMetrics();
          this.howToText_.filters = [new DropShadowFilter(0,0,0)];
          this.howToText_.x = 6;

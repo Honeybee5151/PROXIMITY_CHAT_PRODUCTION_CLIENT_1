@@ -459,28 +459,8 @@ public class Player extends Character {
         return filteredTexture;
     }
 
+    //editor8182381 — Classless: always use skin portrait, no rank icons
     override public function getPortrait():BitmapData {
-        // Only show rank icon for the local player's own in-game HUD portrait
-        if (map_ != null && this == map_.player_) {
-            if (portrait_ == null) {
-                var rankIndex:int = 0;
-                for (var i:int = 0; i < ObjectLibrary.playerChars_.length; i++) {
-                    if (int(ObjectLibrary.playerChars_[i].@type) == objectType_) {
-                        rankIndex = i;
-                        break;
-                    }
-                }
-                var iconSize:int = 34;
-                var canvasSize:int = 48;
-                var icon:BitmapData = TitleIcons.getIcon(rankIndex, iconSize);
-                var canvas:BitmapData = new BitmapData(canvasSize, canvasSize, true, 0x00000000);
-                var offset:int = (canvasSize - iconSize) / 2;
-                canvas.copyPixels(icon, icon.rect, new Point(offset, offset));
-                portrait_ = canvas;
-            }
-            return portrait_;
-        }
-        // Everything else (tooltips, other players, menu): show actual skin
         return super.getPortrait();
     }
 

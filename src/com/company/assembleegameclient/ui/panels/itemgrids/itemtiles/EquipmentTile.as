@@ -41,10 +41,8 @@ import com.company.assembleegameclient.objects.Player;
       {
          if (type <= 0)
             return true;
-         // Community dungeon: classless, but enforce category (weapon/ability/armor/ring)
-         if (player != null && player.map_ != null && player.map_.communityDungeon_)
-            return ObjectLibrary.getCommunityDungeonSlot(ObjectLibrary.getSlotTypeFromType(type)) == tileId;
-         return this.itemType == ObjectLibrary.getSlotTypeFromType(type);
+         //editor8182381 — Classless: always enforce category (weapon/ability/armor/ring)
+         return ObjectLibrary.getCommunityDungeonSlot(ObjectLibrary.getSlotTypeFromType(type)) == tileId;
       }
 
       public function setType(type:int, darken:Boolean = true) : void
@@ -158,9 +156,8 @@ import com.company.assembleegameclient.objects.Player;
          var itemChanged:Boolean = super.setItem(itemId, itemData);
          if(itemChanged)
          {
-            this.backgroundDetail.visible = itemSprite.itemId <= 0;
-            // Hide class-specific background icons in community dungeon (classless)
-            if (ownerGrid && ownerGrid.curPlayer && ownerGrid.curPlayer.map_ && ownerGrid.curPlayer.map_.communityDungeon_)
+            //editor8182381 — Classless: always hide class-specific background icons
+            if (this.backgroundDetail)
                this.backgroundDetail.visible = false;
             this.updateMinMana();
          }
@@ -211,16 +208,14 @@ import com.company.assembleegameclient.objects.Player;
 
       override protected function beginDragCallback() : void
       {
-         if (ownerGrid && ownerGrid.curPlayer && ownerGrid.curPlayer.map_ && ownerGrid.curPlayer.map_.communityDungeon_)
+         //editor8182381 — Classless: always hide background icons
+         if (this.backgroundDetail)
             this.backgroundDetail.visible = false;
-         else
-            this.backgroundDetail.visible = true;
       }
 
       override protected function endDragCallback() : void
       {
-         this.backgroundDetail.visible = itemSprite.itemId <= 0;
-         if (ownerGrid && ownerGrid.curPlayer && ownerGrid.curPlayer.map_ && ownerGrid.curPlayer.map_.communityDungeon_)
+         if (this.backgroundDetail)
             this.backgroundDetail.visible = false;
       }
 

@@ -1,6 +1,6 @@
 package kabam.rotmg.classes.view
 {
-   import com.company.assembleegameclient.screens.NewCharacterScreen;
+   import com.company.assembleegameclient.screens.CharacterSelectionAndNewsScreen;
    import kabam.rotmg.core.model.PlayerModel;
    import kabam.rotmg.core.signals.SetScreenSignal;
    import kabam.rotmg.game.model.GameInitData;
@@ -42,9 +42,10 @@ package kabam.rotmg.classes.view
          this.view.play.remove(this.onPlay);
       }
       
+      //editor8182381 — Classless: back goes to character list, not class grid
       private function onBack() : void
       {
-         this.setScreen.dispatch(new NewCharacterScreen());
+         this.setScreen.dispatch(new CharacterSelectionAndNewsScreen());
       }
       
       private function onPlay() : void

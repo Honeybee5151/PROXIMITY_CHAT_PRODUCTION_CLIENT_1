@@ -3,7 +3,6 @@ package com.company.assembleegameclient.screens.charrects
    import com.company.assembleegameclient.appengine.CharacterStats;
    import com.company.assembleegameclient.appengine.SavedCharacter;
    import com.company.assembleegameclient.objects.ObjectLibrary;
-   import com.company.assembleegameclient.screens.TitleIcons;
    import com.company.assembleegameclient.parameters.Parameters;
 
    import flash.display.Bitmap;
@@ -75,20 +74,15 @@ package com.company.assembleegameclient.screens.charrects
          addChild(buyRect);
       }
       
+      //editor8182381 — Classless: use character skin texture instead of rank icon
       private function getIcon(savedChar:SavedCharacter) : DisplayObject
       {
-         var objType:int = savedChar.objectType();
-         var rankIndex:int = 0;
-         for (var i:int = 0; i < ObjectLibrary.playerChars_.length; i++)
-         {
-            if (int(ObjectLibrary.playerChars_[i].@type) == objType)
-            {
-               rankIndex = i;
-               break;
-            }
-         }
-         var data:BitmapData = TitleIcons.getIcon(rankIndex, 48);
-         return new Bitmap(data);
+         var type:int = savedChar.skinType() != 0 ? savedChar.skinType() : savedChar.objectType();
+         var bd:BitmapData = ObjectLibrary.getRedrawnTextureFromType(type, 100, true, true, 5);
+         var bmp:Bitmap = new Bitmap(bd);
+         bmp.scaleX = 3;
+         bmp.scaleY = 3;
+         return bmp;
       }
       
       private function onNewChar(event:Event) : void

@@ -369,6 +369,7 @@ public class ObjectLibrary
         return (int(_local_2.SlotType));
     }
 
+    //editor8182381 — Classless: equippable if item has a valid category slot
     public static function isEquippableByPlayer(_arg_1:int, _arg_2:Player):Boolean
     {
         if (_arg_1 == ItemConstants.NO_ITEM)
@@ -377,41 +378,19 @@ public class ObjectLibrary
         }
         var _local_3:XML = xmlLibrary_[_arg_1];
         var _local_4:int = int(_local_3.SlotType.toString());
-        var _local_5:uint;
-        while (_local_5 < GeneralConstants.NUM_EQUIPMENT_SLOTS)
-        {
-            if (_arg_2.slotTypes_[_local_5] == _local_4)
-            {
-                return (true);
-            }
-            _local_5++;
-        }
-        return (false);
+        return getCommunityDungeonSlot(_local_4) >= 0;
     }
 
+    //editor8182381 — Classless: always map item type to category slot
     public static function getMatchingSlotIndex(_arg_1:int, _arg_2:Player):int
     {
         var _local_3:XML;
         var _local_4:int;
-        var _local_5:uint;
         if (_arg_1 != ItemConstants.NO_ITEM)
         {
             _local_3 = xmlLibrary_[_arg_1];
             _local_4 = int(_local_3.SlotType);
-            // Community dungeon: classless, map item type to natural slot
-            if (_arg_2 != null && _arg_2.map_ != null && _arg_2.map_.communityDungeon_)
-            {
-                return getCommunityDungeonSlot(_local_4);
-            }
-            _local_5 = 0;
-            while (_local_5 < GeneralConstants.NUM_EQUIPMENT_SLOTS)
-            {
-                if (_arg_2.slotTypes_[_local_5] == _local_4)
-                {
-                    return (_local_5);
-                }
-                _local_5++;
-            }
+            return getCommunityDungeonSlot(_local_4);
         }
         return (-1);
     }
@@ -459,14 +438,10 @@ public class ObjectLibrary
         }
     }
 
+    //editor8182381 — Classless: all equipment with valid category is usable
     public static function isUsableByPlayer(_arg_1:int, _arg_2:Player):Boolean
     {
         if (((_arg_2 == null) || (_arg_2.slotTypes_ == null)))
-        {
-            return (true);
-        }
-        // Community dungeon: classless, all equipment is usable
-        if (_arg_2.map_ != null && _arg_2.map_.communityDungeon_)
         {
             return (true);
         }
@@ -480,16 +455,7 @@ public class ObjectLibrary
         {
             return (true);
         }
-        var _local_5:int;
-        while (_local_5 < _arg_2.slotTypes_.length)
-        {
-            if (_arg_2.slotTypes_[_local_5] == _local_4)
-            {
-                return (true);
-            }
-            _local_5++;
-        }
-        return (false);
+        return getCommunityDungeonSlot(_local_4) >= 0;
     }
 
     public static function isSoulbound(_arg_1:int):Boolean

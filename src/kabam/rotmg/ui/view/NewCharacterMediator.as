@@ -57,14 +57,33 @@ package kabam.rotmg.ui.view
          super();
       }
       
+      //editor8182381 — Classless: skip class grid, auto-select universal Player class
       override public function initialize() : void
       {
-         this.view.selected.add(this.onSelected);
-         this.view.close.add(this.onClose);
-         this.view.tooltip.add(this.onTooltip);
-         this.updateNewCharacterScreen.add(this.onUpdate);
-         this.buyCharacterPending.add(this.onBuyCharacterPending);
-         this.view.initialize(this.playerModel);
+         var charClass:CharacterClass = this.classesModel.getCharacterClass(0x0300);
+         charClass.setIsSelected(true);
+
+         var ownedCount:int = 0;
+         for (var i:int = 0; i < charClass.skins.getCount(); i++)
+         {
+            var skin:* = charClass.skins.getSkinAt(i);
+            if (skin.getState() == CharacterSkinState.OWNED && skin != charClass.skins.getDefaultSkin())
+               ownedCount++;
+         }
+
+         if (ownedCount > 0)
+         {
+            this.setScreen.dispatch(new CharacterSkinView());
+         }
+         else
+         {
+            var game:GameInitData = new GameInitData();
+            game.createCharacter = true;
+            game.charId = this.playerModel.getNextCharId();
+            game.keyTime = -1;
+            game.isNewGame = true;
+            this.playGame.dispatch(game);
+         }
       }
       
       private function onBuyCharacterPending(objectType:int) : void
