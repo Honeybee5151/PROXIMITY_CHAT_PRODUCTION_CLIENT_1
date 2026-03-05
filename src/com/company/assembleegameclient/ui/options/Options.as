@@ -400,7 +400,7 @@ public class Options extends Sprite
       this.addOption(new ChoiceOption("hideList", new <String>["Off", "Locked", "Guild", "Party", "L/G/P"], [0, 1, 2, 3, 4], "Hide Players", "Hide players on screen", null));
       this.addOption(new ChoiceOption("showTierTag", new <String>["On","Off"], [true,false], "Show Tier Tag","This toggles whether to show tier tags on your gear", onToggleTierTag));
       this.addOption(new ChoiceOption("fps", new <String>["60", "75", "120", "144", "165", "240", "360"], [60, 75, 120, 144, 165, 240, 360], "FPS", "Increase or Decrease the framerate.", this.fps));
-      this.addOption(new ChoiceOption("toggleFullscreen", new <String>["On","Off"], [true,false], "Fullscreen Mode", "Changes your game to Fullscreen mode.", this.fsv3));
+      //editor8182381 — DELETED: removed fullscreen option
       this.addOption(new ChoiceOption("showStatistics", new <String>["On","Off"], [true, false], "Performance Stats", "Changes whether or not you see performance stats.", this.statistics));
    }
 

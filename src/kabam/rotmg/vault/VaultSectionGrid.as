@@ -5,8 +5,8 @@ import com.company.assembleegameclient.objects.ObjectLibrary;
 import flash.display.Bitmap;
 import flash.display.BitmapData;
 import flash.display.Graphics;
-import flash.display.Shape;
 import flash.display.Sprite;
+import flash.events.Event;
 import flash.events.MouseEvent;
 import flash.geom.Rectangle;
 
@@ -22,7 +22,7 @@ public class VaultSectionGrid extends Sprite
     public static const VISIBLE_HEIGHT:int = 352; // 8 rows visible
 
     private var content_:Sprite;
-    private var scrollbar_:Shape;
+    private var scrollbar_:Sprite; //editor8182381 — CHANGED: Shape→Sprite for mouse events
     private var itemTypes_:Vector.<int>;
     private var itemDatas_:Vector.<String>;
     private var cellSprites_:Vector.<Sprite>;
@@ -30,6 +30,12 @@ public class VaultSectionGrid extends Sprite
     private var scrollY_:Number = 0;
     private var maxScrollY_:Number;
     public var sectionIndex:int;
+
+    //editor8182381 — drag scrollbar state
+    private var dragging_:Boolean = false;
+    private var dragOffsetY_:Number = 0;
+    private var trackX_:Number;
+    private var thumbH_:Number;
 
     public function VaultSectionGrid(sectionIdx:int)
     {
@@ -52,11 +58,14 @@ public class VaultSectionGrid extends Sprite
 
         this.createCells();
 
-        this.maxScrollY_ = (ROWS * CELL_TOTAL) - VISIBLE_HEIGHT;
+        //editor8182381 — CHANGED: subtract CELL_PAD so scroll stops at last cell bottom (no ghost row)
+        this.maxScrollY_ = (ROWS * CELL_TOTAL - CELL_PAD) - VISIBLE_HEIGHT;
         if (this.maxScrollY_ < 0) this.maxScrollY_ = 0;
 
-        // Scrollbar track
-        this.scrollbar_ = new Shape();
+        this.trackX_ = COLS * CELL_TOTAL + 4;
+
+        // Scrollbar (Sprite for mouse events)
+        this.scrollbar_ = new Sprite();
         this.drawScrollbar();
         addChild(this.scrollbar_);
 
@@ -64,6 +73,8 @@ public class VaultSectionGrid extends Sprite
         this.scrollRect = new Rectangle(0, 0, COLS * CELL_TOTAL + 20, VISIBLE_HEIGHT);
 
         addEventListener(MouseEvent.MOUSE_WHEEL, onMouseWheel);
+        //editor8182381 — scrollbar drag listeners
+        this.scrollbar_.addEventListener(MouseEvent.MOUSE_DOWN, onScrollbarDown);
     }
 
     private function createCells():void
@@ -177,9 +188,71 @@ public class VaultSectionGrid extends Sprite
     private function onMouseWheel(e:MouseEvent):void
     {
         this.scrollY_ -= e.delta * 20;
+        applyScroll();
+    }
+
+    //editor8182381 — scrollbar click-drag support
+    private function onScrollbarDown(e:MouseEvent):void
+    {
+        if (this.maxScrollY_ <= 0) return;
+
+        // localY on the scrollbar sprite
+        var localY:Number = e.localY;
+        var thumbY:Number = (this.scrollY_ / this.maxScrollY_) * (VISIBLE_HEIGHT - this.thumbH_);
+
+        if (localY >= thumbY && localY <= thumbY + this.thumbH_)
+        {
+            // Clicked on thumb — start drag
+            this.dragOffsetY_ = localY - thumbY;
+        }
+        else
+        {
+            // Clicked on track — jump to position
+            this.dragOffsetY_ = this.thumbH_ / 2;
+            var newThumbY:Number = localY - this.dragOffsetY_;
+            this.scrollY_ = (newThumbY / (VISIBLE_HEIGHT - this.thumbH_)) * this.maxScrollY_;
+            applyScroll();
+        }
+
+        this.dragging_ = true;
+        if (stage)
+        {
+            stage.addEventListener(MouseEvent.MOUSE_MOVE, onDragMove);
+            stage.addEventListener(MouseEvent.MOUSE_UP, onDragUp);
+            stage.addEventListener(Event.MOUSE_LEAVE, onDragUp);
+        }
+    }
+
+    private function onDragMove(e:MouseEvent):void
+    {
+        if (!this.dragging_) return;
+
+        // Convert stage mouse to scrollbar local Y
+        var localPt:* = this.scrollbar_.globalToLocal(new flash.geom.Point(e.stageX, e.stageY));
+        var newThumbY:Number = localPt.y - this.dragOffsetY_;
+        var trackRange:Number = VISIBLE_HEIGHT - this.thumbH_;
+        if (trackRange <= 0) return;
+
+        this.scrollY_ = (newThumbY / trackRange) * this.maxScrollY_;
+        applyScroll();
+    }
+
+    private function onDragUp(e:Event):void
+    {
+        this.dragging_ = false;
+        if (stage)
+        {
+            stage.removeEventListener(MouseEvent.MOUSE_MOVE, onDragMove);
+            stage.removeEventListener(MouseEvent.MOUSE_UP, onDragUp);
+            stage.removeEventListener(Event.MOUSE_LEAVE, onDragUp);
+        }
+    }
+
+    //editor8182381 — shared scroll apply + clamp
+    private function applyScroll():void
+    {
         if (this.scrollY_ < 0) this.scrollY_ = 0;
         if (this.scrollY_ > this.maxScrollY_) this.scrollY_ = this.maxScrollY_;
-
         this.content_.y = -this.scrollY_;
         this.drawScrollbar();
     }
@@ -189,21 +262,20 @@ public class VaultSectionGrid extends Sprite
         var g:Graphics = this.scrollbar_.graphics;
         g.clear();
 
-        var trackX:Number = COLS * CELL_TOTAL + 4;
         var trackH:Number = VISIBLE_HEIGHT;
 
         // Track
         g.beginFill(0x222222, 0.5);
-        g.drawRoundRect(trackX, 0, 10, trackH, 5, 5);
+        g.drawRoundRect(this.trackX_, 0, 10, trackH, 5, 5);
         g.endFill();
 
         // Thumb
         if (this.maxScrollY_ > 0)
         {
-            var thumbH:Number = Math.max(20, trackH * (VISIBLE_HEIGHT / (ROWS * CELL_TOTAL)));
-            var thumbY:Number = (this.scrollY_ / this.maxScrollY_) * (trackH - thumbH);
+            this.thumbH_ = Math.max(20, trackH * (VISIBLE_HEIGHT / (ROWS * CELL_TOTAL)));
+            var thumbY:Number = (this.scrollY_ / this.maxScrollY_) * (trackH - this.thumbH_);
             g.beginFill(0x666666, 0.8);
-            g.drawRoundRect(trackX, thumbY, 10, thumbH, 5, 5);
+            g.drawRoundRect(this.trackX_, thumbY, 10, this.thumbH_, 5, 5);
             g.endFill();
         }
     }
@@ -211,6 +283,14 @@ public class VaultSectionGrid extends Sprite
     public function dispose():void
     {
         removeEventListener(MouseEvent.MOUSE_WHEEL, onMouseWheel);
+        this.scrollbar_.removeEventListener(MouseEvent.MOUSE_DOWN, onScrollbarDown);
+        //editor8182381 — clean up drag listeners
+        if (stage)
+        {
+            stage.removeEventListener(MouseEvent.MOUSE_MOVE, onDragMove);
+            stage.removeEventListener(MouseEvent.MOUSE_UP, onDragUp);
+            stage.removeEventListener(Event.MOUSE_LEAVE, onDragUp);
+        }
         for (var i:int = 0; i < SLOTS; i++)
         {
             if (this.cellSprites_[i])

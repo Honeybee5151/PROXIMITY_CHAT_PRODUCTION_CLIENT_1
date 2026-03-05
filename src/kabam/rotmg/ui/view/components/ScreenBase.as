@@ -16,17 +16,29 @@ public class ScreenBase extends Sprite
       {
          super();
          graphic = new TitleView_TitleScreenBackground();
-         graphic.scaleX = WebMain.STAGE.stageWidth / 800;
-         graphic.scaleY = WebMain.STAGE.stageHeight / 600;
+         fitBackground(); //editor8182381 — CHANGED: cover-fit instead of 800/600 stretch
          addChild(graphic);
-         //addChild(this.darkenFactory.create());
          addChild(new SoundIcon());
+      }
+
+      //editor8182381 — CHANGED: cover-fit scaling to match TitleView
+      private static function fitBackground():void
+      {
+         if (WebMain.STAGE)
+         {
+            var bgW:Number = graphic.bitmapData.width;
+            var bgH:Number = graphic.bitmapData.height;
+            var s:Number = Math.max(WebMain.STAGE.stageWidth / bgW, WebMain.STAGE.stageHeight / bgH);
+            graphic.scaleX = s;
+            graphic.scaleY = s;
+            graphic.x = (WebMain.STAGE.stageWidth - bgW * s) / 2;
+            graphic.y = WebMain.STAGE.stageHeight - bgH * s; //editor8182381 — anchor to bottom
+         }
       }
 
       public static function reSize(e:Event):void
       {
-         graphic.scaleX = WebMain.STAGE.stageWidth / 800;
-         graphic.scaleY = WebMain.STAGE.stageHeight / 600;
+         fitBackground(); //editor8182381
       }
    }
 }

@@ -1,205 +1,154 @@
 package kabam.rotmg.ui.view
 {
-import com.company.assembleegameclient.constants.ScreenTypes;
-import com.company.assembleegameclient.screens.AccountLoadingScreen;
 import com.company.assembleegameclient.screens.AccountScreen;
-import com.company.assembleegameclient.screens.TitleMenuOption;
 import com.company.assembleegameclient.ui.SoundIcon;
-import com.company.rotmg.graphics.ScreenGraphic;
 import com.company.ui.SimpleText;
 
 import flash.display.Bitmap;
-
-import flash.display.Graphics;
 import flash.display.Sprite;
 import flash.events.Event;
 import flash.events.MouseEvent;
 import flash.filters.DropShadowFilter;
-import flash.geom.Point;
-import flash.geom.Vector3D;
-
-import kabam.rotmg.ProximityChat.VoiceChatService;
+import flash.text.TextFieldAutoSize;
 
 import kabam.rotmg.ui.model.EnvironmentData;
-import kabam.rotmg.ui.view.components.DarkenFactory;
-import kabam.rotmg.ui.view.components.MapBackground;
 import org.osflash.signals.Signal;
 
+//editor8182381 — CHANGED: removed play/servers/account buttons and bottom bar, click background to play
 public class TitleView extends Sprite
 {
-   private static var TitleScreenGraphic:Class = TitleView_TitleScreenGraphic;
-
    private static const COPYRIGHT:String = "© betterSkillys :)";
 
-
    public var playClicked:Signal;
+   public var accountClicked:Signal;
    public var serversClicked:Signal;
    public var creditsClicked:Signal;
-   public var accountClicked:Signal;
-   //editor8182381 — DELETED: legendsClicked, editorClicked signals
 
    private var container:Sprite;
    private var parallaxLayers:Vector.<Bitmap>;
-   private var graphic:Sprite;
-
-   private var playButton:TitleMenuOption;
-   private var serversButton:TitleMenuOption;
-   private var creditsButton:TitleMenuOption;
-   private var accountButton:TitleMenuOption;
-   //editor8182381 — DELETED: legendsButton, editorButton vars
 
    private var versionText:SimpleText;
    private var copyrightText:SimpleText;
-   private var darkenFactory:DarkenFactory;
+   private var clickToPlayText:SimpleText; //editor8182381
    private var data:EnvironmentData;
-   public static var anchor:Point = new Point(-40, -40);
-   public static var anchor2:Point = new Point(0, -20);
-   public static var proximityChatChecker:Boolean = false
-   //777592
+   public static var proximityChatChecker:Boolean = false;
+
    public function TitleView()
    {
-      this.darkenFactory = new DarkenFactory();
       super();
       this.initLayers();
-      this.graphic = this.makeScreenGraphic();
-      addChild(this.graphic);
       addChild(new AccountScreen());
       this.makeChildren();
       addChild(new SoundIcon());
    }
 
-   public function initLayers(): void
+   public function initLayers():void
    {
       this.parallaxLayers = new Vector.<Bitmap>();
       this.parallaxLayers[0] = new TitleView_BackgroundLayer();
-      this.parallaxLayers[1] = new TitleView_FlamesLayer();
-
-      this.parallaxLayers[0].x = 40;
-      this.parallaxLayers[0].y = 40;
-      this.parallaxLayers[1].x = 0;
-      this.parallaxLayers[1].y = 20;
-
-      for (var i:int = 0; i < 2; i++)
-      {
-         this.parallaxLayers.push(this.parallaxLayers[i]);
-         addChild(this.parallaxLayers[i]);
-         this.parallaxLayers[i].addEventListener(Event.ENTER_FRAME, onParallax);
-      }
+      this.parallaxLayers[0].x = 0;
+      this.parallaxLayers[0].y = 0;
+      addChild(this.parallaxLayers[0]);
    }
 
-   public function onParallax(e:Event): void
-   {
-      var bgOffset:Vector3D = new Vector3D(anchor.x-mouseX,anchor.y-mouseY, 0);
-      var flameOffset:Vector3D = new Vector3D(anchor2.x-mouseX,anchor2.y-mouseY, 0);
-      this.parallaxLayers[0].x += (anchor.x + bgOffset.x * 0.015 - this.parallaxLayers[0].x) * 0.015;
-      this.parallaxLayers[0].y += (anchor.y + bgOffset.y * 0.015 - this.parallaxLayers[0].y) * 0.15;
-      this.parallaxLayers[1].x += (anchor2.x + flameOffset.x * 0.025 - this.parallaxLayers[1].x) * 0.025;
-      this.parallaxLayers[1].y += (anchor2.y + flameOffset.y * 0.025 - this.parallaxLayers[1].y) * 0.025;
-   }
-
-   private function makeScreenGraphic():Sprite
-   {
-      var box:Sprite = new Sprite();
-      var b:Graphics = box.graphics;
-      b.clear();
-      b.beginFill(0, 0.5);
-      b.drawRect(0, 0, 1, 75);
-      b.endFill();
-      addChild(box);
-      return box;
-   }
-
-   private function makeChildren() : void
+   private function makeChildren():void
    {
       this.container = new Sprite();
-      this.playButton = new TitleMenuOption(ScreenTypes.PLAY,36,true);
-      this.playButton.addEventListener(MouseEvent.CLICK, removeListener);
-      this.playClicked = this.playButton.clicked;
-      this.container.addChild(this.playButton);
-      this.serversButton = new TitleMenuOption(ScreenTypes.SERVERS,22,false);
-      this.serversButton.addEventListener(MouseEvent.CLICK, removeListener);
-      this.serversClicked = this.serversButton.clicked;
-      this.container.addChild(this.serversButton);
-      this.creditsButton = new TitleMenuOption(ScreenTypes.CREDITS,22,false);
-      this.creditsClicked = this.creditsButton.clicked;
-      //this.container.addChild(this.creditsButton);
-      this.accountButton = new TitleMenuOption(ScreenTypes.ACCOUNT,22,false);
-      this.accountButton.addEventListener(MouseEvent.CLICK, removeListener);
-      this.accountClicked = this.accountButton.clicked;
-      this.container.addChild(this.accountButton);
-      //editor8182381 — removed legends and editor buttons from title screen
-      this.versionText = new SimpleText(12,0xaaaaaa,false,0,0);
-      this.versionText.filters = [new DropShadowFilter(0,0,0)];
-      this.container.addChild(this.versionText);
-      this.copyrightText = new SimpleText(12,0xaaaaaa,false,0,0);
+
+      //editor8182381 — signals (playClicked dispatched on background click)
+      this.playClicked = new Signal();
+      this.accountClicked = new Signal();
+      this.serversClicked = new Signal();
+      this.creditsClicked = new Signal();
+
+      //editor8182381 — "Click to play" hint
+      this.clickToPlayText = new SimpleText(28, 0xFFFFFF, false, 0, 0);
+      this.clickToPlayText.setBold(true);
+      this.clickToPlayText.setText("Click to Play");
+      this.clickToPlayText.autoSize = TextFieldAutoSize.LEFT;
+      this.clickToPlayText.filters = [new DropShadowFilter(0, 0, 0, 1, 8, 8)];
+      this.clickToPlayText.updateMetrics();
+      this.clickToPlayText.alpha = 0.7;
+      this.clickToPlayText.mouseEnabled = false;
+      this.container.addChild(this.clickToPlayText);
+
+      this.versionText = new SimpleText(12, 0xaaaaaa, false, 0, 0);
+      this.versionText.filters = [new DropShadowFilter(0, 0, 0)];
+      //editor8182381 — DELETED: removed version text from title screen
+
+      this.copyrightText = new SimpleText(12, 0xaaaaaa, false, 0, 0);
       this.copyrightText.text = COPYRIGHT;
       this.copyrightText.updateMetrics();
-      this.copyrightText.filters = [new DropShadowFilter(0,0,0)];
+      this.copyrightText.filters = [new DropShadowFilter(0, 0, 0)];
       this.container.addChild(this.copyrightText);
    }
 
    public function addListeners():void
    {
-      this.playButton.addEventListener(MouseEvent.CLICK, removeListener);
-      this.serversButton.addEventListener(MouseEvent.CLICK, removeListener);
-      this.accountButton.addEventListener(MouseEvent.CLICK, removeListener);
+      //editor8182381 — click background to play
+      if (stage)
+         stage.addEventListener(MouseEvent.CLICK, onBackgroundClick);
+   }
+
+   private function onBackgroundClick(e:MouseEvent):void
+   {
+      //editor8182381 — only dispatch if clicking background/container, not dialogs or UI elements
+      if (e.target == stage || e.target == this.parallaxLayers[0] || e.target == this.clickToPlayText || e.target == this.container)
+      {
+         this.playClicked.dispatch();
+      }
    }
 
    public function removeListener(e:Event):void
    {
       if (stage)
+      {
          stage.removeEventListener("resize", positionButtons);
-      this.playButton.removeEventListener(MouseEvent.CLICK, removeListener);
-      this.serversButton.removeEventListener(MouseEvent.CLICK, removeListener);
-      this.accountButton.removeEventListener(MouseEvent.CLICK, removeListener);
+         stage.removeEventListener(MouseEvent.CLICK, onBackgroundClick);
+      }
    }
 
-   public function initialize(data:EnvironmentData) : void
+   public function initialize(data:EnvironmentData):void
    {
       this.data = data;
-      this.updateVersionText();
       this.positionButtons();
       this.addChildren();
       this.addListeners();
       if (stage)
          stage.addEventListener("resize", positionButtons);
-
-      //777592
-
-
-
    }
 
-   private function updateVersionText() : void
+   private function updateVersionText():void
    {
       this.versionText.htmlText = this.data.buildLabel;
       this.versionText.updateMetrics();
    }
 
-   private function addChildren() : void
+   private function addChildren():void
    {
       addChild(this.container);
    }
 
-   public function positionButtons(e:Event = null) : void
+   public function positionButtons(e:Event = null):void
    {
       if (stage)
       {
          if (e != null)
             AccountScreen.reSize(e);
-         this.graphic.width = stage.stageWidth;
-         this.graphic.y = stage.stageHeight - 75;
-         this.parallaxLayers[0].scaleX = this.parallaxLayers[1].scaleX = stage.stageWidth / 800;
-         this.parallaxLayers[0].scaleY = this.parallaxLayers[1].scaleY = stage.stageHeight / 600;
 
-         this.playButton.x = stage.stageWidth / 2 - this.playButton.width / 2;
-         this.playButton.y = stage.stageHeight - 75;
-         this.serversButton.x = stage.stageWidth / 2 - this.serversButton.width / 2 - 94;
-         this.serversButton.y =  stage.stageHeight - 65;
-         this.accountButton.x = stage.stageWidth / 2 - this.accountButton.width / 2 + 96;
-         this.accountButton.y = stage.stageHeight - 65;
-         //editor8182381 — DELETED: legendsButton/editorButton positioning
-         this.versionText.y = stage.stageHeight - this.versionText.height;
+         //editor8182381 — scale background to cover
+         var bgW:Number = this.parallaxLayers[0].bitmapData.width;
+         var bgH:Number = this.parallaxLayers[0].bitmapData.height;
+         var fitScale:Number = Math.max(stage.stageWidth / bgW, stage.stageHeight / bgH);
+         this.parallaxLayers[0].scaleX = fitScale;
+         this.parallaxLayers[0].scaleY = fitScale;
+         this.parallaxLayers[0].x = (stage.stageWidth - bgW * fitScale) / 2;
+         this.parallaxLayers[0].y = stage.stageHeight - bgH * fitScale; //editor8182381 — CHANGED: anchor to bottom so floor is always visible
+
+         //editor8182381 — center "Click to Play" text
+         this.clickToPlayText.x = stage.stageWidth / 2 - this.clickToPlayText.width / 2;
+         this.clickToPlayText.y = stage.stageHeight / 2 - this.clickToPlayText.height / 2;
+
          this.copyrightText.x = stage.stageWidth - this.copyrightText.width;
          this.copyrightText.y = stage.stageHeight - this.copyrightText.height;
       }

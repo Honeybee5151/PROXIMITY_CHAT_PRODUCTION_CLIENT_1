@@ -84,6 +84,12 @@ public class WebMain extends Sprite {
         new AssetLoader().load();
         stage.scaleMode = StageScaleMode.NO_SCALE;
         stage.align = StageAlign.TOP_LEFT;
+
+        //editor8182381 — maximize window on startup
+        if (stage.nativeWindow) {
+            stage.nativeWindow.maximize();
+        }
+
         VoiceChatService.getInstance().initialize();
         var startup:StartupSignal = this.context.injector.getInstance(StartupSignal);
 

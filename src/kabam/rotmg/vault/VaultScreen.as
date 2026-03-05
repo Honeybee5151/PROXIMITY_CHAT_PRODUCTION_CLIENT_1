@@ -37,6 +37,8 @@ public class VaultScreen extends Sprite
     private var invSlots_:Vector.<Sprite>;
     private var invBitmaps_:Vector.<Bitmap>;
     private var invTypes_:Vector.<int>;
+    private var invEquipIndices_:Vector.<int>; //editor8182381 — maps UI slot → player equipment_ index
+    private var invLabel_:SimpleText; //editor8182381 — "Inventory" / "Backpack" label
     private var selectedVaultSlot_:int = -1;
     private var selectedVaultSection_:int = -1;
     private var bottomBar_:Sprite;
@@ -108,6 +110,7 @@ public class VaultScreen extends Sprite
         this.invSlots_ = new Vector.<Sprite>();
         this.invBitmaps_ = new Vector.<Bitmap>();
         this.invTypes_ = new Vector.<int>();
+        this.invEquipIndices_ = new Vector.<int>(); //editor8182381
         createInventoryRow();
 
         // Position
@@ -122,15 +125,16 @@ public class VaultScreen extends Sprite
         updateTabHighlight();
     }
 
+    //editor8182381 — CHANGED: show inventory slots 4-11, plus 12-19 if player has backpack
     private function createInventoryRow():void
     {
         var player:Player = this.gs_.map.player_;
         if (player == null) return;
 
-        // Show inventory slots 4-11 (the 8 backpack slots)
-        for (var i:int = 4; i < 12; i++)
+        var maxSlot:int = player.hasBackpack_ ? 20 : 12; // 4-11 inv, 12-19 backpack
+
+        for (var i:int = 4; i < maxSlot; i++)
         {
-            var slotIdx:int = i - 4;
             var cell:Sprite = new Sprite();
             var g:Graphics = cell.graphics;
             g.beginFill(0x444444, 1);
@@ -146,6 +150,8 @@ public class VaultScreen extends Sprite
             cell.addChild(bmp);
             this.invBitmaps_.push(bmp);
 
+            this.invEquipIndices_.push(i);
+
             var itemType:int = player.equipment_[i];
             this.invTypes_.push(itemType);
             if (itemType > 0)
@@ -156,17 +162,27 @@ public class VaultScreen extends Sprite
                 bmp.y = (40 - (tex ? tex.height : 0)) / 2;
             }
         }
+
+        // Label
+        this.invLabel_ = new SimpleText(14, 0xBBBBBB, false, 200, 0);
+        this.invLabel_.setBold(true);
+        this.invLabel_.setText("Inventory");
+        this.invLabel_.autoSize = TextFieldAutoSize.LEFT;
+        this.invLabel_.filters = [new DropShadowFilter(0, 0, 0)];
+        this.invLabel_.updateMetrics();
+        addChild(this.invLabel_);
     }
 
+    //editor8182381 — CHANGED: refresh all inv+backpack slots dynamically
     public function refreshInventoryRow():void
     {
         var player:Player = this.gs_.map.player_;
         if (player == null) return;
 
-        for (var i:int = 0; i < 8; i++)
+        for (var i:int = 0; i < this.invSlots_.length; i++)
         {
-            var invIdx:int = i + 4;
-            var itemType:int = player.equipment_[invIdx];
+            var equipIdx:int = this.invEquipIndices_[i];
+            var itemType:int = player.equipment_[equipIdx];
             this.invTypes_[i] = itemType;
             if (itemType > 0)
             {
@@ -260,7 +276,7 @@ public class VaultScreen extends Sprite
         var idx:int = this.invSlots_.indexOf(cell);
         if (idx < 0) return;
 
-        var invSlotIndex:int = idx + 4; // actual player inv slot
+        var invSlotIndex:int = this.invEquipIndices_[idx]; //editor8182381 — CHANGED: use stored equip index
 
         if (this.selectedVaultSlot_ >= 0 && this.selectedVaultSection_ >= 0)
         {
@@ -398,17 +414,21 @@ public class VaultScreen extends Sprite
             this.grids_[j].y = gridY;
         }
 
-        // Inventory row at bottom
+        //editor8182381 — CHANGED: two rows if backpack, with label
         var invStartX:Number = 20;
-        var invY:Number = 470;
+        var invY:Number = 455;
+        if (this.invLabel_)
+        {
+            this.invLabel_.x = invStartX;
+            this.invLabel_.y = invY - 16;
+        }
         for (var k:int = 0; k < this.invSlots_.length; k++)
         {
-            this.invSlots_[k].x = invStartX + k * 44;
-            this.invSlots_[k].y = invY;
+            var row:int = (k < 8) ? 0 : 1;
+            var col:int = (k < 8) ? k : (k - 8);
+            this.invSlots_[k].x = invStartX + col * 44;
+            this.invSlots_[k].y = invY + row * 44;
         }
-
-        // Inventory label
-        // (label created during position, or could be static)
     }
 
     private function onClose(e:Event):void

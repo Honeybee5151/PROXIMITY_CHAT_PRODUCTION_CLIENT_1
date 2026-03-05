@@ -129,9 +129,9 @@ import kabam.rotmg.messaging.impl.incoming.CreateSuccess;
 import kabam.rotmg.messaging.impl.incoming.CustomDungeonAssetsMsg;
 import kabam.rotmg.messaging.impl.incoming.CustomGroundsMsg;
 import kabam.rotmg.messaging.impl.incoming.CustomObjectsMsg;
-import kabam.rotmg.messaging.impl.incoming.vault.VaultData as VaultDataMsg;
+import kabam.rotmg.messaging.impl.incoming.vault.VaultData;
 import kabam.rotmg.messaging.impl.outgoing.vault.VaultOpen;
-import kabam.rotmg.messaging.impl.outgoing.vault.VaultSwap as VaultSwapMsg;
+import kabam.rotmg.messaging.impl.outgoing.vault.VaultSwap;
 import kabam.rotmg.vault.VaultScreen;
 import kabam.rotmg.messaging.impl.incoming.Damage;
 import kabam.rotmg.messaging.impl.incoming.Death;
@@ -542,8 +542,8 @@ public class GameServerConnection
          messages.map(CUSTOM_OBJECTS).toMessage(CustomObjectsMsg).toMethod(this.onCustomObjects);
          messages.map(CUSTOM_DUNGEON_ASSETS).toMessage(CustomDungeonAssetsMsg).toMethod(this.onCustomDungeonAssets);
          messages.map(VAULT_OPEN).toMessage(VaultOpen);
-         messages.map(VAULT_DATA).toMessage(VaultDataMsg).toMethod(this.onVaultData);
-         messages.map(VAULT_SWAP).toMessage(VaultSwapMsg);
+         messages.map(VAULT_DATA).toMessage(VaultData).toMethod(this.onVaultData);
+         messages.map(VAULT_SWAP).toMessage(VaultSwap);
       }
 
       private function unmapMessages() : void {
@@ -2598,7 +2598,7 @@ public class GameServerConnection
 
       public function vaultSwap(action:int, sectionIndex:int, vaultSlotIndex:int, vaultItemType:int, invSlotIndex:int, invItemType:int, destSectionIndex:int = 0, destVaultSlotIndex:int = 0):void
       {
-         var pkt:VaultSwapMsg = this.messages.require(VAULT_SWAP) as VaultSwapMsg;
+         var pkt:VaultSwap = this.messages.require(VAULT_SWAP) as VaultSwap;
          pkt.action_ = action;
          pkt.sectionIndex_ = sectionIndex;
          pkt.vaultSlotIndex_ = vaultSlotIndex;
@@ -2610,7 +2610,7 @@ public class GameServerConnection
          this.serverConnection.sendMessage(pkt);
       }
 
-      private function onVaultData(vaultData:VaultDataMsg):void
+      private function onVaultData(vaultData:VaultData):void
       {
          if (VaultScreen.instance != null)
          {
