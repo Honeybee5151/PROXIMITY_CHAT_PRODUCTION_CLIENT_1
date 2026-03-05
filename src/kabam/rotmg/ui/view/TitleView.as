@@ -30,6 +30,7 @@ public class TitleView extends Sprite
    private var versionText:SimpleText;
    private var copyrightText:SimpleText;
    private var clickToPlayText:SimpleText; //editor8182381
+   private var pulseTime:Number = 0; //editor8182381
    private var data:EnvironmentData;
    public static var proximityChatChecker:Boolean = false;
 
@@ -39,7 +40,7 @@ public class TitleView extends Sprite
       this.initLayers();
       addChild(new AccountScreen());
       this.makeChildren();
-      addChild(new SoundIcon());
+      //editor8182381 — DELETED: removed SoundIcon from title screen
    }
 
    public function initLayers():void
@@ -88,6 +89,14 @@ public class TitleView extends Sprite
       //editor8182381 — click background to play
       if (stage)
          stage.addEventListener(MouseEvent.CLICK, onBackgroundClick);
+      addEventListener(Event.ENTER_FRAME, onPulse); //editor8182381
+   }
+
+   //editor8182381 — pulse "Click to Play" alpha between 0.3 and 1.0
+   private function onPulse(e:Event):void
+   {
+      this.pulseTime += 0.03;
+      this.clickToPlayText.alpha = 0.65 + 0.35 * Math.sin(this.pulseTime);
    }
 
    private function onBackgroundClick(e:MouseEvent):void
@@ -101,6 +110,7 @@ public class TitleView extends Sprite
 
    public function removeListener(e:Event):void
    {
+      removeEventListener(Event.ENTER_FRAME, onPulse); //editor8182381
       if (stage)
       {
          stage.removeEventListener("resize", positionButtons);

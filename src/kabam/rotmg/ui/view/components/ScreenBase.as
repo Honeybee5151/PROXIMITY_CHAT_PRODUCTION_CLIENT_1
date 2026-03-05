@@ -18,7 +18,7 @@ public class ScreenBase extends Sprite
          graphic = new TitleView_TitleScreenBackground();
          fitBackground(); //editor8182381 — CHANGED: cover-fit instead of 800/600 stretch
          addChild(graphic);
-         addChild(new SoundIcon());
+         //editor8182381 — DELETED: removed SoundIcon from loading screen
       }
 
       //editor8182381 — CHANGED: cover-fit scaling to match TitleView
