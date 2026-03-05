@@ -24,6 +24,8 @@ public class CommunityContentLoader
     private var _timers:Array = [];
     private var _loaders:Array = [];
 
+    public static var isReady:Boolean = false; //editor8182381 — flag for EnterGameCommand to wait on
+
     private static const TIMEOUT_MS:int = 5000;
 
     private static const SPRITES:Array = [
@@ -206,6 +208,7 @@ public class CommunityContentLoader
         if (_pendingCount <= 0)
         {
             trace("[CommunityContent] All downloads complete");
+            isReady = true; //editor8182381
             dispose();
             if (_callback != null) _callback();
         }

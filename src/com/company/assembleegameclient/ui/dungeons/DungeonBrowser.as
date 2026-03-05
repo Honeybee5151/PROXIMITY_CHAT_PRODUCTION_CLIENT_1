@@ -22,6 +22,7 @@ import flash.events.TimerEvent;
 import kabam.rotmg.account.core.Account;
 import kabam.rotmg.core.StaticInjectorContext;
 import kabam.rotmg.application.api.ApplicationSetup;
+import kabam.rotmg.assets.CommunityContentLoader; //editor8182381
 
 public class DungeonBrowser extends Sprite
 {
@@ -575,6 +576,18 @@ public class DungeonBrowser extends Sprite
 
     public function enterDungeon(name:String):void
     {
+        //editor8182381 — Block entry until community XMLs are loaded
+        if (!CommunityContentLoader.isReady)
+        {
+            if (this.loadingText_ && this.loadingText_.parent)
+                removeChild(this.loadingText_);
+            this.loadingText_ = new SimpleText(16, 0xFFAA00, false, WIDTH, 0);
+            this.loadingText_.htmlText = "<p align=\"center\">Community content still loading, please wait...</p>";
+            this.loadingText_.updateMetrics();
+            this.loadingText_.y = LIST_Y + LIST_HEIGHT + 10;
+            addChild(this.loadingText_);
+            return;
+        }
         // Send /dungeon command through game connection
         this.gs_.gsc_.playerText("/dungeon " + name);
         this.close();

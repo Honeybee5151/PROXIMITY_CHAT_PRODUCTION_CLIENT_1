@@ -116,6 +116,7 @@ public class Player extends Character {
         texturingCache_ = new Dictionary();
     }
 
+
     private var famePortrait_:BitmapData = null;
     public var skinId:int;
     public var skin:AnimatedChar;

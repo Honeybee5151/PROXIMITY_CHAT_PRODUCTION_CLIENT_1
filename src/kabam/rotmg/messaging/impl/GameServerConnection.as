@@ -1480,9 +1480,13 @@ public class GameServerConnection
       private function addObject(obj:ObjectData) : void
       {
          var map:Map = this.gs_.map;
-         var go:GameObject = ObjectLibrary.getObjectFromType(obj.objectType_);
+         var go:GameObject;
+         try {
+            go = ObjectLibrary.getObjectFromType(obj.objectType_);
+         } catch(e:Error) {
+            return;
+         }
          if(go == null) {
-            trace("unhandled object type: " + obj.objectType_);
             return;
          }
          var status:ObjectStatusData = obj.status_;

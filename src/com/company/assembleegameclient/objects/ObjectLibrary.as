@@ -278,15 +278,11 @@ public class ObjectLibrary
     {
         var objectXML:XML;
         var typeReference:String;
-        try
-        {
-            objectXML = xmlLibrary_[objectType];
-            typeReference = objectXML.Class;
+        objectXML = xmlLibrary_[objectType];
+        if (objectXML == null) {
+            return null;
         }
-        catch(e:Error)
-        {
-            throw (new Error(("Type: 0x" + objectType.toString(16))));
-        }
+        typeReference = objectXML.Class;
         var typeClass:Class = ((TYPE_MAP[typeReference]) || (makeClass(typeReference)));
         return (new (typeClass)(objectXML));
     }
