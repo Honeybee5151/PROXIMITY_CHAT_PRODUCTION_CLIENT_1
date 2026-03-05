@@ -1,6 +1,6 @@
 package kabam.rotmg.ui.view
 {
-   import com.company.assembleegameclient.screens.CharacterSelectionAndNewsScreen;
+   import com.company.assembleegameclient.screens.TitleView;
    import com.company.assembleegameclient.screens.NewCharacterScreen;
    import flash.display.Sprite;
    import kabam.rotmg.classes.model.CharacterClass;
@@ -57,33 +57,17 @@ package kabam.rotmg.ui.view
          super();
       }
       
-      //editor8182381 — Classless: skip class grid, auto-select universal Player class
+      //editor8182381 — Skip skin selection, always create with default skin
       override public function initialize() : void
       {
          var charClass:CharacterClass = this.classesModel.getCharacterClass(0x0300);
          charClass.setIsSelected(true);
-
-         var ownedCount:int = 0;
-         for (var i:int = 0; i < charClass.skins.getCount(); i++)
-         {
-            var skin:* = charClass.skins.getSkinAt(i);
-            if (skin.getState() == CharacterSkinState.OWNED && skin != charClass.skins.getDefaultSkin())
-               ownedCount++;
-         }
-
-         if (ownedCount > 0)
-         {
-            this.setScreen.dispatch(new CharacterSkinView());
-         }
-         else
-         {
-            var game:GameInitData = new GameInitData();
-            game.createCharacter = true;
-            game.charId = this.playerModel.getNextCharId();
-            game.keyTime = -1;
-            game.isNewGame = true;
-            this.playGame.dispatch(game);
-         }
+         var game:GameInitData = new GameInitData();
+         game.createCharacter = true;
+         game.charId = this.playerModel.getNextCharId();
+         game.keyTime = -1;
+         game.isNewGame = true;
+         this.playGame.dispatch(game);
       }
       
       private function onBuyCharacterPending(objectType:int) : void
@@ -102,36 +86,19 @@ package kabam.rotmg.ui.view
       
       private function onClose() : void
       {
-         this.setScreen.dispatch(new CharacterSelectionAndNewsScreen());
+         this.setScreen.dispatch(new TitleView());
       }
       
       private function onSelected(objectType:int) : void
       {
          var charClass:CharacterClass = this.classesModel.getCharacterClass(objectType);
          charClass.setIsSelected(true);
-
-         // Check if player owns any skins beyond the default
-         var ownedCount:int = 0;
-         for (var i:int = 0; i < charClass.skins.getCount(); i++)
-         {
-            var skin:* = charClass.skins.getSkinAt(i);
-            if (skin.getState() == CharacterSkinState.OWNED && skin != charClass.skins.getDefaultSkin())
-               ownedCount++;
-         }
-
-         if (ownedCount > 0)
-         {
-            this.setScreen.dispatch(new CharacterSkinView());
-         }
-         else
-         {
-            var game:GameInitData = new GameInitData();
-            game.createCharacter = true;
-            game.charId = this.playerModel.getNextCharId();
-            game.keyTime = -1;
-            game.isNewGame = true;
-            this.playGame.dispatch(game);
-         }
+         var game:GameInitData = new GameInitData();
+         game.createCharacter = true;
+         game.charId = this.playerModel.getNextCharId();
+         game.keyTime = -1;
+         game.isNewGame = true;
+         this.playGame.dispatch(game);
       }
       
       private function onTooltip(sprite:Sprite) : void

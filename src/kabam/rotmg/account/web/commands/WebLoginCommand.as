@@ -1,8 +1,8 @@
 package kabam.rotmg.account.web.commands
 {
 import com.company.assembleegameclient.game.GameSprite;
-import com.company.assembleegameclient.screens.CharacterSelectionAndNewsScreen;
 import flash.display.Sprite;
+import kabam.rotmg.ui.view.TitleView;
 import kabam.lib.tasks.BranchingTask;
 import kabam.lib.tasks.DispatchSignalTask;
 import kabam.lib.tasks.Task;
@@ -85,7 +85,7 @@ public class WebLoginCommand
       var type:Class = this.screenModel.currentType;
       if(type == null || type == GameSprite)
       {
-         type = CharacterSelectionAndNewsScreen;
+         type = TitleView;
       }
       return new type();
    }

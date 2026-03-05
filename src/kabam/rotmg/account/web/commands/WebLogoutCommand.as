@@ -1,6 +1,6 @@
 package kabam.rotmg.account.web.commands
 {
-   import com.company.assembleegameclient.screens.CharacterSelectionAndNewsScreen;
+   import kabam.rotmg.ui.view.TitleView;
    import flash.display.Sprite;
    import kabam.rotmg.account.core.Account;
    import kabam.rotmg.core.model.ScreenModel;
@@ -37,7 +37,7 @@ package kabam.rotmg.account.web.commands
       
       private function makeScreen() : Sprite
       {
-         return new (this.model.currentType || CharacterSelectionAndNewsScreen)();
+         return new (this.model.currentType || TitleView)();
       }
    }
 }

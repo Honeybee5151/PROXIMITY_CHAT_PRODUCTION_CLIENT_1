@@ -1032,7 +1032,6 @@ public class Player extends Character {
         }
         var weaponType:int = equipment_[0];
         if (weaponType == -1) {
-            this.addTextLine.dispatch(new AddTextLineVO(Parameters.ERROR_CHAT_NAME, "You do not have a weapon equipped!"));
             return;
         }
         var weaponXML:XML = ObjectLibrary.xmlLibrary_[weaponType];

@@ -1,6 +1,6 @@
 package kabam.rotmg.characters.deletion.control
 {
-   import com.company.assembleegameclient.screens.CharacterSelectionAndNewsScreen;
+   import kabam.rotmg.ui.view.TitleView;
    import kabam.lib.tasks.BranchingTask;
    import kabam.lib.tasks.DispatchSignalTask;
    import kabam.lib.tasks.Task;
@@ -48,7 +48,7 @@ package kabam.rotmg.characters.deletion.control
       private function onSuccess() : Task
       {
          var sequence:TaskSequence = new TaskSequence();
-         sequence.add(new DispatchSignalTask(this.setScreen,new CharacterSelectionAndNewsScreen()));
+         sequence.add(new DispatchSignalTask(this.setScreen,new TitleView()));
          sequence.add(new DispatchSignalTask(this.closeDialogs));
          return sequence;
       }

@@ -1,6 +1,6 @@
 package kabam.rotmg.account.core
 {
-   import com.company.assembleegameclient.screens.CharacterSelectionAndNewsScreen;
+   import kabam.rotmg.ui.view.TitleView;
    import com.company.assembleegameclient.ui.dialogs.ErrorDialog;
    import kabam.lib.tasks.BranchingTask;
    import kabam.lib.tasks.DispatchSignalTask;
@@ -88,7 +88,7 @@ public class BuyCharacterSlotCommand
       private function makeSuccessTask() : Task
       {
          var task:TaskSequence = new TaskSequence();
-         task.add(new DispatchSignalTask(this.setScreen,new CharacterSelectionAndNewsScreen()));
+         task.add(new DispatchSignalTask(this.setScreen,new TitleView()));
          return task;
       }
 

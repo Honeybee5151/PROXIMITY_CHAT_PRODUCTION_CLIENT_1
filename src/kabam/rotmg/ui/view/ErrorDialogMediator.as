@@ -1,6 +1,6 @@
 package kabam.rotmg.ui.view
 {
-   import com.company.assembleegameclient.screens.CharacterSelectionAndNewsScreen;
+   import kabam.rotmg.ui.view.TitleView;
    import com.company.assembleegameclient.ui.dialogs.ErrorDialog;
    import flash.events.Event;
    import kabam.rotmg.core.signals.InvalidateDataSignal;
@@ -48,7 +48,7 @@ package kabam.rotmg.ui.view
       private function onComplete(event:Event) : void
       {
          this.invalidateData.dispatch();
-         this.setScreenWithValidData.dispatch(new CharacterSelectionAndNewsScreen());
+         this.setScreenWithValidData.dispatch(new TitleView());
       }
    }
 }

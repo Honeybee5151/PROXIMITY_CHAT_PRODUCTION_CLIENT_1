@@ -1,6 +1,5 @@
 package kabam.rotmg.legends.control
 {
-   import com.company.assembleegameclient.screens.CharacterSelectionAndNewsScreen;
    import kabam.rotmg.core.signals.InvalidateDataSignal;
    import kabam.rotmg.core.signals.SetScreenWithValidDataSignal;
    import kabam.rotmg.death.model.DeathModel;
@@ -40,7 +39,7 @@ package kabam.rotmg.legends.control
       {
          this.model.clearPendingDeathView();
          this.invalidate.dispatch();
-         this.setScreen.dispatch(new CharacterSelectionAndNewsScreen());
+         this.setScreen.dispatch(new TitleView());
       }
       
       private function gotoTitleView() : void

@@ -1,8 +1,8 @@
 package kabam.rotmg.ui.commands
 {
    import com.company.assembleegameclient.game.GameSprite;
-   import com.company.assembleegameclient.screens.CharacterSelectionAndNewsScreen;
    import flash.display.Sprite;
+   import kabam.rotmg.ui.view.TitleView;
    import kabam.rotmg.account.core.signals.UpdateAccountInfoSignal;
    import kabam.rotmg.core.model.ScreenModel;
    import kabam.rotmg.core.signals.InvalidateDataSignal;
@@ -41,7 +41,7 @@ package kabam.rotmg.ui.commands
          var type:Class = this.screenModel.currentType;
          if(type == null || type == GameSprite)
          {
-            type = CharacterSelectionAndNewsScreen;
+            type = TitleView;
          }
          return new type();
       }

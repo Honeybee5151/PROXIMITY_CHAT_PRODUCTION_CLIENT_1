@@ -1,6 +1,5 @@
 package kabam.rotmg.game.commands
 {
-   import com.company.assembleegameclient.screens.CharacterSelectionAndNewsScreen;
    import kabam.rotmg.core.model.PlayerModel;
    import kabam.rotmg.core.signals.InvalidateDataSignal;
    import kabam.rotmg.core.signals.SetScreenSignal;
@@ -10,6 +9,7 @@ package kabam.rotmg.game.commands
    import kabam.rotmg.fame.model.FameVO;
    import kabam.rotmg.fame.model.SimpleFameVO;
    import kabam.rotmg.messaging.impl.incoming.Death;
+   import kabam.rotmg.ui.view.TitleView;
    
    public class TransitionFromGameToMenuCommand
    {
@@ -60,7 +60,7 @@ package kabam.rotmg.game.commands
       
       private function showCurrentCharacterScreen() : void
       {
-         this.setScreenWithValidData.dispatch(new CharacterSelectionAndNewsScreen());
+         this.setScreenWithValidData.dispatch(new TitleView());
       }
    }
 }
