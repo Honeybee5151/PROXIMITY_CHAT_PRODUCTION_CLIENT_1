@@ -56,8 +56,7 @@ import flash.events.Event;
          this.view.serversClicked.add(this.showServersScreen);
          this.view.creditsClicked.add(this.showCreditsScreen);
          this.view.accountClicked.add(this.handleIntentionToReviewAccount);
-         this.view.legendsClicked.add(this.showLegendsScreen);
-         this.view.editorClicked.add(this.showMapEditor);
+         //editor8182381 — DELETED: legendsClicked, editorClicked signal bindings
       }
       
       private function makeEnvironmentData() : EnvironmentData
@@ -74,8 +73,7 @@ import flash.events.Event;
          this.view.serversClicked.remove(this.showServersScreen);
          this.view.creditsClicked.remove(this.showCreditsScreen);
          this.view.accountClicked.remove(this.handleIntentionToReviewAccount);
-         this.view.legendsClicked.remove(this.showLegendsScreen);
-         this.view.editorClicked.remove(this.showMapEditor);
+         //editor8182381 — DELETED: legendsClicked, editorClicked signal unbindings
       }
       
       private function handleIntentionToPlay() : void

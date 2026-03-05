@@ -129,6 +129,10 @@ import kabam.rotmg.messaging.impl.incoming.CreateSuccess;
 import kabam.rotmg.messaging.impl.incoming.CustomDungeonAssetsMsg;
 import kabam.rotmg.messaging.impl.incoming.CustomGroundsMsg;
 import kabam.rotmg.messaging.impl.incoming.CustomObjectsMsg;
+import kabam.rotmg.messaging.impl.incoming.vault.VaultData as VaultDataMsg;
+import kabam.rotmg.messaging.impl.outgoing.vault.VaultOpen;
+import kabam.rotmg.messaging.impl.outgoing.vault.VaultSwap as VaultSwapMsg;
+import kabam.rotmg.vault.VaultScreen;
 import kabam.rotmg.messaging.impl.incoming.Damage;
 import kabam.rotmg.messaging.impl.incoming.Death;
 import kabam.rotmg.messaging.impl.incoming.EnemyShoot;
@@ -326,6 +330,9 @@ public class GameServerConnection
       public static const CUSTOM_GROUNDS:int = 89;
       public static const CUSTOM_DUNGEON_ASSETS:int = 90;
       public static const CUSTOM_OBJECTS:int = 91;
+      public static const VAULT_OPEN:int = 92;
+      public static const VAULT_DATA:int = 93;
+      public static const VAULT_SWAP:int = 94;
 
       private static const TO_MILLISECONDS:int = 1000;
 
@@ -534,6 +541,9 @@ public class GameServerConnection
          messages.map(CUSTOM_GROUNDS).toMessage(CustomGroundsMsg).toMethod(this.onCustomGrounds);
          messages.map(CUSTOM_OBJECTS).toMessage(CustomObjectsMsg).toMethod(this.onCustomObjects);
          messages.map(CUSTOM_DUNGEON_ASSETS).toMessage(CustomDungeonAssetsMsg).toMethod(this.onCustomDungeonAssets);
+         messages.map(VAULT_OPEN).toMessage(VaultOpen);
+         messages.map(VAULT_DATA).toMessage(VaultDataMsg).toMethod(this.onVaultData);
+         messages.map(VAULT_SWAP).toMessage(VaultSwapMsg);
       }
 
       private function unmapMessages() : void {
@@ -628,6 +638,9 @@ public class GameServerConnection
          messages.unmap(CUSTOM_GROUNDS);
          messages.unmap(CUSTOM_OBJECTS);
          messages.unmap(CUSTOM_DUNGEON_ASSETS);
+         messages.unmap(VAULT_OPEN);
+         messages.unmap(VAULT_DATA);
+         messages.unmap(VAULT_SWAP);
       }
 
       private var _groundsLoadingOverlay:Sprite = null;
@@ -2573,6 +2586,36 @@ public class GameServerConnection
          add.currency_ = currency;
          add.hours_ = hours;
          this.serverConnection.sendMessage(add);
+      }
+
+      /* Vault */
+      public function vaultOpen(sectionIndex:int):void
+      {
+         var pkt:VaultOpen = this.messages.require(VAULT_OPEN) as VaultOpen;
+         pkt.sectionIndex_ = sectionIndex;
+         this.serverConnection.sendMessage(pkt);
+      }
+
+      public function vaultSwap(action:int, sectionIndex:int, vaultSlotIndex:int, vaultItemType:int, invSlotIndex:int, invItemType:int, destSectionIndex:int = 0, destVaultSlotIndex:int = 0):void
+      {
+         var pkt:VaultSwapMsg = this.messages.require(VAULT_SWAP) as VaultSwapMsg;
+         pkt.action_ = action;
+         pkt.sectionIndex_ = sectionIndex;
+         pkt.vaultSlotIndex_ = vaultSlotIndex;
+         pkt.vaultItemType_ = vaultItemType;
+         pkt.invSlotIndex_ = invSlotIndex;
+         pkt.invItemType_ = invItemType;
+         pkt.destSectionIndex_ = destSectionIndex;
+         pkt.destVaultSlotIndex_ = destVaultSlotIndex;
+         this.serverConnection.sendMessage(pkt);
+      }
+
+      private function onVaultData(vaultData:VaultDataMsg):void
+      {
+         if (VaultScreen.instance != null)
+         {
+            VaultScreen.instance.onVaultData(vaultData.sectionIndex_, vaultData.slots_, vaultData.itemTypes_, vaultData.itemDatas_);
+         }
       }
 
        private function onInvitedToParty(invitedToParty:InvitedToParty) : void

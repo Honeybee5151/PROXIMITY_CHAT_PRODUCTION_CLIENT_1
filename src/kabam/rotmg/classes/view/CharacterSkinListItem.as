@@ -240,6 +240,11 @@ package kabam.rotmg.classes.view
       
       private function makeUnlockText() : String
       {
+         //editor8182381 — show rank message for rank-gated skins instead of "Unlock at Level 0"
+         if (this.model && this.model.requiredRank > 0)
+         {
+            return "Unlocks with correct rank";
+         }
          var level:String = Boolean(this.model)?this.model.unlockLevel.toString():"";
          return UNLOCK_TEXT.replace("{LEVEL}",level);
       }
