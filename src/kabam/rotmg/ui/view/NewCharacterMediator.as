@@ -1,6 +1,6 @@
 package kabam.rotmg.ui.view
 {
-   import com.company.assembleegameclient.screens.TitleView;
+   import kabam.rotmg.ui.view.TitleView;
    import com.company.assembleegameclient.screens.NewCharacterScreen;
    import flash.display.Sprite;
    import kabam.rotmg.classes.model.CharacterClass;
