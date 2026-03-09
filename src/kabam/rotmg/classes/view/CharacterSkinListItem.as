@@ -245,6 +245,11 @@ package kabam.rotmg.classes.view
          {
             return "Unlocks with correct rank";
          }
+         //editor8182381 — CHANGED: show skin name instead of "Unlock at Level 0"
+         if (this.model && this.model.unlockLevel == 0)
+         {
+            return "Unlock at " + this.model.name;
+         }
          var level:String = Boolean(this.model)?this.model.unlockLevel.toString():"";
          return UNLOCK_TEXT.replace("{LEVEL}",level);
       }
