@@ -14,6 +14,7 @@ package kabam.rotmg.ui.commands
    import kabam.rotmg.dialogs.control.OpenDialogSignal;
    import kabam.rotmg.game.model.GameInitData;
    import kabam.rotmg.game.signals.PlayGameSignal;
+   import kabam.rotmg.servers.api.Server;
    import kabam.rotmg.servers.api.ServerModel;
    import kabam.rotmg.ui.noservers.NoServersDialogFactory;
 
@@ -55,8 +56,7 @@ package kabam.rotmg.ui.commands
       {
          if(!this.servers.isServerAvailable())
          {
-            this.showNoServersDialog();
-            return;
+            this.servers.setServers(this.makeDefaultServerList());
          }
 
          if(this.model.getCharacterCount() > 0)
@@ -105,6 +105,20 @@ package kabam.rotmg.ui.commands
          var dialog:Dialog = this.noServersDialogFactory.makeDialog();
          dialog.addEventListener(Dialog.BUTTON1_EVENT, this.close);
          this.openDialog.dispatch(dialog);
+      }
+
+      private function makeDefaultServerList():Vector.<Server>
+      {
+         var list:Vector.<Server> = new Vector.<Server>(0);
+         var s:Server = new Server()
+            .setName("Proximity Realms")
+            .setAddress("89.167.53.217")
+            .setPort(2050)
+            .setLatLong(0, 0)
+            .setUsage(0)
+            .setIsAdminOnly(false);
+         list.push(s);
+         return list;
       }
    }
 }

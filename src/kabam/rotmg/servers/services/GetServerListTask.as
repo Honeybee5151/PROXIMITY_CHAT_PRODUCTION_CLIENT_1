@@ -15,6 +15,8 @@ import kabam.rotmg.core.model.PlayerModel;
 import kabam.rotmg.core.signals.SetLoadingMessageSignal;
 import kabam.rotmg.dialogs.control.CloseDialogsSignal;
 import kabam.rotmg.dialogs.control.OpenDialogSignal;
+import kabam.rotmg.servers.api.Server;
+import kabam.rotmg.servers.api.ServerModel;
 import kabam.rotmg.servers.signals.RefreshServerSignal;
 import kabam.rotmg.ui.noservers.NoServersDialogFactory;
 
@@ -33,6 +35,9 @@ public class GetServerListTask extends BaseTask
 
     [Inject]
     public var openDialog:OpenDialogSignal;
+
+    [Inject]
+    public var servers:ServerModel;
 
     [Inject]
     public var noServersDialogFactory:NoServersDialogFactory;
@@ -94,7 +99,17 @@ public class GetServerListTask extends BaseTask
 
     private function onTextError(error:String) : void
     {
-        this.showNoServersDialog();
+        this.logger.info("Server list fetch failed, using default server");
+        var list:Vector.<Server> = new Vector.<Server>(0);
+        var s:Server = new Server()
+            .setName("Proximity Realms")
+            .setAddress("89.167.53.217")
+            .setPort(2050)
+            .setLatLong(0, 0)
+            .setUsage(0)
+            .setIsAdminOnly(false);
+        list.push(s);
+        this.servers.setServers(list);
     }
 }
 }
