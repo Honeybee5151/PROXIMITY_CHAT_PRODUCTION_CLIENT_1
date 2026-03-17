@@ -6,7 +6,9 @@ public class Music {
    private static var song:Song;
 
    public static function load(name:String):void {
+      trace("[Music] load() called with name: '" + name + "' playMusic=" + Parameters.data_.playMusic + " musicVolume=" + Parameters.data_.musicVolume);
       if (musicName == name) {
+         trace("[Music] Same music, skipping");
          return;
       }
 
@@ -14,6 +16,8 @@ public class Music {
 
       if (Parameters.data_.playMusic) {
          transitionNewMusic();
+      } else {
+         trace("[Music] playMusic is false, not playing");
       }
    }
 

@@ -209,7 +209,9 @@ public class GameSprite extends Sprite {
       }
       mui_.enablePlayerInput_ = true;
 
-      // Mark tutorial done on server
+      // Mark tutorial done on server + locally so it won't reappear on instance switch
+      if (this.model && this.model.charList)
+         this.model.charList.tutorialDone_ = true; //editor8182381 — CHANGED: persist locally to prevent re-show on instance switch
       if (gsc_)
          gsc_.playerText("/tutorialdone");
    }

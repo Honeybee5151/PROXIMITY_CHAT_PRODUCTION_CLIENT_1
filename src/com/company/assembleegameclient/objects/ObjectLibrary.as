@@ -47,6 +47,7 @@ public class ObjectLibrary
     public static const dungeonToPortalTextureData_:Dictionary = new Dictionary();
     public static const petSkinIdToPetType_:Dictionary = new Dictionary();
     public static const dungeonsXMLLibrary_:Dictionary = new Dictionary(true);
+    public static const customObjAnimFrames_:Dictionary = new Dictionary();
     public static const ENEMY_FILTER_LIST:Vector.<String> = new <String>["None", "Hp", "Defense"];
     public static const TILE_FILTER_LIST:Vector.<String> = new <String>["ALL", "Walkable", "Unwalkable", "Slow", "Speed=1"];
     public static const defaultProps_:ObjectProperties = new ObjectProperties(null);
@@ -595,6 +596,32 @@ public class ObjectLibrary
             // 0=Object(2D solid), 1=Destructible(3D), 2=Decoration(2D), 3=Wall(3D), 4=Blocker(invisible)
             var classFlag:int = data.readUnsignedByte();
 
+            // Animation frames
+            var frameCount:int = data.readUnsignedByte();
+            if (frameCount > 1 && spriteSize > 0)
+            {
+                var frames:Vector.<BitmapData> = new Vector.<BitmapData>();
+                frames.push(bmd); // frame 0
+                for (var fi:int = 1; fi < frameCount; fi++)
+                {
+                    var frameBmd:BitmapData = new BitmapData(spriteSize, spriteSize, true, 0x00000000);
+                    var fpv:Vector.<uint> = new Vector.<uint>(totalPixels);
+                    for (var fpi:int = 0; fpi < totalPixels; fpi++)
+                    {
+                        var fr:uint = data.readUnsignedByte();
+                        var fg:uint = data.readUnsignedByte();
+                        var fb:uint = data.readUnsignedByte();
+                        if (fr <= 0x2a && fg <= 0x2a && fb <= 0x2a)
+                            fpv[fpi] = 0x00000000;
+                        else
+                            fpv[fpi] = 0xFF000000 | (fr << 16) | (fg << 8) | fb;
+                    }
+                    frameBmd.setVector(frameBmd.rect, fpv);
+                    frames.push(frameBmd);
+                }
+                customObjAnimFrames_[typeCode] = frames;
+            }
+
             var objId:String = "cobj_" + typeCode.toString(16);
             var objXml:XML = <Object/>;
             objXml.@type = "0x" + typeCode.toString(16);
@@ -685,6 +712,15 @@ public class ObjectLibrary
                 delete xmlLibrary_[tc];
                 delete idToType_["cobj_" + tc.toString(16)];
                 delete typeToDisplayId_[tc];
+
+                // Dispose animation frames
+                if (customObjAnimFrames_[tc] != null)
+                {
+                    var animFrames:Vector.<BitmapData> = customObjAnimFrames_[tc];
+                    for each (var afr:BitmapData in animFrames)
+                        if (afr != null) afr.dispose();
+                    delete customObjAnimFrames_[tc];
+                }
             }
         }
     }

@@ -1163,7 +1163,14 @@ public class GameObject extends BasicObject {
         var texture:BitmapData = this.texture_;
         var size:int = this.size_;
         var mask:BitmapData = null;
-        if (this.animatedChar_ != null) {
+        // Custom animated object: cycle frames based on time
+        var customFrames:Vector.<BitmapData> = ObjectLibrary.customObjAnimFrames_[this.objectType_];
+        if (customFrames != null && customFrames.length > 1) {
+            var msPerFrame:int = 200; // 5 FPS animation
+            var frameIdx:int = (time / msPerFrame) % customFrames.length;
+            texture = customFrames[frameIdx];
+        }
+        else if (this.animatedChar_ != null) {
             p = 0;
             action = AnimatedChar.STAND;
             if (time < this.attackStart_ + ATTACK_PERIOD) {

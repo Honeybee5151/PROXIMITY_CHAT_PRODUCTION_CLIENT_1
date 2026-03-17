@@ -4,6 +4,6 @@
 	<!-- editor8182381 — Classless: 1 skin per tier, tied to universal Player class (0x0300) -->
 	<!-- Skeleguard skin (Supporter rank required) -->
 	<Object type="0x2510" id="Skeleguard"><Skin/><Class>Skin</Class><AnimatedTexture><File>playerskins</File><Index>585</Index></AnimatedTexture><PlayerClassType>0x0300</PlayerClassType><UnlockLevel>0</UnlockLevel><RequiredRank>2</RequiredRank><Cost>0</Cost></Object>
-	<!-- Skeleking skin (Sponsor rank required) — furthest down (highest rank) -->
+	<!-- Skeleking skin (Sponsor rank required) -->
 	<Object type="0x2520" id="Skeleking"><Skin/><Class>Skin</Class><AnimatedTexture><File>playerskins</File><Index>584</Index></AnimatedTexture><PlayerClassType>0x0300</PlayerClassType><UnlockLevel>0</UnlockLevel><RequiredRank>3</RequiredRank><Cost>0</Cost></Object>
 </Objects>
