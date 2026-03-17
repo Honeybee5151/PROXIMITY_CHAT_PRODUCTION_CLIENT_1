@@ -25,7 +25,6 @@ import kabam.rotmg.assets.model.CharacterTemplate;
       {
          var node:XML = EmbeddedData.skinsXML;
          var list:XMLList = node.children();
-         trace("[Skins] Parsing " + list.length() + " skins from EmbeddedData"); //editor8182381
          for each(node in list)
          {
             this.parseNode(node);
@@ -43,13 +42,13 @@ import kabam.rotmg.assets.model.CharacterTemplate;
          skin.cost = xml.hasOwnProperty("Cost") ? int(xml.Cost) : 300; //editor8182381 — CHANGED: fix 0||300=300 bug
          skin.requiredRank = xml.hasOwnProperty("RequiredRank") ? int(xml.RequiredRank) : 0; //editor8182381 — CHANGED: fix 0||0 fallback
          skin.template = new CharacterTemplate(file,index);
-         var character:CharacterClass = this.model.getCharacterClass(xml.PlayerClassType);
+         var classType:int = int(xml.PlayerClassType); //editor8182381 — explicit int cast to handle 0x hex strings
+         var character:CharacterClass = this.model.getCharacterClass(classType);
          if (file.indexOf("16") >= 0)
          {
             skin.is16x16 = true;
          }
          character.skins.addSkin(skin);
-         trace("[Skins] Added skin: " + skin.name + " (id=" + skin.id + ", cost=" + skin.cost + ", rank=" + skin.requiredRank + ") to class " + xml.PlayerClassType); //editor8182381
       }
    }
 }
