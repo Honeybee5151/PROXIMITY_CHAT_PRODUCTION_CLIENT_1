@@ -185,6 +185,8 @@ public class Player extends Character {
     protected var rotate_:Number = 0;
     protected var relMoveVec_:Point = null;
     protected var moveMultiplier_:Number = 1;
+    protected var slideVelX_:Number = 0;
+    protected var slideVelY_:Number = 0;
     protected var healingEffect_:HealingEffect = null;
     protected var nearestMerchant_:Merchant = null;
     private var addTextLine:AddTextLineSignal;
@@ -297,6 +299,35 @@ public class Player extends Character {
             if (square_ != null && square_.props_.push_) {
                 moveVec_.x = moveVec_.x - square_.props_.animate_.dx_ / 1000;
                 moveVec_.y = moveVec_.y - square_.props_.animate_.dy_ / 1000;
+            }
+            // Slide (ice) physics: slideAmount_ 0-1, higher = more slippery
+            var slideAmt:Number = (square_ != null) ? square_.props_.slideAmount_ : 0;
+            if (slideAmt > 0) {
+                // friction: how fast slide velocity decays (lower = more slippery)
+                var friction:Number = 1 - slideAmt; // slideAmt=1 → friction=0 (pure ice)
+                var dtSec:Number = dt / 1000;
+                // Decay factor per frame: friction^dt, approximated as exp(-k*dt)
+                var decay:Number = Math.pow(friction, dtSec * 10);
+                if (this.relMoveVec_.x != 0 || this.relMoveVec_.y != 0) {
+                    // Player has input: blend slide velocity toward desired velocity
+                    this.slideVelX_ = this.slideVelX_ * decay + moveVec_.x * (1 - decay);
+                    this.slideVelY_ = this.slideVelY_ * decay + moveVec_.y * (1 - decay);
+                } else {
+                    // No input: slide velocity decays toward zero
+                    this.slideVelX_ = this.slideVelX_ * decay;
+                    this.slideVelY_ = this.slideVelY_ * decay;
+                    // Stop if very slow
+                    if (Math.abs(this.slideVelX_) < 0.0001 && Math.abs(this.slideVelY_) < 0.0001) {
+                        this.slideVelX_ = 0;
+                        this.slideVelY_ = 0;
+                    }
+                }
+                moveVec_.x = this.slideVelX_;
+                moveVec_.y = this.slideVelY_;
+            } else {
+                // Not on slide tile: reset slide velocity to current movement
+                this.slideVelX_ = moveVec_.x;
+                this.slideVelY_ = moveVec_.y;
             }
             this.walkTo(x_ + dt * moveVec_.x, y_ + dt * moveVec_.y);
         }
