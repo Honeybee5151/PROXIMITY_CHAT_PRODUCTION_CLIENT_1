@@ -39,6 +39,10 @@ public class DungeonBrowser extends Sprite
     private var searchInput_:SimpleText;
     private var searchLabel_:SimpleText;
 
+    private var tabCommunity_:TextButton;
+    private var tabOfficial_:TextButton;
+    private var activeTab_:String = "community";
+
     private var sortNewest_:TextButton;
     private var sortOldest_:TextButton;
     private var sortLiked_:TextButton;
@@ -77,6 +81,7 @@ public class DungeonBrowser extends Sprite
         this.drawBackground();
         this.drawTitle();
         this.drawCloseButton();
+        this.drawTabs();
         this.drawSearchBar();
         this.drawSortButtons();
         this.drawListArea();
@@ -133,6 +138,66 @@ public class DungeonBrowser extends Sprite
         this.closeBtn_.y = 14;
         this.closeBtn_.addEventListener(MouseEvent.CLICK, this.onCloseClick);
         addChild(this.closeBtn_);
+    }
+
+    private function drawTabs():void
+    {
+        var tabY:int = 42;
+        var tabW:int = 120;
+
+        this.tabCommunity_ = new TextButton(14, "Community", tabW);
+        this.tabCommunity_.x = WIDTH / 2 - tabW - 5;
+        this.tabCommunity_.y = tabY;
+        this.tabCommunity_.addEventListener(MouseEvent.CLICK, this.onTabCommunity);
+        addChild(this.tabCommunity_);
+
+        this.tabOfficial_ = new TextButton(14, "Official", tabW);
+        this.tabOfficial_.x = WIDTH / 2 + 5;
+        this.tabOfficial_.y = tabY;
+        this.tabOfficial_.addEventListener(MouseEvent.CLICK, this.onTabOfficial);
+        addChild(this.tabOfficial_);
+
+        this.updateTabHighlight();
+    }
+
+    private function updateTabHighlight():void
+    {
+        // Active tab: bright, inactive: dim
+        this.tabCommunity_.alpha = this.activeTab_ == "community" ? 1.0 : 0.4;
+        this.tabOfficial_.alpha = this.activeTab_ == "official" ? 1.0 : 0.4;
+    }
+
+    private function onTabCommunity(e:MouseEvent):void
+    {
+        if (this.activeTab_ == "community") return;
+        this.activeTab_ = "community";
+        this.updateTabHighlight();
+        this.switchTab();
+    }
+
+    private function onTabOfficial(e:MouseEvent):void
+    {
+        if (this.activeTab_ == "official") return;
+        this.activeTab_ = "official";
+        this.updateTabHighlight();
+        this.switchTab();
+    }
+
+    private function switchTab():void
+    {
+        this.clearList();
+        this.allDungeons_ = [];
+        this.filteredDungeons_ = [];
+        // Show loading
+        if (!this.loadingText_ || !this.loadingText_.parent)
+        {
+            this.loadingText_ = new SimpleText(16, 0x888888, false, WIDTH, 0);
+            addChild(this.loadingText_);
+        }
+        this.loadingText_.htmlText = "<p align=\"center\">Loading dungeons...</p>";
+        this.loadingText_.updateMetrics();
+        this.loadingText_.y = LIST_Y + LIST_HEIGHT / 2 - 10;
+        this.fetchDungeonList();
     }
 
     private function drawSearchBar():void
@@ -267,7 +332,9 @@ public class DungeonBrowser extends Sprite
 
         var request:URLRequest = new URLRequest(url);
         request.method = URLRequestMethod.POST;
-        request.data = new URLVariables();
+        var vars:URLVariables = new URLVariables();
+        vars.type = this.activeTab_;
+        request.data = vars;
 
         var loader:URLLoader = new URLLoader();
         loader.addEventListener(Event.COMPLETE, this.onListLoaded);
@@ -671,6 +738,8 @@ public class DungeonBrowser extends Sprite
 
         // Remove button listeners
         this.closeBtn_.removeEventListener(MouseEvent.CLICK, this.onCloseClick);
+        this.tabCommunity_.removeEventListener(MouseEvent.CLICK, this.onTabCommunity);
+        this.tabOfficial_.removeEventListener(MouseEvent.CLICK, this.onTabOfficial);
         this.sortNewest_.removeEventListener(MouseEvent.CLICK, this.onSortNewest);
         this.sortOldest_.removeEventListener(MouseEvent.CLICK, this.onSortOldest);
         this.sortLiked_.removeEventListener(MouseEvent.CLICK, this.onSortLiked);
