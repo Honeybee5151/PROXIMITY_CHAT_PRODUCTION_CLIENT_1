@@ -28,8 +28,8 @@ public class DungeonBrowser extends Sprite
 {
     private static const WIDTH:int = 700;
     private static const HEIGHT:int = 500;
-    private static const LIST_Y:int = 130;
-    private static const LIST_HEIGHT:int = 330;
+    private static const LIST_Y:int = 155;
+    private static const LIST_HEIGHT:int = 305;
     private static const ITEM_HEIGHT:int = 55;
 
     private var gs_:GameSprite;
@@ -206,20 +206,20 @@ public class DungeonBrowser extends Sprite
         this.searchLabel_.text = "Search:";
         this.searchLabel_.updateMetrics();
         this.searchLabel_.x = 20;
-        this.searchLabel_.y = 58;
+        this.searchLabel_.y = 82;
         addChild(this.searchLabel_);
 
         // Search input background
         var bg:Sprite = new Sprite();
         bg.graphics.beginFill(0x0f0f1e, 1);
         bg.graphics.lineStyle(1, 0x3a3a5c);
-        bg.graphics.drawRoundRect(80, 54, 250, 26, 6, 6);
+        bg.graphics.drawRoundRect(80, 78, 250, 26, 6, 6);
         bg.graphics.endFill();
         addChild(bg);
 
         this.searchInput_ = new SimpleText(14, 0xFFFFFF, true, 240, 20);
         this.searchInput_.x = 85;
-        this.searchInput_.y = 57;
+        this.searchInput_.y = 81;
         this.searchInput_.border = false;
         this.searchInput_.background = true;
         this.searchInput_.backgroundColor = 0x0f0f1e;
@@ -230,7 +230,7 @@ public class DungeonBrowser extends Sprite
     private function drawSortButtons():void
     {
         var startX:int = 20;
-        var btnY:int = 92;
+        var btnY:int = 116;
 
         var sortLabel:SimpleText = new SimpleText(12, 0x888888, false, 0, 0);
         sortLabel.text = "Sort:";
