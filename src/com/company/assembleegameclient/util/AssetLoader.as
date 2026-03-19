@@ -163,6 +163,7 @@ public class AssetLoader
       AssetLibrary.addImageSet("archbishopObjects64x64", new EmbeddedAssets.archbishopObjects64x64Embed_().bitmapData, 64, 64);
       AssetLibrary.addImageSet("ancientRuinsObjects8x8", new EmbeddedAssets.ancientRuinsObjects8x8Embed_().bitmapData, 8, 8);
       AssetLibrary.addImageSet("ancientRuinsObjects16x16", new EmbeddedAssets.ancientRuinsObjects16x16Embed_().bitmapData, 16, 16);
+      AssetLibrary.addImageSet("bannerTexture64x64", new EmbeddedAssets.bannerTexture64x64Embed_().bitmapData, 64, 64);
       // custom
       AssetLibrary.addImageSet("emotes", new EmbeddedAssets.emotes().bitmapData, 16, 16);
       AssetLibrary.addImageSet("animEmotes", new EmbeddedAssets.animEmotes().bitmapData, 32, 32);

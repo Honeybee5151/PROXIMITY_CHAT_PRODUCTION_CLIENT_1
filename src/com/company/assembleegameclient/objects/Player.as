@@ -197,6 +197,7 @@ public class Player extends Character {
     private var breathFill_:GraphicsSolidFill = null;
     private var breathPath_:GraphicsPath = null;
     public var projectileSpeedMult_:Number = 1;
+    public var ridingEntityId_:int = -1;
 
     override public function moveTo(x:Number, y:Number):Boolean {
         var ret:Boolean = super.moveTo(x, y);
@@ -380,6 +381,13 @@ public class Player extends Character {
         return nameBitmapData;
     }
 
+    override public function computeSortVal(camera:Camera):void {
+        super.computeSortVal(camera);
+        if (this.ridingEntityId_ > 0) {
+            this.sortVal_ += 1;
+        }
+    }
+
     override public function draw(graphicsData:Vector.<IGraphicsData>, camera:Camera, time:int):void {
         switch (Parameters.data_.hideList) {
             case 1:
@@ -395,7 +403,13 @@ public class Player extends Character {
                 if (this != map_.player_ && !this.starred_ && !this.isFellowGuild_ && !this.isPartyMember_) return;
                 break;
         }
+        if (this.ridingEntityId_ > 0) {
+            this.posS_[4] -= 20;
+        }
         super.draw(graphicsData, camera, time);
+        if (this.ridingEntityId_ > 0) {
+            this.posS_[4] += 20;
+        }
         if (this != map_.player_) {
             drawName(graphicsData, camera);
         }

@@ -2085,6 +2085,10 @@ public class GameServerConnection
                   continue;
                case StatData.SPEEDMULT:
                   player.projectileSpeedMult_ = value;
+                  continue;
+               case StatData.RIDING_ENTITY_ID:
+                  player.ridingEntityId_ = value;
+                  continue;
                default:
                   trace("unhandled stat: " + stat.statType_);
                   continue;

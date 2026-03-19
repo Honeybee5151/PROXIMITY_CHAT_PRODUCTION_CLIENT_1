@@ -112,6 +112,7 @@ public class StatData
    public static const BACKPACKDATA6:int = 140;
    public static const BACKPACKDATA7:int = 141;
    public static const SPEEDMULT:int = 142;
+   public static const RIDING_ENTITY_ID:int = 143;
 
    public var statType_:uint = 0;
 

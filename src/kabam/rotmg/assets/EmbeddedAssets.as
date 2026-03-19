@@ -270,6 +270,8 @@ public class EmbeddedAssets
    private static var lightShaftQuadEmbed_:Class;
    [Embed(source="prod/objects/fourBlockWall.dat", mimeType="application/octet-stream")]
    private static var fourBlockWallEmbed_:Class;
+   [Embed(source="prod/objects/banner.dat", mimeType="application/octet-stream")]
+   private static var bannerEmbed_:Class;
    [Embed(source="prod/images/d1Chars8x8r.png")]
    public static var d1Chars8x8rEmbed_:Class;
    [Embed(source="prod/images/d1Chars16x16r.png")]
@@ -528,6 +530,8 @@ public class EmbeddedAssets
    public static var ancientRuinsChars16x16Embed_:Class;
    [Embed(source="prod/images/ancientRuinsChars8x8.png")]
    public static var ancientRuinsChars8x8Embed_:Class;
+   [Embed(source="prod/images/bannerTexture64x64.png")]
+   public static var bannerTexture64x64Embed_:Class;
    public static var models_:Object = {
       "Japanese Sign":new JapaneseSign(),
       "Monster Tank1":new monsterTank1Embed_(),
@@ -584,7 +588,8 @@ public class EmbeddedAssets
       "Pet Upgrader Obj":new petUpgrader_(),
       "Oryx Cage":new oryxCage_(),
       "Oryx Hung Cage":new oryxCageHung_(),
-      "Oryx Door":new oryxDoor_()
+      "Oryx Door":new oryxDoor_(),
+      "Banner":new bannerEmbed_()
    };
 
 }
