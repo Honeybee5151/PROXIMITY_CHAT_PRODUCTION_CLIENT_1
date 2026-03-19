@@ -44,6 +44,10 @@ public class ShowEffect extends IncomingMessage
 
    public static const CHARGE_PATH_EFFECT_TYPE:int = 18;
 
+   public static const EXPANDING_RING_EFFECT_TYPE:int = 19;
+
+   public static const DANGER_ZONE_EFFECT_TYPE:int = 20;
+
    public var effectType_:uint;
    public var targetObjectId_:int;
    public var pos1_:WorldPosData;

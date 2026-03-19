@@ -28,6 +28,8 @@ import com.company.assembleegameclient.objects.particles.AOEEffect;
 import com.company.assembleegameclient.objects.particles.BurstEffect;
 import com.company.assembleegameclient.objects.particles.ChargePathEffect;
 import com.company.assembleegameclient.objects.particles.CollapseEffect;
+import com.company.assembleegameclient.objects.particles.DangerZoneEffect;
+import com.company.assembleegameclient.objects.particles.ExpandingRingEffect;
 import com.company.assembleegameclient.objects.particles.ConeBlastEffect;
 import com.company.assembleegameclient.objects.particles.FlowEffect;
 import com.company.assembleegameclient.objects.particles.HealEffect;
@@ -1787,6 +1789,24 @@ public class GameServerConnection
                   break;
                }
                e = new ChargePathEffect(go.x_, go.y_, showEffect.pos1_.x_, showEffect.pos1_.y_, showEffect.pos2_.x_, showEffect.color_, showEffect.duration_ * 1000);
+               map.addObj(e, go.x_, go.y_);
+               break;
+            case ShowEffect.EXPANDING_RING_EFFECT_TYPE:
+               go = map.goDict_[showEffect.targetObjectId_];
+               if(go == null)
+               {
+                  break;
+               }
+               e = new ExpandingRingEffect(go.x_, go.y_, showEffect.pos1_.x_, showEffect.pos1_.y_, showEffect.color_, showEffect.duration_);
+               map.addObj(e, go.x_, go.y_);
+               break;
+            case ShowEffect.DANGER_ZONE_EFFECT_TYPE:
+               go = map.goDict_[showEffect.targetObjectId_];
+               if(go == null)
+               {
+                  break;
+               }
+               e = new DangerZoneEffect(showEffect.targetObjectId_, showEffect.pos1_.x_, showEffect.pos1_.y_, showEffect.color_, showEffect.duration_);
                map.addObj(e, go.x_, go.y_);
                break;
             /*case ShowEffect.THROW_PROJECTILE_EFFECT_TYPE:
