@@ -87,8 +87,17 @@ public class ItemAttributes {
         }
         if (HasValue(obj, xml, "ActivateOnEquip")) {
             this.StatsBoosts = new Vector.<StatBoost>();
-            for each (var stat:* in GetValue(obj, xml, "ActivateOnEquip", null)) {
-                this.StatsBoosts.push(new StatBoost(stat));
+            for each (var activateOnEquip:* in GetValue(obj, xml, "ActivateOnEquip", null)) {
+                // Prod format: <ActivateOnEquip stat="21" amount="4">IncrementStat</ActivateOnEquip>
+                if (activateOnEquip.hasOwnProperty("@stat")) {
+                    this.StatsBoosts.push(new StatBoost(activateOnEquip));
+                }
+                // Custom format: <ActivateOnEquip><AddStat stat="22" amount="5"/></ActivateOnEquip>
+                else if (activateOnEquip.hasOwnProperty("AddStat")) {
+                    for each (var addStat:XML in activateOnEquip.AddStat) {
+                        this.StatsBoosts.push(new StatBoost(addStat));
+                    }
+                }
             }
         }
         if (HasValue(obj, xml, "Activate")) {
