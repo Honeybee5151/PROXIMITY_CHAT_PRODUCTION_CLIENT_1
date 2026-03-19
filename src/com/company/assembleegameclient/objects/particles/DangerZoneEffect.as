@@ -79,8 +79,8 @@ package com.company.assembleegameclient.objects.particles
          y_ = targetObj.y_;
 
          // Compute movement direction from position delta
-         // Cone rotates at ~60 deg/sec to match server turn speed
-         var TURN_SPEED_RAD:Number = 60.0 * Math.PI / 180.0; // 60 deg/sec in radians
+         // Cone rotates at ~30 deg/sec to match server turn speed
+         var TURN_SPEED_RAD:Number = 30.0 * Math.PI / 180.0; // 30 deg/sec in radians
          if (!isNaN(this.lastTargetX_))
          {
             var dx:Number = targetObj.x_ - this.lastTargetX_;
@@ -234,9 +234,7 @@ package com.company.assembleegameclient.objects.particles
          this.path_.commands.push(GraphicsPathCommand.LINE_TO);
          this.path_.data.push(this.screenVerts_[backIdx], this.screenVerts_[backIdx + 1]);
 
-         // Pulsing opacity
-         var pulse:Number = 0.22 + 0.08 * Math.sin(time * 0.005);
-         this.fill_.alpha = pulse;
+         this.fill_.alpha = 0.25;
 
          graphicsData.push(this.fill_);
          graphicsData.push(this.path_);
