@@ -1,6 +1,7 @@
 package com.company.assembleegameclient.objects.particles
 {
    import com.company.assembleegameclient.map.Camera;
+   import com.company.assembleegameclient.map.Square;
    import com.company.assembleegameclient.objects.GameObject;
    import com.company.assembleegameclient.util.RandomUtil;
    import com.company.util.GraphicsUtil;
@@ -13,7 +14,9 @@ package com.company.assembleegameclient.objects.particles
    public class DangerZoneEffect extends ParticleEffect
    {
       private static const NUM_SEGMENTS:int = 48;
-      private static const CONE_SEGMENTS:int = 24;
+      private static const EDGE_SEGMENTS:int = 16;   // segments along each curved edge
+      private static const ARC_SEGMENTS:int = 24;     // segments for the arc at the tip
+      private static const CONE_TAPER:Number = 0.4;   // cone narrows to 60% of max at full range
 
       // Dedup: only one DangerZoneEffect per target object
       private static var activeEffects_:Dictionary = new Dictionary();
@@ -77,13 +80,18 @@ package com.company.assembleegameclient.objects.particles
             return false;
          }
 
-         // Look up the target object each frame
          if (map_ == null) return true;
 
          var targetObj:GameObject = map_.goDict_[this.targetObjectId_] as GameObject;
          if (targetObj == null)
          {
-            // Boss gone (dead/out of range/player died) — keep rendering at last known position
+            // Boss gone — keep rendering at last known position
+            if (map_ != null && map_.player_ != null)
+            {
+               var pSq:Square = map_.getSquare(map_.player_.x_, map_.player_.y_);
+               if (pSq != null)
+                  square_ = pSq;
+            }
             return true;
          }
 
@@ -91,9 +99,16 @@ package com.company.assembleegameclient.objects.particles
          x_ = targetObj.x_;
          y_ = targetObj.y_;
 
+         // Pin square_ to player position so the effect is ALWAYS drawn
+         if (map_ != null && map_.player_ != null)
+         {
+            var playerSq:Square = map_.getSquare(map_.player_.x_, map_.player_.y_);
+            if (playerSq != null)
+               square_ = playerSq;
+         }
+
          // Compute movement direction from position delta
-         // Cone rotates at ~30 deg/sec to match server turn speed
-         var TURN_SPEED_RAD:Number = 30.0 * Math.PI / 180.0; // 30 deg/sec in radians
+         var TURN_SPEED_RAD:Number = 30.0 * Math.PI / 180.0;
          if (!isNaN(this.lastTargetX_))
          {
             var dx:Number = targetObj.x_ - this.lastTargetX_;
@@ -110,7 +125,6 @@ package com.company.assembleegameclient.objects.particles
                }
                else
                {
-                  // Clamped rotation — max turn per frame matches server
                   var angleDiff:Number = rawAngle - this.smoothedAngle_;
                   while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
                   while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
@@ -125,7 +139,7 @@ package com.company.assembleegameclient.objects.particles
          this.lastTargetX_ = targetObj.x_;
          this.lastTargetY_ = targetObj.y_;
 
-         // Spawn edge particles along the cone boundary
+         // Spawn edge particles along the curved cone boundary
          this.edgeSpawnTimer_ += dt;
          if (this.edgeSpawnTimer_ >= 100 && map_ != null && this.hasDirection_)
          {
@@ -136,15 +150,23 @@ package com.company.assembleegameclient.objects.particles
          return true;
       }
 
+      /** Effective half-angle at distance d: narrows linearly from full angle to 60% at max range */
+      private function effectiveHalfAngle(dist:Number) : Number
+      {
+         var t:Number = dist / this.zoneRadius_;
+         if (t > 1) t = 1;
+         if (t < 0) t = 0;
+         return this.coneHalfAngle_ * (1.0 - CONE_TAPER * t);
+      }
+
       private function spawnConeEdgeParticles() : void
       {
          var numParticles:int = 4;
          for (var i:int = 0; i < numParticles; i++)
          {
-            // Spawn particles along the two edges of the safe cone
             var side:Number = (i < numParticles / 2) ? 1 : -1;
-            var edgeAngle:Number = this.smoothedAngle_ + side * this.coneHalfAngle_;
             var dist:Number = 2 + Math.random() * (this.zoneRadius_ - 2);
+            var edgeAngle:Number = this.smoothedAngle_ + side * effectiveHalfAngle(dist);
             var px:Number = x_ + Math.cos(edgeAngle) * dist;
             var py:Number = y_ + Math.sin(edgeAngle) * dist;
 
@@ -170,6 +192,8 @@ package com.company.assembleegameclient.objects.particles
          var i:int;
          var angle:Number;
          var step:Number;
+         var d:Number;
+         var ha:Number;
 
          // --- Outer circle (clockwise) ---
          step = (Math.PI * 2) / NUM_SEGMENTS;
@@ -183,25 +207,51 @@ package com.company.assembleegameclient.objects.particles
             );
          }
 
-         // --- Cone cutout (only if we have a direction) ---
+         // --- Curved cone cutout (only if we have a direction) ---
          if (this.hasDirection_)
          {
+            var coneR:Number = r * 1.15; // overshoot to eliminate seam
+
             // Start at boss center
             this.worldVerts_.push(cx, cy, 0);
 
-            // Arc from +halfAngle to -halfAngle (CCW = going from positive to negative)
-            // Use slightly larger radius so the cutout extends past the outer circle — eliminates seam artifact
-            var coneR:Number = r * 1.15;
-            var coneStartAngle:Number = this.smoothedAngle_ + this.coneHalfAngle_;
-            var coneEndAngle:Number = this.smoothedAngle_ - this.coneHalfAngle_;
-            var coneStep:Number = (coneStartAngle - coneEndAngle) / CONE_SEGMENTS;
-
-            for (i = 0; i <= CONE_SEGMENTS; i++)
+            // Positive edge: center → tip, angle narrows with distance
+            for (i = 1; i <= EDGE_SEGMENTS; i++)
             {
-               angle = coneStartAngle - i * coneStep;
+               d = (i / Number(EDGE_SEGMENTS)) * coneR;
+               ha = effectiveHalfAngle(d);
+               angle = this.smoothedAngle_ + ha;
+               this.worldVerts_.push(
+                  cx + Math.cos(angle) * d,
+                  cy + Math.sin(angle) * d,
+                  0
+               );
+            }
+
+            // Arc across the tip from +halfAngle to -halfAngle
+            var tipHalfAngle:Number = effectiveHalfAngle(coneR);
+            var arcStartAngle:Number = this.smoothedAngle_ + tipHalfAngle;
+            var arcEndAngle:Number = this.smoothedAngle_ - tipHalfAngle;
+            var arcStep:Number = (arcStartAngle - arcEndAngle) / ARC_SEGMENTS;
+            for (i = 0; i <= ARC_SEGMENTS; i++)
+            {
+               angle = arcStartAngle - i * arcStep;
                this.worldVerts_.push(
                   cx + Math.cos(angle) * coneR,
                   cy + Math.sin(angle) * coneR,
+                  0
+               );
+            }
+
+            // Negative edge: tip → center
+            for (i = EDGE_SEGMENTS - 1; i >= 1; i--)
+            {
+               d = (i / Number(EDGE_SEGMENTS)) * coneR;
+               ha = effectiveHalfAngle(d);
+               angle = this.smoothedAngle_ - ha;
+               this.worldVerts_.push(
+                  cx + Math.cos(angle) * d,
+                  cy + Math.sin(angle) * d,
                   0
                );
             }
@@ -227,28 +277,44 @@ package com.company.assembleegameclient.objects.particles
             this.path_.data.push(this.screenVerts_[i * 3], this.screenVerts_[i * 3 + 1]);
          }
 
-         // Cone cutout path (only when direction is known)
+         // Curved cone cutout path
          if (this.hasDirection_)
          {
-            var coneOffset:int = (NUM_SEGMENTS + 1) * 3; // center point
-            this.path_.commands.push(GraphicsPathCommand.MOVE_TO);
-            this.path_.data.push(this.screenVerts_[coneOffset], this.screenVerts_[coneOffset + 1]);
+            var idx:int = (NUM_SEGMENTS + 1) * 3; // center point
 
-            // Arc points
-            var arcStart:int = coneOffset + 3; // first arc point
-            for (i = 0; i <= CONE_SEGMENTS; i++)
+            // Move to center
+            this.path_.commands.push(GraphicsPathCommand.MOVE_TO);
+            this.path_.data.push(this.screenVerts_[idx], this.screenVerts_[idx + 1]);
+            idx += 3;
+
+            // Positive edge segments
+            for (i = 0; i < EDGE_SEGMENTS; i++)
             {
                this.path_.commands.push(GraphicsPathCommand.LINE_TO);
-               this.path_.data.push(
-                  this.screenVerts_[arcStart + i * 3],
-                  this.screenVerts_[arcStart + i * 3 + 1]
-               );
+               this.path_.data.push(this.screenVerts_[idx], this.screenVerts_[idx + 1]);
+               idx += 3;
             }
 
-            // Back to center
-            var backIdx:int = arcStart + (CONE_SEGMENTS + 1) * 3;
+            // Arc segments
+            for (i = 0; i <= ARC_SEGMENTS; i++)
+            {
+               this.path_.commands.push(GraphicsPathCommand.LINE_TO);
+               this.path_.data.push(this.screenVerts_[idx], this.screenVerts_[idx + 1]);
+               idx += 3;
+            }
+
+            // Negative edge segments
+            var negEdgeCount:int = EDGE_SEGMENTS - 1;
+            for (i = 0; i < negEdgeCount; i++)
+            {
+               this.path_.commands.push(GraphicsPathCommand.LINE_TO);
+               this.path_.data.push(this.screenVerts_[idx], this.screenVerts_[idx + 1]);
+               idx += 3;
+            }
+
+            // Final point back to center
             this.path_.commands.push(GraphicsPathCommand.LINE_TO);
-            this.path_.data.push(this.screenVerts_[backIdx], this.screenVerts_[backIdx + 1]);
+            this.path_.data.push(this.screenVerts_[idx], this.screenVerts_[idx + 1]);
          }
 
          this.fill_.alpha = 0.45;
