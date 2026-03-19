@@ -83,8 +83,8 @@ package com.company.assembleegameclient.objects.particles
          var targetObj:GameObject = map_.goDict_[this.targetObjectId_] as GameObject;
          if (targetObj == null)
          {
-            delete activeEffects_[this.targetObjectId_];
-            return false; // Target dead
+            // Boss gone (dead/out of range/player died) — keep rendering at last known position
+            return true;
          }
 
          // Track our position to the target
@@ -251,7 +251,7 @@ package com.company.assembleegameclient.objects.particles
             this.path_.data.push(this.screenVerts_[backIdx], this.screenVerts_[backIdx + 1]);
          }
 
-         this.fill_.alpha = 0.25;
+         this.fill_.alpha = 0.45;
 
          graphicsData.push(this.fill_);
          graphicsData.push(this.path_);
