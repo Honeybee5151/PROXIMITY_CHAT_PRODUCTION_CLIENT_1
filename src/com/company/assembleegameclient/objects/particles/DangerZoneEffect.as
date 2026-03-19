@@ -79,6 +79,8 @@ package com.company.assembleegameclient.objects.particles
          y_ = targetObj.y_;
 
          // Compute movement direction from position delta
+         // Cone rotates at ~60 deg/sec to match server turn speed
+         var TURN_SPEED_RAD:Number = 60.0 * Math.PI / 180.0; // 60 deg/sec in radians
          if (!isNaN(this.lastTargetX_))
          {
             var dx:Number = targetObj.x_ - this.lastTargetX_;
@@ -95,12 +97,15 @@ package com.company.assembleegameclient.objects.particles
                }
                else
                {
-                  // Smooth the angle to avoid jitter
+                  // Clamped rotation — max turn per frame matches server
                   var angleDiff:Number = rawAngle - this.smoothedAngle_;
-                  // Normalize to [-PI, PI]
                   while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
                   while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
-                  this.smoothedAngle_ += angleDiff * 0.15;
+                  var maxRotation:Number = TURN_SPEED_RAD * (dt / 1000.0);
+                  if (Math.abs(angleDiff) <= maxRotation)
+                     this.smoothedAngle_ = rawAngle;
+                  else
+                     this.smoothedAngle_ += (angleDiff > 0 ? 1 : -1) * maxRotation;
                }
             }
          }
