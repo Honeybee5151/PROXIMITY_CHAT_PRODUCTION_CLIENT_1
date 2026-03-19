@@ -416,9 +416,14 @@ public class Projectile extends BasicObject
       {
          if (Parameters.data_.eyeCandyParticles)
          {
-            map_.addObj(new SparkParticle(100, 0xFF00FF, 600, 0.5, RandomUtil.plusMinus(3), RandomUtil.plusMinus(3)), x_, y_);
-            map_.addObj(new SparkParticle(100, 0xFF00FF, 600, 0.5, RandomUtil.plusMinus(3), RandomUtil.plusMinus(3)), x_, y_);
-            map_.addObj(new SparkParticle(100, 0xFF00FF, 600, 0.5, RandomUtil.plusMinus(3), RandomUtil.plusMinus(3)), x_, y_);
+            var ptColor:int = this.projProps_.particleTrailColor_;
+            var ptLife:int = this.projProps_.particleTrailLifetimeMS > 0 ? this.projProps_.particleTrailLifetimeMS : 600;
+            var ptCount:int = this.projProps_.particleTrailIntensity_ > 0 ? int(this.projProps_.particleTrailIntensity_ / 100 * 3) : 3;
+            if (ptCount < 1) ptCount = 1;
+            for (var ptI:int = 0; ptI < ptCount; ptI++)
+            {
+               map_.addObj(new SparkParticle(100, ptColor, ptLife, 0.5, RandomUtil.plusMinus(3), RandomUtil.plusMinus(3)), x_, y_);
+            }
          }
       }
    }

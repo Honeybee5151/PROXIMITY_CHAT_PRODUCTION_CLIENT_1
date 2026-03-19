@@ -7,6 +7,7 @@ import com.company.assembleegameclient.objects.BasicObject;
 import com.company.assembleegameclient.objects.GameObject;
 import com.company.assembleegameclient.objects.Party;
 import com.company.assembleegameclient.objects.Player;
+import com.company.assembleegameclient.objects.particles.DangerZoneEffect;
 import com.company.assembleegameclient.parameters.Parameters;
 import com.company.assembleegameclient.util.ConditionEffect;
 
@@ -148,6 +149,7 @@ public class Map extends Sprite {
     }
 
     public function dispose():void {
+        DangerZoneEffect.clearAll();
         var square:Square = null;
         var go:GameObject = null;
         var bo:BasicObject = null;

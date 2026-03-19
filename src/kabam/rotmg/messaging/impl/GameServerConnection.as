@@ -1806,9 +1806,10 @@ public class GameServerConnection
                {
                   break;
                }
-               // Dedup: skip if one already exists for this target
+               // If effect already exists, just refresh its timer
                if(DangerZoneEffect.hasActiveEffect(showEffect.targetObjectId_))
                {
+                  DangerZoneEffect.refreshEffect(showEffect.targetObjectId_, showEffect.duration_);
                   break;
                }
                e = new DangerZoneEffect(showEffect.targetObjectId_, showEffect.pos1_.x_, showEffect.pos1_.y_, showEffect.color_, showEffect.duration_);

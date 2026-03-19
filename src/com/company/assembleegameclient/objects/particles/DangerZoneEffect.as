@@ -14,16 +14,40 @@ package com.company.assembleegameclient.objects.particles
    public class DangerZoneEffect extends ParticleEffect
    {
       private static const NUM_SEGMENTS:int = 48;
-      private static const EDGE_SEGMENTS:int = 16;   // segments along each curved edge
-      private static const ARC_SEGMENTS:int = 24;     // segments for the arc at the tip
-      private static const CONE_TAPER:Number = 0.4;   // cone narrows to 60% of max at full range
+      private static const EDGE_SEGMENTS:int = 16;
+      private static const ARC_SEGMENTS:int = 24;
+      private static const CONE_TAPER:Number = 0.4;
 
       // Dedup: only one DangerZoneEffect per target object
       private static var activeEffects_:Dictionary = new Dictionary();
 
       public static function hasActiveEffect(targetObjectId:int):Boolean
       {
-         return activeEffects_[targetObjectId] != null;
+         var fx:DangerZoneEffect = activeEffects_[targetObjectId] as DangerZoneEffect;
+         if (fx == null) return false;
+         // Stale check: if the effect was removed from map, clean up
+         if (fx.map_ == null)
+         {
+            delete activeEffects_[targetObjectId];
+            return false;
+         }
+         return true;
+      }
+
+      /** Refresh the timer of an existing effect (called on server re-broadcast) */
+      public static function refreshEffect(targetObjectId:int, durationMs:int):void
+      {
+         var fx:DangerZoneEffect = activeEffects_[targetObjectId] as DangerZoneEffect;
+         if (fx != null && fx.map_ != null)
+         {
+            fx.timeLeft_ = durationMs;
+         }
+      }
+
+      /** Clear all active effects — call on map/instance change */
+      public static function clearAll():void
+      {
+         activeEffects_ = new Dictionary();
       }
 
       public var targetObjectId_:int;
@@ -71,6 +95,12 @@ package com.company.assembleegameclient.objects.particles
          activeEffects_[targetObjectId] = this;
       }
 
+      override public function removeFromMap():void
+      {
+         delete activeEffects_[this.targetObjectId_];
+         super.removeFromMap();
+      }
+
       override public function update(time:int, dt:int) : Boolean
       {
          this.timeLeft_ -= dt;
@@ -85,7 +115,7 @@ package com.company.assembleegameclient.objects.particles
          var targetObj:GameObject = map_.goDict_[this.targetObjectId_] as GameObject;
          if (targetObj == null)
          {
-            // Boss gone — keep rendering at last known position
+            // Boss gone — keep rendering at last known position, pin to player square
             if (map_ != null && map_.player_ != null)
             {
                var pSq:Square = map_.getSquare(map_.player_.x_, map_.player_.y_);
@@ -150,7 +180,6 @@ package com.company.assembleegameclient.objects.particles
          return true;
       }
 
-      /** Effective half-angle at distance d: narrows linearly from full angle to 60% at max range */
       private function effectiveHalfAngle(dist:Number) : Number
       {
          var t:Number = dist / this.zoneRadius_;
@@ -210,12 +239,12 @@ package com.company.assembleegameclient.objects.particles
          // --- Curved cone cutout (only if we have a direction) ---
          if (this.hasDirection_)
          {
-            var coneR:Number = r * 1.15; // overshoot to eliminate seam
+            var coneR:Number = r * 1.15;
 
             // Start at boss center
             this.worldVerts_.push(cx, cy, 0);
 
-            // Positive edge: center → tip, angle narrows with distance
+            // Positive edge: center → tip
             for (i = 1; i <= EDGE_SEGMENTS; i++)
             {
                d = (i / Number(EDGE_SEGMENTS)) * coneR;
@@ -228,7 +257,7 @@ package com.company.assembleegameclient.objects.particles
                );
             }
 
-            // Arc across the tip from +halfAngle to -halfAngle
+            // Arc across the tip
             var tipHalfAngle:Number = effectiveHalfAngle(coneR);
             var arcStartAngle:Number = this.smoothedAngle_ + tipHalfAngle;
             var arcEndAngle:Number = this.smoothedAngle_ - tipHalfAngle;
@@ -280,14 +309,12 @@ package com.company.assembleegameclient.objects.particles
          // Curved cone cutout path
          if (this.hasDirection_)
          {
-            var idx:int = (NUM_SEGMENTS + 1) * 3; // center point
+            var idx:int = (NUM_SEGMENTS + 1) * 3;
 
-            // Move to center
             this.path_.commands.push(GraphicsPathCommand.MOVE_TO);
             this.path_.data.push(this.screenVerts_[idx], this.screenVerts_[idx + 1]);
             idx += 3;
 
-            // Positive edge segments
             for (i = 0; i < EDGE_SEGMENTS; i++)
             {
                this.path_.commands.push(GraphicsPathCommand.LINE_TO);
@@ -295,7 +322,6 @@ package com.company.assembleegameclient.objects.particles
                idx += 3;
             }
 
-            // Arc segments
             for (i = 0; i <= ARC_SEGMENTS; i++)
             {
                this.path_.commands.push(GraphicsPathCommand.LINE_TO);
@@ -303,7 +329,6 @@ package com.company.assembleegameclient.objects.particles
                idx += 3;
             }
 
-            // Negative edge segments
             var negEdgeCount:int = EDGE_SEGMENTS - 1;
             for (i = 0; i < negEdgeCount; i++)
             {
@@ -312,7 +337,6 @@ package com.company.assembleegameclient.objects.particles
                idx += 3;
             }
 
-            // Final point back to center
             this.path_.commands.push(GraphicsPathCommand.LINE_TO);
             this.path_.data.push(this.screenVerts_[idx], this.screenVerts_[idx + 1]);
          }
