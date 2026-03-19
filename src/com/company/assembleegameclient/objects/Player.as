@@ -204,7 +204,7 @@ public class Player extends Character {
     public var ridingDesiredY_:Number = -1;
     public var dashCooldownEnd_:int = 0;
     private static const DASH_COOLDOWN_MS:int = 5000;
-    private static const DASH_CIRCLE_RADIUS:Number = 5;
+    private static const DASH_CIRCLE_RADIUS:Number = 7;
     private static const DASH_CIRCLE_SEGMENTS:int = 32;
     private var dashArcFill_:GraphicsSolidFill = null;
     private var dashArcPath_:GraphicsPath = null;
@@ -1012,7 +1012,6 @@ public class Player extends Character {
     private function drawDashIndicator(graphicsData:Vector.<IGraphicsData>, time:int):void {
         var now:int = getTimer();
         var remaining:int = this.dashCooldownEnd_ - now;
-        if (remaining <= 0 && this.dashCooldownEnd_ == 0) return; // never dashed yet
 
         if (this.dashArcFill_ == null) {
             this.dashArcFill_ = new GraphicsSolidFill(0x60B0E0, 0.9);
