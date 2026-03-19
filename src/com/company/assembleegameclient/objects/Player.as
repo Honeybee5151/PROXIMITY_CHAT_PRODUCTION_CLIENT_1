@@ -441,11 +441,8 @@ public class Player extends Character {
         if (this != map_.player_) {
             drawName(graphicsData, camera);
         }
-        else {
-            if (this.breath_ >= 0) {
-                this.drawBreathBar(graphicsData, time);
-            }
-            this.drawDashIndicator(graphicsData, time);
+        else if (this.breath_ >= 0) {
+            this.drawBreathBar(graphicsData, time);
         }
     }
 

@@ -7,9 +7,11 @@ import com.company.assembleegameclient.ui.IconButton;
    import com.company.ui.SimpleText;
    import com.company.util.AssetLibrary;
    import flash.display.Bitmap;
+   import flash.display.Shape;
    import flash.display.Sprite;
    import flash.events.MouseEvent;
    import flash.filters.DropShadowFilter;
+   import flash.utils.getTimer;
    import org.osflash.signals.Signal;
    import org.osflash.signals.natives.NativeSignal;
    
@@ -38,6 +40,11 @@ import com.company.assembleegameclient.ui.IconButton;
       private var boostPanelButton:BoostPanelButton;
 
       private var expTimer:ExperienceBoostTimerPopup;
+
+      private var dashOverlay_:Shape;
+      private static const DASH_COOLDOWN_MS:int = 5000;
+      private static const DASH_RADIUS:Number = 16;
+      private static const DASH_SEGMENTS:int = 36;
       
       public function CharacterDetailsView()
       {
@@ -81,6 +88,8 @@ import com.company.assembleegameclient.ui.IconButton;
          this.portrait_.x = -2;
          this.portrait_.y = -8;
          addChild(this.portrait_);
+         this.dashOverlay_ = new Shape();
+         addChild(this.dashOverlay_);
       }
       
       private function createNameText(name:String) : void
@@ -103,6 +112,7 @@ import com.company.assembleegameclient.ui.IconButton;
          if (this.expTimer) {
             this.expTimer.update(_arg1.xpTimer);
          }
+         drawDashCircle(_arg1);
          if (_arg1.dropBoost) {
             this.boostPanelButton = ((this.boostPanelButton) || (new BoostPanelButton(_arg1)));
             if (this.portrait_) {
@@ -125,6 +135,50 @@ import com.company.assembleegameclient.ui.IconButton;
          }
       }
       
+      private function drawDashCircle(player:Player) : void
+      {
+         if (this.dashOverlay_ == null) return;
+         this.dashOverlay_.graphics.clear();
+
+         // Center the circle on the portrait
+         var bd:* = this.portrait_.bitmapData;
+         if (bd == null) return;
+         var cx:Number = this.portrait_.x + bd.width / 2;
+         var cy:Number = this.portrait_.y + bd.height / 2;
+         var r:Number = DASH_RADIUS;
+
+         var now:int = getTimer();
+         var remaining:int = player.dashCooldownEnd_ - now;
+         var progress:Number = remaining <= 0 ? 1.0 : 1.0 - (remaining / Number(DASH_COOLDOWN_MS));
+         if (progress > 1.0) progress = 1.0;
+         if (progress < 0) progress = 0;
+
+         // Background ring (dark)
+         this.dashOverlay_.graphics.lineStyle(3, 0x222222, 0.6);
+         this.dashOverlay_.graphics.drawCircle(cx, cy, r);
+         this.dashOverlay_.graphics.lineStyle();
+
+         // Progress arc (blue, clockwise from top)
+         if (progress > 0)
+         {
+            var arcEnd:Number = progress * Math.PI * 2;
+            var segs:int = Math.max(3, int(progress * DASH_SEGMENTS));
+            var ready:Boolean = progress >= 1.0;
+            var alpha:Number = ready ? 0.7 + 0.3 * Math.abs(Math.sin(now / 400)) : 0.9;
+            var color:uint = ready ? 0x80D0FF : 0x60B0E0;
+
+            this.dashOverlay_.graphics.lineStyle(3, color, alpha);
+            var startAngle:Number = -Math.PI / 2;
+            this.dashOverlay_.graphics.moveTo(cx + Math.cos(startAngle) * r, cy + Math.sin(startAngle) * r);
+            for (var i:int = 1; i <= segs; i++)
+            {
+               var angle:Number = startAngle + (i / Number(segs)) * arcEnd;
+               this.dashOverlay_.graphics.lineTo(cx + Math.cos(angle) * r, cy + Math.sin(angle) * r);
+            }
+            this.dashOverlay_.graphics.lineStyle();
+         }
+      }
+
       private function onNexusClick(event:MouseEvent) : void
       {
          this.gotoNexus.dispatch();
