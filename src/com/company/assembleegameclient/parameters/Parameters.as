@@ -106,6 +106,7 @@ public class Parameters {
         setDefaultKey("rotateLeft", KeyCodes.Q);
         setDefaultKey("rotateRight", KeyCodes.E);
         setDefaultKey("useSpecial", KeyCodes.SPACE);
+        setDefaultKey("dash", KeyCodes.SHIFT);
         setDefaultKey("interact", KeyCodes.NUMBER_0);
         setDefaultKey("useInvSlot1", KeyCodes.NUMBER_1);
         setDefaultKey("useInvSlot2", KeyCodes.NUMBER_2);

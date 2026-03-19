@@ -19,6 +19,7 @@ import flash.geom.Point;
 import flash.system.Capabilities;
 import flash.text.TextField;
 import flash.utils.Timer;
+import flash.utils.getTimer;
 import flash.text.TextFieldType;
 
 import kabam.rotmg.ProximityChat.PCBridge;
@@ -60,6 +61,7 @@ public class MapUserInput
    private var mouseDown_:Boolean = false;
    private var autofire_:Boolean = false;
    private var specialKeyDown_:Boolean = false;
+   private var dashCooldownEnd_:int = 0;
    public var enablePlayerInput_:Boolean = true;
    public var setHotkeysInput_:Boolean = true;
    private var mouseDownTimer:Timer;
@@ -420,6 +422,13 @@ public class MapUserInput
                {
                   this.specialKeyDown_ = true;
                }
+            }
+            break;
+         case Parameters.data_.dash:
+            if(getTimer() >= this.dashCooldownEnd_ && player != null && !player.isPaused() && !player.isStasis())
+            {
+               this.gs_.gsc_.dash(this.gs_.lastUpdate_);
+               this.dashCooldownEnd_ = getTimer() + 5000;
             }
             break;
          case Parameters.data_.autofireToggle:

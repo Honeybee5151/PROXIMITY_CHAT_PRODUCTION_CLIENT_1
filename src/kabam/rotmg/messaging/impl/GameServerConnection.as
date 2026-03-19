@@ -180,6 +180,7 @@ import kabam.rotmg.messaging.impl.outgoing.ChangeTrade;
 import kabam.rotmg.messaging.impl.outgoing.ChooseName;
 import kabam.rotmg.messaging.impl.outgoing.Create;
 import kabam.rotmg.messaging.impl.outgoing.CreateGuild;
+import kabam.rotmg.messaging.impl.outgoing.Dash;
 import kabam.rotmg.messaging.impl.outgoing.EditAccountList;
 import kabam.rotmg.messaging.impl.outgoing.EnemyHit;
 import kabam.rotmg.messaging.impl.outgoing.Escape;
@@ -334,6 +335,7 @@ public class GameServerConnection
       public static const VAULT_OPEN:int = 92;
       public static const VAULT_DATA:int = 93;
       public static const VAULT_SWAP:int = 94;
+      public static const DASH:int = 95;
 
       private static const TO_MILLISECONDS:int = 1000;
 
@@ -545,6 +547,7 @@ public class GameServerConnection
          messages.map(VAULT_OPEN).toMessage(VaultOpen);
          messages.map(VAULT_DATA).toMessage(VaultData).toMethod(this.onVaultData);
          messages.map(VAULT_SWAP).toMessage(VaultSwap);
+         messages.map(DASH).toMessage(Dash);
       }
 
       private function unmapMessages() : void {
@@ -1296,6 +1299,13 @@ public class GameServerConnection
             return;
          }
          this.serverConnection.sendMessage(this.messages.require(ESCAPE));
+      }
+
+      public function dash(time:int) : void
+      {
+         var pkt:Dash = this.messages.require(DASH) as Dash;
+         pkt.time_ = time;
+         this.serverConnection.sendMessage(pkt);
       }
 
       public function joinGuild(guildName:String) : void
