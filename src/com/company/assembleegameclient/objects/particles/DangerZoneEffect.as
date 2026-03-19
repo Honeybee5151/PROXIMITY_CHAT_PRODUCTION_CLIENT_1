@@ -3,6 +3,8 @@ package com.company.assembleegameclient.objects.particles
    import com.company.assembleegameclient.map.Camera;
    import com.company.assembleegameclient.map.Square;
    import com.company.assembleegameclient.objects.GameObject;
+   import com.company.assembleegameclient.objects.Player;
+   import com.company.assembleegameclient.util.ConditionEffect;
    import com.company.assembleegameclient.util.RandomUtil;
    import com.company.util.GraphicsUtil;
    import flash.display.GraphicsPath;
@@ -18,6 +20,10 @@ package com.company.assembleegameclient.objects.particles
       private static const ARC_SEGMENTS:int = 24;
       private static const CONE_TAPER:Number = 0.4;
 
+      private static const DAMAGE_TICK_MS:int = 1000;  // damage every 1s
+      private static const DAMAGE_AMOUNT:int = 100;
+      private static const SLOW_DURATION_MS:int = 1500;
+
       // Dedup: only one DangerZoneEffect per target object
       private static var activeEffects_:Dictionary = new Dictionary();
 
@@ -25,7 +31,6 @@ package com.company.assembleegameclient.objects.particles
       {
          var fx:DangerZoneEffect = activeEffects_[targetObjectId] as DangerZoneEffect;
          if (fx == null) return false;
-         // Stale check: if the effect was removed from map, clean up
          if (fx.map_ == null)
          {
             delete activeEffects_[targetObjectId];
@@ -34,7 +39,6 @@ package com.company.assembleegameclient.objects.particles
          return true;
       }
 
-      /** Refresh the timer of an existing effect (called on server re-broadcast) */
       public static function refreshEffect(targetObjectId:int, durationMs:int):void
       {
          var fx:DangerZoneEffect = activeEffects_[targetObjectId] as DangerZoneEffect;
@@ -44,7 +48,6 @@ package com.company.assembleegameclient.objects.particles
          }
       }
 
-      /** Clear all active effects — call on map/instance change */
       public static function clearAll():void
       {
          activeEffects_ = new Dictionary();
@@ -70,6 +73,8 @@ package com.company.assembleegameclient.objects.particles
       private var screenVerts_:Vector.<Number>;
 
       private var edgeSpawnTimer_:int;
+      private var damageTimer_:int;
+      private var slowTimer_:int;
 
       public function DangerZoneEffect(targetObjectId:int, coneHalfAngle:Number, radius:Number, color:int, durationMs:int)
       {
@@ -91,12 +96,19 @@ package com.company.assembleegameclient.objects.particles
          this.worldVerts_ = new Vector.<Number>();
          this.screenVerts_ = new Vector.<Number>();
          this.edgeSpawnTimer_ = 999;
+         this.damageTimer_ = 0;
 
          activeEffects_[targetObjectId] = this;
       }
 
       override public function removeFromMap():void
       {
+         // Clear slow if we applied it
+         if (this.slowTimer_ > 0 && map_ != null && map_.player_ != null)
+         {
+            map_.player_.condition_[ConditionEffect.CE_FIRST_BATCH] &= ~ConditionEffect.SLOWED_BIT;
+            this.slowTimer_ = 0;
+         }
          delete activeEffects_[this.targetObjectId_];
          super.removeFromMap();
       }
@@ -106,36 +118,46 @@ package com.company.assembleegameclient.objects.particles
          this.timeLeft_ -= dt;
          if (this.timeLeft_ <= 0)
          {
+            if (this.slowTimer_ > 0 && map_ != null && map_.player_ != null)
+            {
+               map_.player_.condition_[ConditionEffect.CE_FIRST_BATCH] &= ~ConditionEffect.SLOWED_BIT;
+            }
             delete activeEffects_[this.targetObjectId_];
             return false;
          }
 
          if (map_ == null) return true;
 
+         // Tick down slow timer and clear slow when expired
+         if (this.slowTimer_ > 0 && map_.player_ != null)
+         {
+            this.slowTimer_ -= dt;
+            if (this.slowTimer_ <= 0)
+            {
+               this.slowTimer_ = 0;
+               map_.player_.condition_[ConditionEffect.CE_FIRST_BATCH] &= ~ConditionEffect.SLOWED_BIT;
+            }
+         }
+
+         // Pin square_ to player so effect is always drawn
+         if (map_.player_ != null)
+         {
+            var playerSq:Square = map_.getSquare(map_.player_.x_, map_.player_.y_);
+            if (playerSq != null)
+               square_ = playerSq;
+         }
+
          var targetObj:GameObject = map_.goDict_[this.targetObjectId_] as GameObject;
          if (targetObj == null)
          {
-            // Boss gone — keep rendering at last known position, pin to player square
-            if (map_ != null && map_.player_ != null)
-            {
-               var pSq:Square = map_.getSquare(map_.player_.x_, map_.player_.y_);
-               if (pSq != null)
-                  square_ = pSq;
-            }
+            // Boss gone — keep rendering at last known position, still do damage
+            checkDamage(time, dt);
             return true;
          }
 
          // Track our position to the target
          x_ = targetObj.x_;
          y_ = targetObj.y_;
-
-         // Pin square_ to player position so the effect is ALWAYS drawn
-         if (map_ != null && map_.player_ != null)
-         {
-            var playerSq:Square = map_.getSquare(map_.player_.x_, map_.player_.y_);
-            if (playerSq != null)
-               square_ = playerSq;
-         }
 
          // Compute movement direction from position delta
          var TURN_SPEED_RAD:Number = 30.0 * Math.PI / 180.0;
@@ -169,15 +191,61 @@ package com.company.assembleegameclient.objects.particles
          this.lastTargetX_ = targetObj.x_;
          this.lastTargetY_ = targetObj.y_;
 
-         // Spawn edge particles along the curved cone boundary
+         // Spawn edge particles
          this.edgeSpawnTimer_ += dt;
-         if (this.edgeSpawnTimer_ >= 100 && map_ != null && this.hasDirection_)
+         if (this.edgeSpawnTimer_ >= 100 && this.hasDirection_)
          {
             this.edgeSpawnTimer_ = 0;
             spawnConeEdgeParticles();
          }
 
+         // Client-side damage
+         checkDamage(time, dt);
+
          return true;
+      }
+
+      private function checkDamage(time:int, dt:int) : void
+      {
+         if (map_ == null || map_.player_ == null) return;
+         if (!this.hasDirection_) return;
+
+         this.damageTimer_ += dt;
+         if (this.damageTimer_ < DAMAGE_TICK_MS) return;
+         this.damageTimer_ -= DAMAGE_TICK_MS;
+
+         var player:Player = map_.player_;
+
+         // Skip if invincible/invulnerable
+         if (player.isInvincible() || player.isInvulnerable()) return;
+         if (player.hp_ <= 0) return;
+
+         // Check distance from boss
+         var pdx:Number = player.x_ - x_;
+         var pdy:Number = player.y_ - y_;
+         var dist:Number = Math.sqrt(pdx * pdx + pdy * pdy);
+         if (dist > this.zoneRadius_) return; // Outside zone entirely
+
+         // Check if player is in safe cone
+         var effectiveHalf:Number = effectiveHalfAngle(dist);
+         var angleToPlayer:Number = Math.atan2(pdy, pdx);
+         var diff:Number = angleToPlayer - this.smoothedAngle_;
+         while (diff > Math.PI) diff -= Math.PI * 2;
+         while (diff < -Math.PI) diff += Math.PI * 2;
+
+         if (Math.abs(diff) <= effectiveHalf) return; // In safe cone
+
+         // Player is outside safe cone — damage them (same as ground damage)
+         var kill:Boolean = player.hp_ <= DAMAGE_AMOUNT;
+         player.damage(DAMAGE_AMOUNT, null, kill, null, true);
+         map_.gs_.gsc_.groundDamage(time, player.x_, player.y_);
+
+         // Apply slow effect
+         if (!player.isSlowedImmune())
+         {
+            player.condition_[ConditionEffect.CE_FIRST_BATCH] |= ConditionEffect.SLOWED_BIT;
+            this.slowTimer_ = SLOW_DURATION_MS;
+         }
       }
 
       private function effectiveHalfAngle(dist:Number) : Number
@@ -241,10 +309,8 @@ package com.company.assembleegameclient.objects.particles
          {
             var coneR:Number = r * 1.15;
 
-            // Start at boss center
             this.worldVerts_.push(cx, cy, 0);
 
-            // Positive edge: center → tip
             for (i = 1; i <= EDGE_SEGMENTS; i++)
             {
                d = (i / Number(EDGE_SEGMENTS)) * coneR;
@@ -257,7 +323,6 @@ package com.company.assembleegameclient.objects.particles
                );
             }
 
-            // Arc across the tip
             var tipHalfAngle:Number = effectiveHalfAngle(coneR);
             var arcStartAngle:Number = this.smoothedAngle_ + tipHalfAngle;
             var arcEndAngle:Number = this.smoothedAngle_ - tipHalfAngle;
@@ -272,7 +337,6 @@ package com.company.assembleegameclient.objects.particles
                );
             }
 
-            // Negative edge: tip → center
             for (i = EDGE_SEGMENTS - 1; i >= 1; i--)
             {
                d = (i / Number(EDGE_SEGMENTS)) * coneR;
@@ -285,19 +349,15 @@ package com.company.assembleegameclient.objects.particles
                );
             }
 
-            // Back to center
             this.worldVerts_.push(cx, cy, 0);
          }
 
-         // Transform all to screen
          this.screenVerts_.length = 0;
          camera.wToS_.transformVectors(this.worldVerts_, this.screenVerts_);
 
-         // --- Build path commands ---
          this.path_.commands.length = 0;
          this.path_.data.length = 0;
 
-         // Outer circle path
          this.path_.commands.push(GraphicsPathCommand.MOVE_TO);
          this.path_.data.push(this.screenVerts_[0], this.screenVerts_[1]);
          for (i = 1; i <= NUM_SEGMENTS; i++)
@@ -306,7 +366,6 @@ package com.company.assembleegameclient.objects.particles
             this.path_.data.push(this.screenVerts_[i * 3], this.screenVerts_[i * 3 + 1]);
          }
 
-         // Curved cone cutout path
          if (this.hasDirection_)
          {
             var idx:int = (NUM_SEGMENTS + 1) * 3;
