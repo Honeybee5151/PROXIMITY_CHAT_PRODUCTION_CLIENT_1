@@ -30,6 +30,7 @@ import com.company.util.Trig;
 
 import flash.display.BitmapData;
 import flash.display.GraphicsPath;
+import flash.display.GraphicsPathCommand;
 import flash.display.GraphicsSolidFill;
 import flash.display.IGraphicsData;
 import flash.display.Sprite;
@@ -201,6 +202,14 @@ public class Player extends Character {
     public var ridingEntityId_:int = -1;
     public var ridingDesiredX_:Number = -1;
     public var ridingDesiredY_:Number = -1;
+    public var dashCooldownEnd_:int = 0;
+    private static const DASH_COOLDOWN_MS:int = 5000;
+    private static const DASH_CIRCLE_RADIUS:Number = 5;
+    private static const DASH_CIRCLE_SEGMENTS:int = 32;
+    private var dashArcFill_:GraphicsSolidFill = null;
+    private var dashArcPath_:GraphicsPath = null;
+    private var dashBgFill_:GraphicsSolidFill = null;
+    private var dashBgPath_:GraphicsPath = null;
 
     override public function moveTo(x:Number, y:Number):Boolean {
         var ret:Boolean = super.moveTo(x, y);
@@ -432,8 +441,11 @@ public class Player extends Character {
         if (this != map_.player_) {
             drawName(graphicsData, camera);
         }
-        else if (this.breath_ >= 0) {
-            this.drawBreathBar(graphicsData, time);
+        else {
+            if (this.breath_ >= 0) {
+                this.drawBreathBar(graphicsData, time);
+            }
+            this.drawDashIndicator(graphicsData, time);
         }
     }
 
@@ -995,6 +1007,82 @@ public class Player extends Character {
             default:
                 return 0;
         }
+    }
+
+    private function drawDashIndicator(graphicsData:Vector.<IGraphicsData>, time:int):void {
+        var now:int = getTimer();
+        var remaining:int = this.dashCooldownEnd_ - now;
+        if (remaining <= 0 && this.dashCooldownEnd_ == 0) return; // never dashed yet
+
+        if (this.dashArcFill_ == null) {
+            this.dashArcFill_ = new GraphicsSolidFill(0x60B0E0, 0.9);
+            this.dashArcPath_ = new GraphicsPath(new Vector.<int>(), new Vector.<Number>());
+            this.dashBgFill_ = new GraphicsSolidFill(0x222222, 0.6);
+            this.dashBgPath_ = new GraphicsPath(new Vector.<int>(), new Vector.<Number>());
+        }
+
+        var cx:Number = posS_[0];
+        var cy:Number = posS_[1] + DEFAULT_HP_BAR_Y_OFFSET + DEFAULT_HP_BAR_HEIGHT + 10;
+        var r:Number = DASH_CIRCLE_RADIUS;
+        var progress:Number = remaining <= 0 ? 1.0 : 1.0 - (remaining / Number(DASH_COOLDOWN_MS));
+        if (progress > 1.0) progress = 1.0;
+        if (progress < 0) progress = 0;
+
+        var i:int;
+        var angle:Number;
+
+        // Background circle (dark)
+        this.dashBgPath_.commands.length = 0;
+        this.dashBgPath_.data.length = 0;
+        this.dashBgPath_.commands.push(GraphicsPathCommand.MOVE_TO);
+        this.dashBgPath_.data.push(cx, cy - r);
+        for (i = 1; i <= DASH_CIRCLE_SEGMENTS; i++) {
+            angle = -Math.PI / 2 + (i / Number(DASH_CIRCLE_SEGMENTS)) * Math.PI * 2;
+            this.dashBgPath_.commands.push(GraphicsPathCommand.LINE_TO);
+            this.dashBgPath_.data.push(cx + Math.cos(angle) * r, cy + Math.sin(angle) * r);
+        }
+        graphicsData.push(this.dashBgFill_);
+        graphicsData.push(this.dashBgPath_);
+        graphicsData.push(GraphicsUtil.END_FILL);
+
+        // Progress arc (blue, counter-clockwise from top)
+        if (progress > 0) {
+            var arcEnd:Number = progress * Math.PI * 2;
+            var arcSegments:int = Math.max(2, int(progress * DASH_CIRCLE_SEGMENTS));
+
+            this.dashArcPath_.commands.length = 0;
+            this.dashArcPath_.data.length = 0;
+
+            // Pie slice: center → top → arc → center
+            this.dashArcPath_.commands.push(GraphicsPathCommand.MOVE_TO);
+            this.dashArcPath_.data.push(cx, cy);
+            this.dashArcPath_.commands.push(GraphicsPathCommand.LINE_TO);
+            this.dashArcPath_.data.push(cx, cy - r);
+
+            for (i = 1; i <= arcSegments; i++) {
+                angle = -Math.PI / 2 + (i / Number(arcSegments)) * arcEnd;
+                this.dashArcPath_.commands.push(GraphicsPathCommand.LINE_TO);
+                this.dashArcPath_.data.push(cx + Math.cos(angle) * r, cy + Math.sin(angle) * r);
+            }
+
+            this.dashArcPath_.commands.push(GraphicsPathCommand.LINE_TO);
+            this.dashArcPath_.data.push(cx, cy);
+
+            // Bright pulse when fully ready
+            if (progress >= 1.0) {
+                var pulse:Number = 0.7 + 0.3 * Math.abs(Math.sin(time / 400));
+                this.dashArcFill_.alpha = pulse;
+            } else {
+                this.dashArcFill_.alpha = 0.9;
+            }
+
+            graphicsData.push(this.dashArcFill_);
+            graphicsData.push(this.dashArcPath_);
+            graphicsData.push(GraphicsUtil.END_FILL);
+        }
+
+        GraphicsFillExtra.setSoftwareDrawSolid(this.dashArcFill_, true);
+        GraphicsFillExtra.setSoftwareDrawSolid(this.dashBgFill_, true);
     }
 
     protected function drawBreathBar(graphicsData:Vector.<IGraphicsData>, time:int):void {

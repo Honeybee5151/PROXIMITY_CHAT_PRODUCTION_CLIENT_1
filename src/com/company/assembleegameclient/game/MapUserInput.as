@@ -61,7 +61,6 @@ public class MapUserInput
    private var mouseDown_:Boolean = false;
    private var autofire_:Boolean = false;
    private var specialKeyDown_:Boolean = false;
-   private var dashCooldownEnd_:int = 0;
    public var enablePlayerInput_:Boolean = true;
    public var setHotkeysInput_:Boolean = true;
    private var mouseDownTimer:Timer;
@@ -425,10 +424,10 @@ public class MapUserInput
             }
             break;
          case Parameters.data_.dash:
-            if(getTimer() >= this.dashCooldownEnd_ && player != null && !player.isPaused() && !player.isStasis())
+            if(player != null && getTimer() >= player.dashCooldownEnd_ && !player.isPaused() && !player.isStasis())
             {
                this.gs_.gsc_.dash(this.gs_.lastUpdate_);
-               this.dashCooldownEnd_ = getTimer() + 5000;
+               player.dashCooldownEnd_ = getTimer() + 5000;
             }
             break;
          case Parameters.data_.autofireToggle:
