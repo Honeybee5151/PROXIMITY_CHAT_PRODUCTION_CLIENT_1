@@ -182,6 +182,7 @@ public class Player extends Character {
     private var lastHeartbeatTime_:int = 0;
     private static var heartbeatSound_:Sound = null;
     private var heartbeatChannel_:SoundChannel = null;
+    private var heartbeatGraceTime_:int = 0; //editor8182381 — grace period before stopping heartbeat
     protected var rotate_:Number = 0;
     protected var relMoveVec_:Point = null;
     protected var moveMultiplier_:Number = 1;
@@ -361,6 +362,7 @@ public class Player extends Character {
 
         //editor8182381 — Heartbeat sound when low HP (plays independently of SFX toggle)
         if (map_.player_ == this && Parameters.data_.playHeartbeat && hp_ > 0 && maxHP_ > 0 && hp_ < maxHP_ * 0.3) {
+            this.heartbeatGraceTime_ = 1500; //editor8182381 — reset grace timer while low HP
             var hpRatio:Number = hp_ / (maxHP_ * 0.3);
             var beatInterval:int = 300 + hpRatio * 700;
             if (time - this.lastHeartbeatTime_ >= beatInterval) {
@@ -374,8 +376,12 @@ public class Player extends Character {
                 this.lastHeartbeatTime_ = time;
             }
         } else if (this.heartbeatChannel_ != null) {
-            this.heartbeatChannel_.stop();
-            this.heartbeatChannel_ = null;
+            //editor8182381 — grace period: don't cut heartbeat immediately when HP goes above threshold
+            this.heartbeatGraceTime_ -= dt;
+            if (this.heartbeatGraceTime_ <= 0) {
+                this.heartbeatChannel_.stop();
+                this.heartbeatChannel_ = null;
+            }
         }
 
         return true;
