@@ -92,10 +92,25 @@ import com.company.assembleegameclient.ui.IconButton;
          this.nameText_.setBold(true);
          this.nameText_.y = 0;
          this.nameText_.filters = [new DropShadowFilter(0,0,0)];
+         addChild(this.nameText_);
+         fitName(name);
+      }
+
+      private function fitName(name:String) : void
+      {
+         var maxW:int = 136;
+         var fontSize:int = 20;
+         this.nameText_.setSize(fontSize);
          this.nameText_.text = name;
          this.nameText_.updateMetrics();
-         this.nameText_.x = 36 + (136 - this.nameText_.width) / 2;
-         addChild(this.nameText_);
+         while (this.nameText_.width > maxW && fontSize > 10)
+         {
+            fontSize--;
+            this.nameText_.setSize(fontSize);
+            this.nameText_.text = name;
+            this.nameText_.updateMetrics();
+         }
+         this.nameText_.x = 36 + (maxW - this.nameText_.width) / 2;
       }
 
       public function update(player:Player) : void
@@ -181,9 +196,7 @@ import com.company.assembleegameclient.ui.IconButton;
 
       public function setName(name:String) : void
       {
-         this.nameText_.text = name;
-         this.nameText_.updateMetrics();
-         this.nameText_.x = 36 + (136 - this.nameText_.width) / 2;
+         fitName(name);
       }
    }
 }

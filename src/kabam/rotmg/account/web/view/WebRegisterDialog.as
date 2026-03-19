@@ -51,7 +51,7 @@ import flash.events.MouseEvent;
       private function makeUIElements() : void
       {
          this.playerNameInput = new LabeledField("Player Name", false, 275);
-         this.playerNameInput.inputText_.maxChars = 10;
+         this.playerNameInput.inputText_.maxChars = 16;
          this.playerNameInput.inputText_.restrict = "A-Za-z";
          this.emailInput = new LabeledField("Email",false,275);
          this.passwordInput = new LabeledField("Password",true,275);
@@ -122,7 +122,7 @@ import flash.events.MouseEvent;
 
       private function isPlayerNameValid():Boolean
       {
-         var _local1:Boolean = ((!((this.playerNameInput.text() == ""))) && ((this.playerNameInput.text().length <= 10)));
+         var _local1:Boolean = ((!((this.playerNameInput.text() == ""))) && ((this.playerNameInput.text().length <= 16)));
          this.playerNameInput.setErrorHighlight(!(_local1));
          if (!_local1){
             this.errors.push("Invalid Player Name");
