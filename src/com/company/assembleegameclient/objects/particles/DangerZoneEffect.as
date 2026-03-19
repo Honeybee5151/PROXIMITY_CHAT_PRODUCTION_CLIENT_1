@@ -8,11 +8,20 @@ package com.company.assembleegameclient.objects.particles
    import flash.display.GraphicsPathCommand;
    import flash.display.GraphicsSolidFill;
    import flash.display.IGraphicsData;
+   import flash.utils.Dictionary;
 
    public class DangerZoneEffect extends ParticleEffect
    {
       private static const NUM_SEGMENTS:int = 48;
       private static const CONE_SEGMENTS:int = 24;
+
+      // Dedup: only one DangerZoneEffect per target object
+      private static var activeEffects_:Dictionary = new Dictionary();
+
+      public static function hasActiveEffect(targetObjectId:int):Boolean
+      {
+         return activeEffects_[targetObjectId] != null;
+      }
 
       public var targetObjectId_:int;
       public var coneHalfAngle_:Number;
@@ -55,6 +64,8 @@ package com.company.assembleegameclient.objects.particles
          this.worldVerts_ = new Vector.<Number>();
          this.screenVerts_ = new Vector.<Number>();
          this.edgeSpawnTimer_ = 999;
+
+         activeEffects_[targetObjectId] = this;
       }
 
       override public function update(time:int, dt:int) : Boolean
@@ -62,6 +73,7 @@ package com.company.assembleegameclient.objects.particles
          this.timeLeft_ -= dt;
          if (this.timeLeft_ <= 0)
          {
+            delete activeEffects_[this.targetObjectId_];
             return false;
          }
 
@@ -71,6 +83,7 @@ package com.company.assembleegameclient.objects.particles
          var targetObj:GameObject = map_.goDict_[this.targetObjectId_] as GameObject;
          if (targetObj == null)
          {
+            delete activeEffects_[this.targetObjectId_];
             return false; // Target dead
          }
 
@@ -179,6 +192,8 @@ package com.company.assembleegameclient.objects.particles
          this.worldVerts_.push(cx, cy, 0);
 
          // Arc from +halfAngle to -halfAngle (CCW = going from positive to negative)
+         // Use slightly larger radius so the cutout extends past the outer circle — eliminates seam artifact
+         var coneR:Number = r * 1.15;
          var coneStartAngle:Number = this.smoothedAngle_ + this.coneHalfAngle_;
          var coneEndAngle:Number = this.smoothedAngle_ - this.coneHalfAngle_;
          var coneStep:Number = (coneStartAngle - coneEndAngle) / CONE_SEGMENTS;
@@ -187,8 +202,8 @@ package com.company.assembleegameclient.objects.particles
          {
             angle = coneStartAngle - i * coneStep;
             this.worldVerts_.push(
-               cx + Math.cos(angle) * r,
-               cy + Math.sin(angle) * r,
+               cx + Math.cos(angle) * coneR,
+               cy + Math.sin(angle) * coneR,
                0
             );
          }

@@ -376,12 +376,9 @@ public class Player extends Character {
                 this.lastHeartbeatTime_ = time;
             }
         } else if (this.heartbeatChannel_ != null) {
-            //editor8182381 — grace period: don't cut heartbeat immediately when HP goes above threshold
-            this.heartbeatGraceTime_ -= dt;
-            if (this.heartbeatGraceTime_ <= 0) {
-                this.heartbeatChannel_.stop();
-                this.heartbeatChannel_ = null;
-            }
+            //editor8182381 — don't .stop() mid-sample (causes pop). Let last beat finish naturally, just stop scheduling new ones.
+            this.heartbeatChannel_ = null;
+            this.lastHeartbeatTime_ = 0;
         }
 
         return true;

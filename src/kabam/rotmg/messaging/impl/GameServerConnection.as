@@ -1806,6 +1806,11 @@ public class GameServerConnection
                {
                   break;
                }
+               // Dedup: skip if one already exists for this target
+               if(DangerZoneEffect.hasActiveEffect(showEffect.targetObjectId_))
+               {
+                  break;
+               }
                e = new DangerZoneEffect(showEffect.targetObjectId_, showEffect.pos1_.x_, showEffect.pos1_.y_, showEffect.color_, showEffect.duration_);
                map.addObj(e, go.x_, go.y_);
                break;
