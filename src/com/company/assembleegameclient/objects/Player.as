@@ -198,6 +198,8 @@ public class Player extends Character {
     private var breathPath_:GraphicsPath = null;
     public var projectileSpeedMult_:Number = 1;
     public var ridingEntityId_:int = -1;
+    public var ridingDesiredX_:Number = -1;
+    public var ridingDesiredY_:Number = -1;
 
     override public function moveTo(x:Number, y:Number):Boolean {
         var ret:Boolean = super.moveTo(x, y);
@@ -336,6 +338,20 @@ public class Player extends Character {
             return false;
         }
 
+        // Riding: snap mount to player + sync animation
+        if (this.ridingEntityId_ > 0 && map_ != null) {
+            var mount:GameObject = map_.goDict_[this.ridingEntityId_];
+            if (mount != null) {
+                mount.isLocalMount_ = true;
+                mount.moveTo(x_, y_);
+                mount.moveVec_.x = moveVec_.x;
+                mount.moveVec_.y = moveVec_.y;
+                if (moveVec_.x != 0 || moveVec_.y != 0) {
+                    mount.facing_ = Math.atan2(moveVec_.y, moveVec_.x);
+                }
+            }
+        }
+
         if (map_.player_ == this && square_.props_.maxDamage_ > 0 && square_.lastDamage_ + 500 < time && !isInvincible() && (square_.obj_ == null || !square_.obj_.props_.protectFromGroundDamage_)) {
             d = map_.gs_.gsc_.getNextDamage(square_.props_.minDamage_, square_.props_.maxDamage_);
             damage( d, null, hp_ <= d, null, false);
@@ -431,12 +447,16 @@ public class Player extends Character {
             action = AnimatedChar.ATTACK;
         }
         else if (moveVec_.x != 0 || moveVec_.y != 0) {
-            walkPer = 3.5 / this.getMoveSpeed();
             if (moveVec_.y != 0 || moveVec_.x != 0) {
                 facing_ = Math.atan2(moveVec_.y, moveVec_.x);
             }
-            p = time % walkPer / walkPer;
-            action = AnimatedChar.WALK;
+            if (this.ridingEntityId_ > 0) {
+                action = AnimatedChar.STAND;
+            } else {
+                walkPer = 3.5 / this.getMoveSpeed();
+                p = time % walkPer / walkPer;
+                action = AnimatedChar.WALK;
+            }
         }
         if (this.isHexed()) {
             this.isDefaultAnimatedChar && this.setToRandomAnimatedCharacter();

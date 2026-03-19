@@ -184,6 +184,7 @@ public class GameObject extends BasicObject {
     public var radius_:Number = 0.5;
     public var facing_:Number = 0;
     public var flying_:Boolean = false;
+    public var isLocalMount_:Boolean = false;
     public var attackAngle_:Number = 0;
     public var attackStart_:int = 0;
     public var animatedChar_:AnimatedChar = null;
@@ -224,7 +225,7 @@ public class GameObject extends BasicObject {
     protected var myLastTickId_:int = -1;
     protected var posAtTick_:Point;
     protected var tickPosition_:Point;
-    protected var moveVec_:Vector3D;
+    public var moveVec_:Vector3D;
     protected var bitmapFill_:GraphicsBitmapFill;
     protected var path_:GraphicsPath;
     protected var vS_:Vector.<Number>;
@@ -362,7 +363,11 @@ public class GameObject extends BasicObject {
         var pY:Number;
         var moving:Boolean;
 
-        if (!((this.moveVec_.x == 0) && (this.moveVec_.y == 0))) {
+        if (this.isLocalMount_) {
+            // Position controlled by rider — skip interpolation, keep moveVec for animation
+            moving = (this.moveVec_.x != 0 || this.moveVec_.y != 0);
+        }
+        else if (!((this.moveVec_.x == 0) && (this.moveVec_.y == 0))) {
             if (this.myLastTickId_ < map_.gs_.gsc_.lastTickId_) {
                 this.moveVec_.x = 0;
                 this.moveVec_.y = 0;

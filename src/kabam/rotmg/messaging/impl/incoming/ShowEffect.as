@@ -42,6 +42,8 @@ public class ShowEffect extends IncomingMessage
 
    public static const INSPIRED_EFFECT_TYPE:int = 17;
 
+   public static const CHARGE_PATH_EFFECT_TYPE:int = 18;
+
    public var effectType_:uint;
    public var targetObjectId_:int;
    public var pos1_:WorldPosData;

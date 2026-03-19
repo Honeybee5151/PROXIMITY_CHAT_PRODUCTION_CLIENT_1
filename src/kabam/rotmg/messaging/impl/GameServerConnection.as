@@ -26,6 +26,7 @@ import com.company.assembleegameclient.objects.Projectile;
 import com.company.assembleegameclient.objects.SellableObject;
 import com.company.assembleegameclient.objects.particles.AOEEffect;
 import com.company.assembleegameclient.objects.particles.BurstEffect;
+import com.company.assembleegameclient.objects.particles.ChargePathEffect;
 import com.company.assembleegameclient.objects.particles.CollapseEffect;
 import com.company.assembleegameclient.objects.particles.ConeBlastEffect;
 import com.company.assembleegameclient.objects.particles.FlowEffect;
@@ -1769,6 +1770,15 @@ public class GameServerConnection
                go.spritesProjectEffect = SpritesProjectEffect(go);
                this.gs_.map.addObj(go, go.x_, go.y_);
                break;
+            case ShowEffect.CHARGE_PATH_EFFECT_TYPE:
+               go = map.goDict_[showEffect.targetObjectId_];
+               if(go == null)
+               {
+                  break;
+               }
+               e = new ChargePathEffect(go.x_, go.y_, showEffect.pos1_.x_, showEffect.pos1_.y_, showEffect.pos2_.x_, showEffect.color_, showEffect.duration_ * 1000);
+               map.addObj(e, go.x_, go.y_);
+               break;
             /*case ShowEffect.THROW_PROJECTILE_EFFECT_TYPE:
                start = showEffect.pos1_.toPoint();
                e = new ThrowProjectileEffect(showEffect.color_,showEffect.pos2_.toPoint(),showEffect.pos1_.toPoint());
@@ -2120,7 +2130,8 @@ public class GameServerConnection
          }
          var isMyObject:Boolean = objectStatus.objectId_ == this.playerId_;
          var noAllyNotifications:Boolean = Parameters.data_.noAllyNotifications;
-         if(tickTime != 0 && !isMyObject)
+         var isMyMount:Boolean = this.player != null && this.player.ridingEntityId_ > 0 && objectStatus.objectId_ == this.player.ridingEntityId_;
+         if(tickTime != 0 && !isMyObject && !isMyMount)
          {
             go.onTickPos(objectStatus.pos_.x_,objectStatus.pos_.y_,tickTime,tickId);
          }
