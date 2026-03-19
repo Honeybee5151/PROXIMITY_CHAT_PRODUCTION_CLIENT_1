@@ -159,13 +159,9 @@ package com.company.assembleegameclient.objects.particles
 
       override public function draw(graphicsData:Vector.<IGraphicsData>, camera:Camera, time:int) : void
       {
-         if (!this.hasDirection_) return;
-
          var cx:Number = x_;
          var cy:Number = y_;
          var r:Number = this.zoneRadius_;
-
-         // Build path: large circle (CW) + cone cutout (CCW) = danger zone with safe cone hole
 
          this.path_.commands.length = 0;
          this.path_.data.length = 0;
@@ -187,29 +183,32 @@ package com.company.assembleegameclient.objects.particles
             );
          }
 
-         // --- Cone cutout (counter-clockwise = hole) ---
-         // Start at boss center
-         this.worldVerts_.push(cx, cy, 0);
-
-         // Arc from +halfAngle to -halfAngle (CCW = going from positive to negative)
-         // Use slightly larger radius so the cutout extends past the outer circle — eliminates seam artifact
-         var coneR:Number = r * 1.15;
-         var coneStartAngle:Number = this.smoothedAngle_ + this.coneHalfAngle_;
-         var coneEndAngle:Number = this.smoothedAngle_ - this.coneHalfAngle_;
-         var coneStep:Number = (coneStartAngle - coneEndAngle) / CONE_SEGMENTS;
-
-         for (i = 0; i <= CONE_SEGMENTS; i++)
+         // --- Cone cutout (only if we have a direction) ---
+         if (this.hasDirection_)
          {
-            angle = coneStartAngle - i * coneStep;
-            this.worldVerts_.push(
-               cx + Math.cos(angle) * coneR,
-               cy + Math.sin(angle) * coneR,
-               0
-            );
-         }
+            // Start at boss center
+            this.worldVerts_.push(cx, cy, 0);
 
-         // Back to center
-         this.worldVerts_.push(cx, cy, 0);
+            // Arc from +halfAngle to -halfAngle (CCW = going from positive to negative)
+            // Use slightly larger radius so the cutout extends past the outer circle — eliminates seam artifact
+            var coneR:Number = r * 1.15;
+            var coneStartAngle:Number = this.smoothedAngle_ + this.coneHalfAngle_;
+            var coneEndAngle:Number = this.smoothedAngle_ - this.coneHalfAngle_;
+            var coneStep:Number = (coneStartAngle - coneEndAngle) / CONE_SEGMENTS;
+
+            for (i = 0; i <= CONE_SEGMENTS; i++)
+            {
+               angle = coneStartAngle - i * coneStep;
+               this.worldVerts_.push(
+                  cx + Math.cos(angle) * coneR,
+                  cy + Math.sin(angle) * coneR,
+                  0
+               );
+            }
+
+            // Back to center
+            this.worldVerts_.push(cx, cy, 0);
+         }
 
          // Transform all to screen
          this.screenVerts_.length = 0;
@@ -228,26 +227,29 @@ package com.company.assembleegameclient.objects.particles
             this.path_.data.push(this.screenVerts_[i * 3], this.screenVerts_[i * 3 + 1]);
          }
 
-         // Cone cutout path (starts after circle vertices)
-         var coneOffset:int = (NUM_SEGMENTS + 1) * 3; // center point
-         this.path_.commands.push(GraphicsPathCommand.MOVE_TO);
-         this.path_.data.push(this.screenVerts_[coneOffset], this.screenVerts_[coneOffset + 1]);
-
-         // Arc points
-         var arcStart:int = coneOffset + 3; // first arc point
-         for (i = 0; i <= CONE_SEGMENTS; i++)
+         // Cone cutout path (only when direction is known)
+         if (this.hasDirection_)
          {
-            this.path_.commands.push(GraphicsPathCommand.LINE_TO);
-            this.path_.data.push(
-               this.screenVerts_[arcStart + i * 3],
-               this.screenVerts_[arcStart + i * 3 + 1]
-            );
-         }
+            var coneOffset:int = (NUM_SEGMENTS + 1) * 3; // center point
+            this.path_.commands.push(GraphicsPathCommand.MOVE_TO);
+            this.path_.data.push(this.screenVerts_[coneOffset], this.screenVerts_[coneOffset + 1]);
 
-         // Back to center
-         var backIdx:int = arcStart + (CONE_SEGMENTS + 1) * 3;
-         this.path_.commands.push(GraphicsPathCommand.LINE_TO);
-         this.path_.data.push(this.screenVerts_[backIdx], this.screenVerts_[backIdx + 1]);
+            // Arc points
+            var arcStart:int = coneOffset + 3; // first arc point
+            for (i = 0; i <= CONE_SEGMENTS; i++)
+            {
+               this.path_.commands.push(GraphicsPathCommand.LINE_TO);
+               this.path_.data.push(
+                  this.screenVerts_[arcStart + i * 3],
+                  this.screenVerts_[arcStart + i * 3 + 1]
+               );
+            }
+
+            // Back to center
+            var backIdx:int = arcStart + (CONE_SEGMENTS + 1) * 3;
+            this.path_.commands.push(GraphicsPathCommand.LINE_TO);
+            this.path_.data.push(this.screenVerts_[backIdx], this.screenVerts_[backIdx + 1]);
+         }
 
          this.fill_.alpha = 0.25;
 
