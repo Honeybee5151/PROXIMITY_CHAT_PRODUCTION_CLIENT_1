@@ -40,10 +40,9 @@ import com.company.assembleegameclient.ui.IconButton;
 
       private var dashShape_:Shape;
       private static const DASH_COOLDOWN_MS:int = 5000;
-      private static const DASH_RADIUS:Number = 14;
-      private static const DASH_SEGMENTS:int = 36;
-      private static const DASH_CX:Number = 14;
-      private static const DASH_CY:Number = 10;
+      private static const DASH_X:Number = 2;
+      private static const DASH_Y:Number = -2;
+      private static const DASH_SIZE:Number = 28;
 
       public function CharacterDetailsView()
       {
@@ -146,9 +145,9 @@ import com.company.assembleegameclient.ui.IconButton;
          var g:* = this.dashShape_.graphics;
          g.clear();
 
-         var cx:Number = DASH_CX;
-         var cy:Number = DASH_CY;
-         var r:Number = DASH_RADIUS;
+         var sx:Number = DASH_X;
+         var sy:Number = DASH_Y;
+         var s:Number = DASH_SIZE;
 
          var now:int = getTimer();
          var remaining:int = player.dashCooldownEnd_ - now;
@@ -156,30 +155,21 @@ import com.company.assembleegameclient.ui.IconButton;
          if (progress > 1.0) progress = 1.0;
          if (progress < 0) progress = 0;
 
-         // Background filled circle (dark)
+         // Background square (dark)
          g.beginFill(0x222222, 0.6);
-         g.drawCircle(cx, cy, r);
+         g.drawRect(sx, sy, s, s);
          g.endFill();
 
-         // Progress pie slice (blue, clockwise from top)
+         // Progress fill (blue, bottom to top)
          if (progress > 0)
          {
-            var arcEnd:Number = progress * Math.PI * 2;
-            var segs:int = Math.max(3, int(progress * DASH_SEGMENTS));
             var ready:Boolean = progress >= 1.0;
             var alpha:Number = ready ? 0.7 + 0.3 * Math.abs(Math.sin(now / 400)) : 0.9;
             var color:uint = ready ? 0x80D0FF : 0x60B0E0;
+            var fillH:Number = progress * s;
 
             g.beginFill(color, alpha);
-            g.moveTo(cx, cy);
-            var startAngle:Number = -Math.PI / 2;
-            g.lineTo(cx + Math.cos(startAngle) * r, cy + Math.sin(startAngle) * r);
-            for (var i:int = 1; i <= segs; i++)
-            {
-               var angle:Number = startAngle + (i / Number(segs)) * arcEnd;
-               g.lineTo(cx + Math.cos(angle) * r, cy + Math.sin(angle) * r);
-            }
-            g.lineTo(cx, cy);
+            g.drawRect(sx, sy + s - fillH, s, fillH);
             g.endFill();
          }
       }
