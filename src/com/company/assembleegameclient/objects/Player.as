@@ -513,7 +513,7 @@ public class Player extends Character {
         }
         var filteredTexture:BitmapData = texturingCache_[texture];
         if (filteredTexture == null) {
-            filteredTexture = GlowRedrawer.outlineGlow(texture, 0);
+            filteredTexture = GlowRedrawer.outlineGlow(texture, this.glowColor_);
             texturingCache_[texture] = filteredTexture;
         }
         if (this.isCursed()) {
