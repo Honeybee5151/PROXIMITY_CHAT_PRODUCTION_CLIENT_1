@@ -28,6 +28,7 @@ public class ObjectProperties
    public var healthBar_:int = 0;
    public var protectFromGroundDamage_:Boolean = false;
    public var protectFromSink_:Boolean = false;
+   public var isRaft_:Boolean = false;
    public var z_:Number = 0;
    public var flying_:Boolean = false;
    public var color_:int = -1;
@@ -94,6 +95,7 @@ public class ObjectProperties
       }
       this.protectFromGroundDamage_ = _arg_1.hasOwnProperty("ProtectFromGroundDamage");
       this.protectFromSink_ = _arg_1.hasOwnProperty("ProtectFromSink");
+      this.isRaft_ = _arg_1.hasOwnProperty("Raft");
       this.flying_ = _arg_1.hasOwnProperty("Flying");
       this.showName_ = _arg_1.hasOwnProperty("ShowName");
       this.dontFaceAttacks_ = _arg_1.hasOwnProperty("DontFaceAttacks");

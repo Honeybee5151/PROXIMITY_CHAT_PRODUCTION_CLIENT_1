@@ -202,6 +202,9 @@ public class Player extends Character {
     public var ridingEntityId_:int = -1;
     public var ridingDesiredX_:Number = -1;
     public var ridingDesiredY_:Number = -1;
+    public var lastRaftX_:Number = 0;
+    public var lastRaftY_:Number = 0;
+    public var raftInitialized_:Boolean = false;
     public var dashCooldownEnd_:int = 0;
     private static const DASH_COOLDOWN_MS:int = 5000;
     private static const DASH_CIRCLE_RADIUS:Number = 7;
@@ -293,6 +296,22 @@ public class Player extends Character {
             return true;
         }
 
+        // Raft carry: add raft's interpolated delta to player position each frame
+        if (this.ridingEntityId_ > 0 && map_ != null && map_.player_ == this) {
+            var raftObj:GameObject = map_.goDict_[this.ridingEntityId_];
+            if (raftObj != null && raftObj.props_.isRaft_) {
+                var raftDx:Number = raftObj.x_ - this.lastRaftX_;
+                var raftDy:Number = raftObj.y_ - this.lastRaftY_;
+                this.lastRaftX_ = raftObj.x_;
+                this.lastRaftY_ = raftObj.y_;
+                if (this.raftInitialized_) {
+                    x_ += raftDx;
+                    y_ += raftDy;
+                }
+                this.raftInitialized_ = true;
+            }
+        }
+
         if (this.relMoveVec_ != null) {
             playerAngle = Parameters.data_.cameraAngle;
             if (this.rotate_ != 0) {
@@ -348,10 +367,24 @@ public class Player extends Character {
             return false;
         }
 
-        // Riding: snap mount to player + sync animation
+        // Raft bounds clamping: keep player within raft area
+        if (this.ridingEntityId_ > 0 && map_ != null && map_.player_ == this) {
+            var raftClamp:GameObject = map_.goDict_[this.ridingEntityId_];
+            if (raftClamp != null && raftClamp.props_.isRaft_) {
+                // Bounds tuned to match visible oval sprite (anchor + glow padding offset)
+                var clampedX:Number = Math.max(raftClamp.x_ - 1.0, Math.min(raftClamp.x_, x_));
+                var clampedY:Number = Math.max(raftClamp.y_ - 4.0, Math.min(raftClamp.y_, y_));
+                if (clampedX != x_ || clampedY != y_) {
+                    x_ = clampedX;
+                    y_ = clampedY;
+                }
+            }
+        }
+
+        // Riding: snap mount to player + sync animation (but NOT for rafts)
         if (this.ridingEntityId_ > 0 && map_ != null) {
             var mount:GameObject = map_.goDict_[this.ridingEntityId_];
-            if (mount != null) {
+            if (mount != null && !mount.props_.isRaft_) {
                 mount.isLocalMount_ = true;
                 mount.moveTo(x_, y_);
                 mount.moveVec_.x = moveVec_.x;
@@ -431,12 +464,18 @@ public class Player extends Character {
                 if (this != map_.player_ && !this.starred_ && !this.isFellowGuild_ && !this.isPartyMember_) return;
                 break;
         }
-        if (this.ridingEntityId_ > 0) {
-            this.posS_[4] -= 20;
+        if (this.ridingEntityId_ > 0 && map_ != null) {
+            var drawMount:GameObject = map_.goDict_[this.ridingEntityId_];
+            if (drawMount == null || !drawMount.props_.isRaft_) {
+                this.posS_[4] -= 20;
+            }
         }
         super.draw(graphicsData, camera, time);
-        if (this.ridingEntityId_ > 0) {
-            this.posS_[4] += 20;
+        if (this.ridingEntityId_ > 0 && map_ != null) {
+            var drawMount2:GameObject = map_.goDict_[this.ridingEntityId_];
+            if (drawMount2 == null || !drawMount2.props_.isRaft_) {
+                this.posS_[4] += 20;
+            }
         }
         if (this != map_.player_) {
             drawName(graphicsData, camera);
@@ -462,8 +501,17 @@ public class Player extends Character {
             if (moveVec_.y != 0 || moveVec_.x != 0) {
                 facing_ = Math.atan2(moveVec_.y, moveVec_.x);
             }
-            if (this.ridingEntityId_ > 0) {
-                action = AnimatedChar.STAND;
+            if (this.ridingEntityId_ > 0 && map_ != null) {
+                var animMount:GameObject = map_.goDict_[this.ridingEntityId_];
+                if (animMount != null && animMount.props_.isRaft_) {
+                    // Raft: show walking animation normally
+                    walkPer = 3.5 / this.getMoveSpeed();
+                    p = time % walkPer / walkPer;
+                    action = AnimatedChar.WALK;
+                } else {
+                    // Regular mount: stand still
+                    action = AnimatedChar.STAND;
+                }
             } else {
                 walkPer = 3.5 / this.getMoveSpeed();
                 p = time % walkPer / walkPer;

@@ -174,7 +174,7 @@ public class Parameters {
         setDefault("showGuildInvitePopup", true);
         setDefault("contextualClick", true);
         setDefault("inventorySwap", true);
-        setDefault("GPURender", true);
+        setDefault("GPURender", false);
         setDefault("eyeCandyParticles", true);
         setDefault("hpBars", true);
         setDefault("allyShots", true);

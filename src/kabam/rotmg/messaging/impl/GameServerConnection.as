@@ -2134,6 +2134,7 @@ public class GameServerConnection
                   continue;
                case StatData.RIDING_ENTITY_ID:
                   player.ridingEntityId_ = value;
+                  player.raftInitialized_ = false;
                   continue;
                default:
                   trace("unhandled stat: " + stat.statType_);
@@ -2166,7 +2167,7 @@ public class GameServerConnection
          }
          var isMyObject:Boolean = objectStatus.objectId_ == this.playerId_;
          var noAllyNotifications:Boolean = Parameters.data_.noAllyNotifications;
-         var isMyMount:Boolean = this.player != null && this.player.ridingEntityId_ > 0 && objectStatus.objectId_ == this.player.ridingEntityId_;
+         var isMyMount:Boolean = this.player != null && this.player.ridingEntityId_ > 0 && objectStatus.objectId_ == this.player.ridingEntityId_ && go.props_ != null && !go.props_.isRaft_;
          if(tickTime != 0 && !isMyObject && !isMyMount)
          {
             go.onTickPos(objectStatus.pos_.x_,objectStatus.pos_.y_,tickTime,tickId);
