@@ -1457,9 +1457,14 @@ public class GameServerConnection
          var owner:GameObject = this.gs_.map.goDict_[enemyShoot.ownerId_];
          if(owner == null || owner.dead_)
          {
+            trace("[BeamDebug] onEnemyShoot DROPPED ownerId=" + enemyShoot.ownerId_ + " owner=" + (owner == null ? "null" : "dead") + " bulletType=" + enemyShoot.bulletType_);
             this.shootAck(-1);
             return;
          }
+         if(owner.objectType_ == 0x49D1 || owner.objectType_ == 0x49D2) {
+            trace("[BeamDebug] onEnemyShoot PROCESSING ownerId=" + enemyShoot.ownerId_ + " type=0x" + owner.objectType_.toString(16) + " numShots=" + enemyShoot.numShots_ + " angle=" + enemyShoot.angle_.toFixed(2) + " pos=(" + enemyShoot.startingPos_.x_.toFixed(1) + "," + enemyShoot.startingPos_.y_.toFixed(1) + ") dmg=" + enemyShoot.damage_);
+         }
+         try {
          for(var i:int = 0; i < enemyShoot.numShots_; i++)
          {
             proj = FreeList.newObject(Projectile) as Projectile;
@@ -1468,6 +1473,9 @@ public class GameServerConnection
             proj.setDamage(enemyShoot.damage_);
             this.gs_.map.addObj(proj,enemyShoot.startingPos_.x_,enemyShoot.startingPos_.y_);
             proj.addTo(this.gs_.map, enemyShoot.startingPos_.x_, enemyShoot.startingPos_.y_);
+         }
+         } catch(e:Error) {
+            trace("[BeamDebug] onEnemyShoot EXCEPTION creating projectile: " + e.message);
          }
          this.shootAck(this.gs_.lastUpdate_);
          owner.setAttack(owner.objectType_,enemyShoot.angle_ + enemyShoot.angleInc_ * ((enemyShoot.numShots_ - 1) / 2));
@@ -1510,10 +1518,15 @@ public class GameServerConnection
          try {
             go = ObjectLibrary.getObjectFromType(obj.objectType_);
          } catch(e:Error) {
+            trace("[BeamDebug] addObject EXCEPTION for type=0x" + obj.objectType_.toString(16) + ": " + e.message);
             return;
          }
          if(go == null) {
+            trace("[BeamDebug] addObject go==null for type=0x" + obj.objectType_.toString(16));
             return;
+         }
+         if(obj.objectType_ == 0x49D1 || obj.objectType_ == 0x49D2) {
+            trace("[BeamDebug] addObject SUCCESS type=0x" + obj.objectType_.toString(16) + " id=" + obj.status_.objectId_);
          }
          var status:ObjectStatusData = obj.status_;
          go.setObjectId(status.objectId_);

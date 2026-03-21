@@ -1,5 +1,6 @@
 ﻿// Decompiled by AS3 Sorcerer 6.08
 // www.as3sorcerer.com
+// Force recompile: beam sources v2
 
 //kabam.rotmg.assets.EmbeddedData_AbyssOfDemonsCXML
 
