@@ -115,6 +115,7 @@ public class Map extends Sprite {
     public var disableShooting_:Boolean;
     public var disableAbilities_:Boolean;
     public var communityDungeon_:Boolean;
+    public var lockRotation_:Boolean;
 
     //editor8182381 — Darkness zone config
     public var darknessZoneCenterX_:Number = 0;
@@ -122,7 +123,7 @@ public class Map extends Sprite {
     public var darknessZoneInnerRadius_:Number = 0;
     public var darknessZoneOuterRadius_:Number = 0;
 
-    public function setProps(width:int, height:int, name:String, back:int, allowPlayerTeleport:Boolean, showDisplays:Boolean, disableShooting:Boolean, disableAbilities:Boolean, communityDungeon:Boolean = false):void {
+    public function setProps(width:int, height:int, name:String, back:int, allowPlayerTeleport:Boolean, showDisplays:Boolean, disableShooting:Boolean, disableAbilities:Boolean, communityDungeon:Boolean = false, lockRotation:Boolean = false):void {
         this.width_ = width;
         this.height_ = height;
         this.name_ = name;
@@ -132,6 +133,7 @@ public class Map extends Sprite {
         this.disableShooting_ = disableShooting;
         this.disableAbilities_ = disableAbilities;
         this.communityDungeon_ = communityDungeon;
+        this.lockRotation_ = lockRotation;
     }
 
     public function initialize():void {

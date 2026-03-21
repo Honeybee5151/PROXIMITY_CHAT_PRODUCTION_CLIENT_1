@@ -741,6 +741,13 @@ public class Player extends Character {
     }
 
     public function walkTo(x:Number, y:Number):Boolean {
+        // On raft: skip tile passability check — raft bounds clamp handles it
+        if (this.ridingEntityId_ > 0 && map_ != null) {
+            var raftWalk:GameObject = map_.goDict_[this.ridingEntityId_];
+            if (raftWalk != null && raftWalk.props_.isRaft_) {
+                return this.moveTo(x, y);
+            }
+        }
         this.modifyMove(x, y, newP);
         return this.moveTo(newP.x, newP.y);
     }

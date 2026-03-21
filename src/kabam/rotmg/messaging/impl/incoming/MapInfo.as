@@ -17,6 +17,7 @@ package kabam.rotmg.messaging.impl.incoming
       public var disableShooting_:Boolean;
       public var disableAbilitites_:Boolean;
       public var communityDungeon_:Boolean;
+      public var lockRotation_:Boolean;
 
       //editor8182381 — Darkness zone fields
       public var darknessZoneCenterX_:Number = 0;
@@ -44,6 +45,7 @@ package kabam.rotmg.messaging.impl.incoming
          this.disableShooting_ = data.readBoolean();
          this.disableAbilitites_ = data.readBoolean();
          this.communityDungeon_ = data.readBoolean();
+         this.lockRotation_ = data.readBoolean();
          //editor8182381 — Darkness zone
          this.darknessZoneCenterX_ = data.readFloat();
          this.darknessZoneCenterY_ = data.readFloat();
