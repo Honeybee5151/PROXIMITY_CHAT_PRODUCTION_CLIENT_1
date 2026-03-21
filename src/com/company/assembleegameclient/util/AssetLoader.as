@@ -172,7 +172,7 @@ public class AssetLoader
       // community dungeon sprites
       AssetLibrary.addImageSet("communitySprites8x8", new EmbeddedAssets.communitySprites8x8().bitmapData, 8, 8);
       AssetLibrary.addImageSet("communitySprites16x16", new EmbeddedAssets.communitySprites16x16().bitmapData, 16, 16);
-      AssetLibrary.addImageSet("communitySprites32x32", new EmbeddedAssets.communitySprites32x32().bitmapData, 32, 48);
+      AssetLibrary.addImageSet("communitySprites32x32", new EmbeddedAssets.communitySprites32x32().bitmapData, 26, 32);
    }
 
    private function addAnimatedCharacters():void

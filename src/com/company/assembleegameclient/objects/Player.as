@@ -313,6 +313,14 @@ public class Player extends Character {
         }
 
         if (this.relMoveVec_ != null) {
+            // Lock camera rotation while on raft (bounds are axis-aligned in world space)
+            if (this.ridingEntityId_ > 0 && map_ != null) {
+                var rotMount:GameObject = map_.goDict_[this.ridingEntityId_];
+                if (rotMount != null && rotMount.props_.isRaft_) {
+                    this.rotate_ = 0;
+                    Parameters.data_.cameraAngle = 0;
+                }
+            }
             playerAngle = Parameters.data_.cameraAngle;
             if (this.rotate_ != 0) {
                 playerAngle = playerAngle + dt * Parameters.PLAYER_ROTATE_SPEED * this.rotate_;
@@ -371,9 +379,9 @@ public class Player extends Character {
         if (this.ridingEntityId_ > 0 && map_ != null && map_.player_ == this) {
             var raftClamp:GameObject = map_.goDict_[this.ridingEntityId_];
             if (raftClamp != null && raftClamp.props_.isRaft_) {
-                // Bounds tuned to match visible oval sprite (anchor + glow padding offset)
-                var clampedX:Number = Math.max(raftClamp.x_ - 1.0, Math.min(raftClamp.x_, x_));
-                var clampedY:Number = Math.max(raftClamp.y_ - 4.0, Math.min(raftClamp.y_, y_));
+                // 3x4 tile raft, bottom-center anchored
+                var clampedX:Number = Math.max(raftClamp.x_ - 1.5, Math.min(raftClamp.x_ + 1.5, x_));
+                var clampedY:Number = Math.max(raftClamp.y_ - 3.0, Math.min(raftClamp.y_, y_));
                 if (clampedX != x_ || clampedY != y_) {
                     x_ = clampedX;
                     y_ = clampedY;
@@ -890,6 +898,14 @@ public class Player extends Character {
         else {
             sinkLevel_ = 0;
             this.moveMultiplier_ = square.props_.speed_;
+        }
+        // On raft: always normal walk speed (tile speed affects raft drift instead)
+        if (this.ridingEntityId_ > 0 && map_ != null) {
+            var raftMount:GameObject = map_.goDict_[this.ridingEntityId_];
+            if (raftMount != null && raftMount.props_.isRaft_) {
+                sinkLevel_ = 0;
+                this.moveMultiplier_ = 1.0;
+            }
         }
     }
 
