@@ -84,7 +84,7 @@ package com.company.assembleegameclient.objects
                face = this.faces_[sf];
                var dir2:int = sf % 4;
                sq = map_.lookupSquare(x_ + sqX[dir2], y_ + sqY[dir2]);
-               if(sq == null || sq.texture_ == null || sq.obj_ is Wall && !sq.obj_.dead_)
+               if(sq != null && sq.obj_ is Wall && !sq.obj_.dead_)
                {
                   continue;
                }
@@ -188,7 +188,7 @@ package com.company.assembleegameclient.objects
       {
          // Face spanning faceH units of height
          var vin:Vector.<Number> = new <Number>[x0,y0,z0,x1,y1,z1,x1,y1,z1 - faceH,x0,y0,z0 - faceH];
-         var face:Face3D = new Face3D(tex,vin,flipU ? UVT_FLIP : UVT,true,true);
+         var face:Face3D = new Face3D(tex,vin,flipU ? UVT_FLIP : UVT,false,true);
          face.bitmapFill_.repeat = true;
          this.faces_.push(face);
       }
