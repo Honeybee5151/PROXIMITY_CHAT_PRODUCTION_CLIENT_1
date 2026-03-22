@@ -190,7 +190,7 @@ public class GameSprite extends Sprite {
       var w:Number = WebMain.STAGE.stageWidth;
       var h:Number = WebMain.STAGE.stageHeight;
       var sx:Number = (h * 800) / (w * 600);
-
+//d
       tutorialTitle.scaleX = sx;
       tutorialTitle.x = 400 - (400 * sx) / 2;
 
