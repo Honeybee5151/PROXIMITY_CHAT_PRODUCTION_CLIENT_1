@@ -52,6 +52,7 @@ public class ObjectLibrary
     public static const customObjAnimFrames_:Dictionary = new Dictionary();
     public static const customWallSlices_:Dictionary = new Dictionary(); // typeCode → Vector.<BitmapData> of 8×8 slices (bottom-to-top)
     public static const customWallComposite_:Dictionary = new Dictionary(); // typeCode → BitmapData composite (8 wide × N*8 tall)
+    public static const customWallUpper_:Dictionary = new Dictionary(); // typeCode → BitmapData upper composite (slices 1..N-1, 8 wide × (N-1)*8 tall)
     public static const ENEMY_FILTER_LIST:Vector.<String> = new <String>["None", "Hp", "Defense"];
     public static const TILE_FILTER_LIST:Vector.<String> = new <String>["ALL", "Walkable", "Unwalkable", "Slow", "Speed=1"];
     public static const defaultProps_:ObjectProperties = new ObjectProperties(null);
@@ -729,6 +730,23 @@ public class ObjectLibrary
                         }
                     }
                     customWallComposite_[typeCode] = compBmd;
+
+                    // Create upper composite (slices 1..N-1, excluding bottom slice)
+                    // Used for the upper portion of walls that extends above adjacent walls
+                    if (numSlices > 1)
+                    {
+                        var upperH:int = (numSlices - 1) * 8;
+                        var upperBmd:BitmapData = new BitmapData(8, upperH, true, 0x00000000);
+                        for (var ui:int = 1; ui < numSlices; ui++)
+                        {
+                            if (slices[ui] != null)
+                            {
+                                var upperY:int = upperH - ui * 8;
+                                upperBmd.copyPixels(slices[ui], slices[ui].rect, new Point(0, upperY));
+                            }
+                        }
+                        customWallUpper_[typeCode] = upperBmd;
+                    }
                 }
             }
             else
@@ -782,6 +800,11 @@ public class ObjectLibrary
                 {
                     (customWallComposite_[tc] as BitmapData).dispose();
                     delete customWallComposite_[tc];
+                }
+                if (customWallUpper_[tc] != null)
+                {
+                    (customWallUpper_[tc] as BitmapData).dispose();
+                    delete customWallUpper_[tc];
                 }
             }
         }

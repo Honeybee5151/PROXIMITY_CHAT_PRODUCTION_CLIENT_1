@@ -92,17 +92,28 @@ package com.company.assembleegameclient.objects
          }
          if(ObjectLibrary.customWallComposite_[objectType_] != null)
          {
-            // Composite wall: 4 faces (N,E,S,W) with neighbor culling, same as original
+            // Split wall: faces 0-3 = bottom (N,E,S,W), faces 4-7 = upper (N,E,S,W)
+            // Bottom faces: neighbor-culled (same as original walls)
+            // Upper faces: always show texture (extends above adjacent walls)
             for(var sf:int = 0; sf < this.faces_.length; sf++)
             {
                face = this.faces_[sf];
-               sq = map_.lookupSquare(x_ + sqX[sf], y_ + sqY[sf]);
-               if(sq == null || sq.texture_ == null || sq.obj_ is Wall && !sq.obj_.dead_)
+               if(sf < 4)
                {
-                  face.blackOut_ = true;
+                  // Bottom face: neighbor culling like original walls
+                  sq = map_.lookupSquare(x_ + sqX[sf], y_ + sqY[sf]);
+                  if(sq == null || sq.texture_ == null || sq.obj_ is Wall && !sq.obj_.dead_)
+                  {
+                     face.blackOut_ = true;
+                  }
+                  else
+                  {
+                     face.blackOut_ = false;
+                  }
                }
                else
                {
+                  // Upper face: always show (no adjacent wall at this height)
                   face.blackOut_ = false;
                }
                face.draw(graphicsData, camera);
@@ -139,19 +150,28 @@ package com.company.assembleegameclient.objects
          var yi:int = y_;
          var s:int = this.wallSize_;
 
-         // Check for composite wall texture (custom walls with spriteSize > 8)
-         var compTex:BitmapData = ObjectLibrary.customWallComposite_[objectType_];
-         if (compTex != null)
+         // Check for split wall textures (custom walls with spriteSize > 8)
+         var slices:Vector.<BitmapData> = ObjectLibrary.customWallSlices_[objectType_];
+         var upperTex:BitmapData = ObjectLibrary.customWallUpper_[objectType_];
+         if (slices != null && slices.length > 1 && upperTex != null)
          {
-            // Single face per side spanning full height, like the base game
-            var h:int = compTex.height / 8; // number of 8×8 slices = wall height in units
+            var h:int = slices.length; // total height in units
             var topVin:Vector.<Number> = new <Number>[xi,yi,h, xi+1,yi,h, xi+1,yi+1,h, xi,yi+1,h];
             this.topFace_ = new Face3D(this.topTexture_,topVin,UVT,false,true);
             this.topFace_.bitmapFill_.repeat = true;
-            this.addCompositeWall(xi, yi, h, xi+1, yi, h, compTex, false);
-            this.addCompositeWall(xi+1, yi, h, xi+1, yi+1, h, compTex, false);
-            this.addCompositeWall(xi+1, yi+1, h, xi, yi+1, h, compTex, true);
-            this.addCompositeWall(xi, yi+1, h, xi, yi, h, compTex, true);
+            // Bottom faces (z=0 to z=1): use bottom slice, neighbor-culled
+            // faces_[0..3] = N,E,S,W bottom
+            this.addSplitFace(xi, yi, 1, xi+1, yi, 1, 1, slices[0], false);
+            this.addSplitFace(xi+1, yi, 1, xi+1, yi+1, 1, 1, slices[0], false);
+            this.addSplitFace(xi+1, yi+1, 1, xi, yi+1, 1, 1, slices[0], true);
+            this.addSplitFace(xi, yi+1, 1, xi, yi, 1, 1, slices[0], true);
+            // Upper faces (z=1 to z=h): use upper composite, always visible
+            // faces_[4..7] = N,E,S,W upper
+            var uh:int = h - 1;
+            this.addSplitFace(xi, yi, h, xi+1, yi, h, uh, upperTex, false);
+            this.addSplitFace(xi+1, yi, h, xi+1, yi+1, h, uh, upperTex, false);
+            this.addSplitFace(xi+1, yi+1, h, xi, yi+1, h, uh, upperTex, true);
+            this.addSplitFace(xi, yi+1, h, xi, yi, h, uh, upperTex, true);
          }
          else
          {
@@ -175,12 +195,11 @@ package com.company.assembleegameclient.objects
          this.faces_.push(face);
       }
 
-      private function addCompositeWall(x0:Number, y0:Number, z0:Number, x1:Number, y1:Number, z1:Number, compTex:BitmapData, flipU:Boolean = false) : void
+      private function addSplitFace(x0:Number, y0:Number, z0:Number, x1:Number, y1:Number, z1:Number, faceH:int, tex:BitmapData, flipU:Boolean = false) : void
       {
-         // Single face spanning full wall height, using composite texture
-         var h:int = compTex.height / 8;
-         var vin:Vector.<Number> = new <Number>[x0,y0,z0,x1,y1,z1,x1,y1,z1 - h,x0,y0,z0 - h];
-         var face:Face3D = new Face3D(compTex,vin,flipU ? UVT_FLIP : UVT,true,true);
+         // Face spanning faceH units of height
+         var vin:Vector.<Number> = new <Number>[x0,y0,z0,x1,y1,z1,x1,y1,z1 - faceH,x0,y0,z0 - faceH];
+         var face:Face3D = new Face3D(tex,vin,flipU ? UVT_FLIP : UVT,true,true);
          face.bitmapFill_.repeat = true;
          this.faces_.push(face);
       }
