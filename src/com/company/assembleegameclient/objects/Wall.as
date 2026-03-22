@@ -74,6 +74,26 @@ package com.company.assembleegameclient.objects
                texture = animTexture;
             }
          }
+         if(ObjectLibrary.customWallComposite_[objectType_] != null)
+         {
+            // Custom tall wall: faces 0-3 = bottom (N,E,S,W), faces 4-7 = upper (N,E,S,W)
+            // Both bottom and upper faces are neighbor-culled:
+            // if adjacent tile has a wall, skip drawing that face entirely
+            for(var sf:int = 0; sf < this.faces_.length; sf++)
+            {
+               face = this.faces_[sf];
+               var dir2:int = sf % 4;
+               sq = map_.lookupSquare(x_ + sqX[dir2], y_ + sqY[dir2]);
+               if(sq == null || sq.texture_ == null || sq.obj_ is Wall && !sq.obj_.dead_)
+               {
+                  continue;
+               }
+               face.blackOut_ = false;
+               face.draw(graphicsData, camera);
+            }
+            this.topFace_.draw(graphicsData, camera);
+            return;
+         }
          if(this.wallSize_ > 1)
          {
             // Multi-tile wall: no face culling (spans multiple grid cells)
@@ -85,41 +105,6 @@ package com.company.assembleegameclient.objects
                {
                   face.setTexture(texture);
                }
-               face.draw(graphicsData, camera);
-            }
-            this.topFace_.draw(graphicsData, camera);
-            return;
-         }
-         if(ObjectLibrary.customWallComposite_[objectType_] != null)
-         {
-            // Split wall: faces 0-3 = bottom (N,E,S,W), faces 4-7 = upper (N,E,S,W)
-            // Bottom faces: neighbor-culled (hidden if adjacent wall exists)
-            // Upper faces: neighbor-culled AND camera-angle-culled (skip grazing angles)
-            var sinA:Number = Math.sin(camera.angleRad_);
-            var cosA:Number = Math.cos(camera.angleRad_);
-            // Per-direction visibility (dot product of face normal with camera depth vector):
-            // N(0): -cosA, E(1): -sinA, S(2): cosA, W(3): sinA
-            for(var sf:int = 0; sf < this.faces_.length; sf++)
-            {
-               face = this.faces_[sf];
-               var dir2:int = sf % 4;
-               // Neighbor culling: skip if adjacent tile has a wall
-               sq = map_.lookupSquare(x_ + sqX[dir2], y_ + sqY[dir2]);
-               if(sq == null || sq.texture_ == null || sq.obj_ is Wall && !sq.obj_.dead_)
-               {
-                  continue;
-               }
-               // Upper faces (4-7): skip at grazing camera angles to avoid thin slivers
-               if(sf >= 4)
-               {
-                  var vis:Number;
-                  if(dir2 == 0) vis = -cosA;
-                  else if(dir2 == 1) vis = -sinA;
-                  else if(dir2 == 2) vis = cosA;
-                  else vis = sinA;
-                  if(vis < 0.3) continue;
-               }
-               face.blackOut_ = false;
                face.draw(graphicsData, camera);
             }
             this.topFace_.draw(graphicsData, camera);
