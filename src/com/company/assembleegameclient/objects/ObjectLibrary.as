@@ -686,7 +686,19 @@ public class ObjectLibrary
             var td:TextureDataConcrete = new TextureDataConcrete(dummyXml);
             td.texture_ = bmd;
             typeToTextureData_[typeCode] = td;
-            typeToTopTextureData_[typeCode] = td;
+
+            // Walls get a black top texture; other objects reuse the side texture
+            if (classFlag == 3 || classFlag == 1) // Wall or Destructible
+            {
+                var blackBmd:BitmapData = new BitmapData(spriteSize > 0 ? spriteSize : 8, spriteSize > 0 ? spriteSize : 8, false, 0xFF000000);
+                var topTd:TextureDataConcrete = new TextureDataConcrete(dummyXml);
+                topTd.texture_ = blackBmd;
+                typeToTopTextureData_[typeCode] = topTd;
+            }
+            else
+            {
+                typeToTopTextureData_[typeCode] = td;
+            }
         }
 
         return count;
