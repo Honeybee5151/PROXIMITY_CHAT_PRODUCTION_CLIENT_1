@@ -85,9 +85,12 @@ package com.company.assembleegameclient.objects
                sq = map_.lookupSquare(x_ + sqX[dir2], y_ + sqY[dir2]);
                if(sq != null && sq.obj_ is Wall && !sq.obj_.dead_)
                {
-                  continue;
+                  face.blackOut_ = true;
                }
-               face.blackOut_ = false;
+               else
+               {
+                  face.blackOut_ = false;
+               }
                face.draw(graphicsData, camera);
             }
             this.topFace_.draw(graphicsData, camera);
