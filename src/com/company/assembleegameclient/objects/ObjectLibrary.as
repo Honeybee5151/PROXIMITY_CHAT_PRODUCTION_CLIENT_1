@@ -643,10 +643,6 @@ public class ObjectLibrary
                 objXml.appendChild(<BlocksSight/>);
                 objXml.appendChild(<OccupySquare/>);
                 objXml.appendChild(<EnemyOccupySquare/>);
-                if (spriteSize > 8)
-                {
-                    objXml.appendChild(XML("<WallSize>" + int(spriteSize / 8) + "</WallSize>"));
-                }
             }
             else if (classFlag == 1) // Destructible — 3D breakable cube
             {
@@ -657,10 +653,6 @@ public class ObjectLibrary
                 objXml.appendChild(<EnemyOccupySquare/>);
                 objXml.appendChild(<Enemy/>);
                 objXml.appendChild(<MaxHitPoints>100</MaxHitPoints>);
-                if (spriteSize > 8)
-                {
-                    objXml.appendChild(XML("<WallSize>" + int(spriteSize / 8) + "</WallSize>"));
-                }
             }
             else if (classFlag == 2) // Decoration — 2D flat, walk-through
             {
