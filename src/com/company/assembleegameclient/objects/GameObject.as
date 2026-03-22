@@ -397,14 +397,10 @@ public class GameObject extends BasicObject {
 
     override public function computeSortVal(camera:Camera):void {
         if (this.sizeMult_ > 1 && this.props_.static_) {
-            // Offset render position: X centered on block, Y at block bottom
-            // Drawing uses bottom-Y alignment (texture extends upward), so placing Y
-            // at the block bottom makes the texture top align with the anchor tile,
-            // matching the website editor's top-left anchoring.
-            var offX:Number = (this.sizeMult_ - 1) * 0.5;
-            var offY:Number = this.sizeMult_ - 0.5;
+            // Offset render position to center of NxN tile block
+            var off:Number = (this.sizeMult_ - 1) * 0.5;
             this.posW_.length = 0;
-            this.posW_.push(this.x_ + offX, this.y_ + offY, 0, this.x_ + offX, this.y_ + offY, this.z_);
+            this.posW_.push(this.x_ + off, this.y_ + off, 0, this.x_ + off, this.y_ + off, this.z_);
             this.posS_.length = 0;
             camera.wToS_.transformVectors(this.posW_, this.posS_);
             this.sortVal_ = int(this.posS_[1]);
