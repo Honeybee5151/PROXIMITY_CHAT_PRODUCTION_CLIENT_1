@@ -93,27 +93,19 @@ package com.company.assembleegameclient.objects
          if(ObjectLibrary.customWallComposite_[objectType_] != null)
          {
             // Split wall: faces 0-3 = bottom (N,E,S,W), faces 4-7 = upper (N,E,S,W)
-            // Bottom faces: neighbor-culled (same as original walls)
-            // Upper faces: always show texture (extends above adjacent walls)
+            // Both bottom and upper use neighbor culling: if adjacent tile has any wall,
+            // hide that side entirely (matching how generic walls behave in formations)
             for(var sf:int = 0; sf < this.faces_.length; sf++)
             {
                face = this.faces_[sf];
-               if(sf < 4)
+               var dir2:int = sf % 4;
+               sq = map_.lookupSquare(x_ + sqX[dir2], y_ + sqY[dir2]);
+               if(sq == null || sq.texture_ == null || sq.obj_ is Wall && !sq.obj_.dead_)
                {
-                  // Bottom face: neighbor culling like original walls
-                  sq = map_.lookupSquare(x_ + sqX[sf], y_ + sqY[sf]);
-                  if(sq == null || sq.texture_ == null || sq.obj_ is Wall && !sq.obj_.dead_)
-                  {
-                     face.blackOut_ = true;
-                  }
-                  else
-                  {
-                     face.blackOut_ = false;
-                  }
+                  face.blackOut_ = true;
                }
                else
                {
-                  // Upper face: always show (no adjacent wall at this height)
                   face.blackOut_ = false;
                }
                face.draw(graphicsData, camera);
