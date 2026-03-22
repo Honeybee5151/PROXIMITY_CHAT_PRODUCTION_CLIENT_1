@@ -74,16 +74,37 @@ package com.company.assembleegameclient.objects
                texture = animTexture;
             }
          }
-         if(this.wallSize_ > 1 || ObjectLibrary.customWallSlices_[objectType_] != null)
+         if(this.wallSize_ > 1)
          {
-            // Multi-tile or stacked wall: always draw all faces (no face culling)
+            // Multi-tile wall: no face culling (spans multiple grid cells)
             for(var mf:int = 0; mf < this.faces_.length; mf++)
             {
                face = this.faces_[mf];
                face.blackOut_ = false;
-               if(animations_ != null && ObjectLibrary.customWallSlices_[objectType_] == null)
+               if(animations_ != null)
                {
                   face.setTexture(texture);
+               }
+               face.draw(graphicsData, camera);
+            }
+            this.topFace_.draw(graphicsData, camera);
+            return;
+         }
+         if(ObjectLibrary.customWallSlices_[objectType_] != null)
+         {
+            // Stacked wall: apply neighbor culling (faces stored as N,E,S,W per cube level)
+            for(var sf:int = 0; sf < this.faces_.length; sf++)
+            {
+               face = this.faces_[sf];
+               var dir:int = sf % 4;
+               sq = map_.lookupSquare(x_ + sqX[dir], y_ + sqY[dir]);
+               if(sq == null || sq.texture_ == null || sq.obj_ is Wall && !sq.obj_.dead_)
+               {
+                  face.blackOut_ = true;
+               }
+               else
+               {
+                  face.blackOut_ = false;
                }
                face.draw(graphicsData, camera);
             }
@@ -167,8 +188,10 @@ package com.company.assembleegameclient.objects
 
       private function addWallSlice(x0:Number, y0:Number, z0:Number, x1:Number, y1:Number, z1:Number, sliceTex:BitmapData, flipU:Boolean = false) : void
       {
-         // Each stacked cube is 1 unit tall
-         var vin:Vector.<Number> = new <Number>[x0,y0,z0,x1,y1,z1,x1,y1,z1 - 1,x0,y0,z0 - 1];
+         // Each stacked cube is 1 unit tall, with slight overlap (0.01) to prevent seams
+         var botZ0:Number = z0 - 1.01;
+         var botZ1:Number = z1 - 1.01;
+         var vin:Vector.<Number> = new <Number>[x0,y0,z0,x1,y1,z1,x1,y1,botZ1,x0,y0,botZ0];
          var face:Face3D = new Face3D(sliceTex,vin,flipU ? UVT_FLIP : UVT,true,true);
          face.bitmapFill_.repeat = true;
          this.faces_.push(face);
