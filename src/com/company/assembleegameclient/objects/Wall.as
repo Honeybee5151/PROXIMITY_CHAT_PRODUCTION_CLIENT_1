@@ -77,16 +77,21 @@ package com.company.assembleegameclient.objects
          if(ObjectLibrary.customWallComposite_[objectType_] != null)
          {
             // Custom tall wall: faces 0-3 = bottom (N,E,S,W), faces 4-7 = upper (N,E,S,W)
-            // Both bottom and upper faces are neighbor-culled:
-            // if adjacent tile has a wall, skip drawing that face entirely
+            // Bottom faces: skip if neighbor has a wall (neighbor covers them)
+            // Upper faces: always draw (they extend above 1-unit neighbors)
+            // Backface culling in Face3D handles camera angle visibility
             for(var sf:int = 0; sf < this.faces_.length; sf++)
             {
                face = this.faces_[sf];
-               var dir2:int = sf % 4;
-               sq = map_.lookupSquare(x_ + sqX[dir2], y_ + sqY[dir2]);
-               if(sq != null && sq.obj_ is Wall && !sq.obj_.dead_)
+               if(sf < 4)
                {
-                  continue;
+                  // Bottom face: neighbor-culled
+                  var dir2:int = sf;
+                  sq = map_.lookupSquare(x_ + sqX[dir2], y_ + sqY[dir2]);
+                  if(sq != null && sq.obj_ is Wall && !sq.obj_.dead_)
+                  {
+                     continue;
+                  }
                }
                face.blackOut_ = false;
                face.draw(graphicsData, camera);
