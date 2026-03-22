@@ -14,6 +14,8 @@ import com.company.assembleegameclient.objects.animation.AnimationsData;
 import kabam.rotmg.assets.EmbeddedData;
 import flash.utils.getDefinitionByName;
 import flash.display.BitmapData;
+import flash.geom.Rectangle;
+import flash.geom.Point;
 import com.company.util.AssetLibrary;
 import com.company.assembleegameclient.parameters.Parameters;
 import com.company.assembleegameclient.util.TextureRedrawer;
@@ -48,6 +50,9 @@ public class ObjectLibrary
     public static const petSkinIdToPetType_:Dictionary = new Dictionary();
     public static const dungeonsXMLLibrary_:Dictionary = new Dictionary(true);
     public static const customObjAnimFrames_:Dictionary = new Dictionary();
+    public static const customWallSlices_:Dictionary = new Dictionary(); // typeCode → Vector.<BitmapData> of 8×8 slices (bottom-to-top)
+    public static const customWallComposite_:Dictionary = new Dictionary(); // typeCode → BitmapData composite (8 wide × N*8 tall)
+    public static const customWallUpper_:Dictionary = new Dictionary(); // typeCode → BitmapData upper composite (slices 1..N-1, 8 wide × (N-1)*8 tall)
     public static const ENEMY_FILTER_LIST:Vector.<String> = new <String>["None", "Hp", "Defense"];
     public static const TILE_FILTER_LIST:Vector.<String> = new <String>["ALL", "Walkable", "Unwalkable", "Slow", "Speed=1"];
     public static const defaultProps_:ObjectProperties = new ObjectProperties(null);
@@ -686,6 +691,55 @@ public class ObjectLibrary
                 var topTd:TextureDataConcrete = new TextureDataConcrete(dummyXml);
                 topTd.texture_ = blackBmd;
                 typeToTopTextureData_[typeCode] = topTd;
+
+                // Extract 8×8 slices for stacked wall rendering (bottom-to-top)
+                if (spriteSize > 8 && bmd != null)
+                {
+                    var numSlices:int = spriteSize / 8;
+                    var slices:Vector.<BitmapData> = new Vector.<BitmapData>(numSlices);
+                    for (var si:int = 0; si < numSlices; si++)
+                    {
+                        // Bottom slice = si=0, top slice = si=numSlices-1
+                        // In the square texture, the strip is bottom-aligned
+                        // So bottom 8 rows = y from (spriteSize-8) to (spriteSize-1)
+                        var srcY:int = spriteSize - (si + 1) * 8;
+                        var sliceBmd:BitmapData = new BitmapData(8, 8, true, 0x00000000);
+                        sliceBmd.copyPixels(bmd, new Rectangle(0, srcY, 8, 8), new Point(0, 0));
+                        slices[si] = sliceBmd;
+                    }
+                    customWallSlices_[typeCode] = slices;
+
+                    // Create composite texture: 8 wide × (numSlices*8) tall, slices arranged top-to-bottom
+                    // Slice 0 (bottom of wall) goes at bottom of bitmap, slice N-1 (top) at top
+                    var compH:int = numSlices * 8;
+                    var compBmd:BitmapData = new BitmapData(8, compH, true, 0x00000000);
+                    for (var ci:int = 0; ci < numSlices; ci++)
+                    {
+                        if (slices[ci] != null)
+                        {
+                            var compY:int = compH - (ci + 1) * 8;
+                            compBmd.copyPixels(slices[ci], slices[ci].rect, new Point(0, compY));
+                        }
+                    }
+                    customWallComposite_[typeCode] = compBmd;
+
+                    // Create upper composite (slices 1..N-1, excluding bottom slice)
+                    // Used for the upper portion of walls that extends above adjacent walls
+                    if (numSlices > 1)
+                    {
+                        var upperH:int = (numSlices - 1) * 8;
+                        var upperBmd:BitmapData = new BitmapData(8, upperH, true, 0x00000000);
+                        for (var ui:int = 1; ui < numSlices; ui++)
+                        {
+                            if (slices[ui] != null)
+                            {
+                                var upperY:int = upperH - ui * 8;
+                                upperBmd.copyPixels(slices[ui], slices[ui].rect, new Point(0, upperY));
+                            }
+                        }
+                        customWallUpper_[typeCode] = upperBmd;
+                    }
+                }
             }
             else
             {
@@ -724,6 +778,25 @@ public class ObjectLibrary
                     for each (var afr:BitmapData in animFrames)
                         if (afr != null) afr.dispose();
                     delete customObjAnimFrames_[tc];
+                }
+
+                // Dispose wall slice textures and composite
+                if (customWallSlices_[tc] != null)
+                {
+                    var sliceVec:Vector.<BitmapData> = customWallSlices_[tc];
+                    for each (var slc:BitmapData in sliceVec)
+                        if (slc != null) slc.dispose();
+                    delete customWallSlices_[tc];
+                }
+                if (customWallComposite_[tc] != null)
+                {
+                    (customWallComposite_[tc] as BitmapData).dispose();
+                    delete customWallComposite_[tc];
+                }
+                if (customWallUpper_[tc] != null)
+                {
+                    (customWallUpper_[tc] as BitmapData).dispose();
+                    delete customWallUpper_[tc];
                 }
             }
         }
