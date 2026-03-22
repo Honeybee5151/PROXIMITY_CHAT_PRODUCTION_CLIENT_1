@@ -14,6 +14,8 @@ import com.company.assembleegameclient.objects.animation.AnimationsData;
 import kabam.rotmg.assets.EmbeddedData;
 import flash.utils.getDefinitionByName;
 import flash.display.BitmapData;
+import flash.geom.Rectangle;
+import flash.geom.Point;
 import com.company.util.AssetLibrary;
 import com.company.assembleegameclient.parameters.Parameters;
 import com.company.assembleegameclient.util.TextureRedrawer;
@@ -48,6 +50,7 @@ public class ObjectLibrary
     public static const petSkinIdToPetType_:Dictionary = new Dictionary();
     public static const dungeonsXMLLibrary_:Dictionary = new Dictionary(true);
     public static const customObjAnimFrames_:Dictionary = new Dictionary();
+    public static const customWallSlices_:Dictionary = new Dictionary(); // typeCode → Vector.<BitmapData> of 8×8 slices (bottom-to-top)
     public static const ENEMY_FILTER_LIST:Vector.<String> = new <String>["None", "Hp", "Defense"];
     public static const TILE_FILTER_LIST:Vector.<String> = new <String>["ALL", "Walkable", "Unwalkable", "Slow", "Speed=1"];
     public static const defaultProps_:ObjectProperties = new ObjectProperties(null);
@@ -690,10 +693,28 @@ public class ObjectLibrary
             // Walls get a black top texture; other objects reuse the side texture
             if (classFlag == 3 || classFlag == 1) // Wall or Destructible
             {
-                var blackBmd:BitmapData = new BitmapData(spriteSize > 0 ? spriteSize : 8, spriteSize > 0 ? spriteSize : 8, false, 0xFF000000);
+                var blackBmd:BitmapData = new BitmapData(8, 8, false, 0xFF000000);
                 var topTd:TextureDataConcrete = new TextureDataConcrete(dummyXml);
                 topTd.texture_ = blackBmd;
                 typeToTopTextureData_[typeCode] = topTd;
+
+                // Extract 8×8 slices for stacked wall rendering (bottom-to-top)
+                if (spriteSize > 8 && bmd != null)
+                {
+                    var numSlices:int = spriteSize / 8;
+                    var slices:Vector.<BitmapData> = new Vector.<BitmapData>(numSlices);
+                    for (var si:int = 0; si < numSlices; si++)
+                    {
+                        // Bottom slice = si=0, top slice = si=numSlices-1
+                        // In the square texture, the strip is bottom-aligned
+                        // So bottom 8 rows = y from (spriteSize-8) to (spriteSize-1)
+                        var srcY:int = spriteSize - (si + 1) * 8;
+                        var sliceBmd:BitmapData = new BitmapData(8, 8, true, 0x00000000);
+                        sliceBmd.copyPixels(bmd, new Rectangle(0, srcY, 8, 8), new Point(0, 0));
+                        slices[si] = sliceBmd;
+                    }
+                    customWallSlices_[typeCode] = slices;
+                }
             }
             else
             {
@@ -732,6 +753,15 @@ public class ObjectLibrary
                     for each (var afr:BitmapData in animFrames)
                         if (afr != null) afr.dispose();
                     delete customObjAnimFrames_[tc];
+                }
+
+                // Dispose wall slice textures
+                if (customWallSlices_[tc] != null)
+                {
+                    var sliceVec:Vector.<BitmapData> = customWallSlices_[tc];
+                    for each (var slc:BitmapData in sliceVec)
+                        if (slc != null) slc.dispose();
+                    delete customWallSlices_[tc];
                 }
             }
         }

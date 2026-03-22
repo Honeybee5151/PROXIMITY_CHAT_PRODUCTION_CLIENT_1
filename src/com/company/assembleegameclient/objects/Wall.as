@@ -72,14 +72,14 @@ package com.company.assembleegameclient.objects
                texture = animTexture;
             }
          }
-         if(this.wallSize_ > 1)
+         if(this.wallSize_ > 1 || ObjectLibrary.customWallSlices_[objectType_] != null)
          {
-            // Multi-tile wall: always draw all faces (no face culling)
+            // Multi-tile or stacked wall: always draw all faces (no face culling)
             for(var mf:int = 0; mf < this.faces_.length; mf++)
             {
                face = this.faces_[mf];
                face.blackOut_ = false;
-               if(animations_ != null)
+               if(animations_ != null && ObjectLibrary.customWallSlices_[objectType_] == null)
                {
                   face.setTexture(texture);
                }
@@ -116,15 +116,42 @@ package com.company.assembleegameclient.objects
          var xi:int = x_;
          var yi:int = y_;
          var s:int = this.wallSize_;
-         // Top face at z=s, spanning s×s tiles
-         var vin:Vector.<Number> = new <Number>[xi,yi,s, xi+s,yi,s, xi+s,yi+s,s, xi,yi+s,s];
-         this.topFace_ = new Face3D(this.topTexture_,vin,UVT,false,true);
-         this.topFace_.bitmapFill_.repeat = true;
-         // 4 side faces, each s tiles wide and s tiles tall
-         this.addWall(xi,yi,s, xi+s,yi,s);
-         this.addWall(xi+s,yi,s, xi+s,yi+s,s);
-         this.addWall(xi+s,yi+s,s, xi,yi+s,s);
-         this.addWall(xi,yi+s,s, xi,yi,s);
+
+         // Check for stacked wall slices (custom walls with spriteSize > 8)
+         var slices:Vector.<BitmapData> = ObjectLibrary.customWallSlices_[objectType_];
+         if (slices != null && slices.length > 1)
+         {
+            // Stacked lego-style: N cubes of 1×1×1 each, stacked vertically
+            var numCubes:int = slices.length;
+            for (var ci:int = 0; ci < numCubes; ci++)
+            {
+               var baseZ:Number = ci;
+               var topZ:Number = ci + 1;
+               var sliceTex:BitmapData = slices[ci];
+               if (sliceTex == null) continue;
+
+               // 4 side faces for this cube level
+               this.addWallSlice(xi, yi, topZ, xi+1, yi, topZ, sliceTex);
+               this.addWallSlice(xi+1, yi, topZ, xi+1, yi+1, topZ, sliceTex);
+               this.addWallSlice(xi+1, yi+1, topZ, xi, yi+1, topZ, sliceTex);
+               this.addWallSlice(xi, yi+1, topZ, xi, yi, topZ, sliceTex);
+            }
+            // Top face on the topmost cube (black)
+            var topVin:Vector.<Number> = new <Number>[xi,yi,numCubes, xi+1,yi,numCubes, xi+1,yi+1,numCubes, xi,yi+1,numCubes];
+            this.topFace_ = new Face3D(this.topTexture_,topVin,UVT,false,true);
+            this.topFace_.bitmapFill_.repeat = true;
+         }
+         else
+         {
+            // Original: single cube of s×s×s
+            var vin:Vector.<Number> = new <Number>[xi,yi,s, xi+s,yi,s, xi+s,yi+s,s, xi,yi+s,s];
+            this.topFace_ = new Face3D(this.topTexture_,vin,UVT,false,true);
+            this.topFace_.bitmapFill_.repeat = true;
+            this.addWall(xi,yi,s, xi+s,yi,s);
+            this.addWall(xi+s,yi,s, xi+s,yi+s,s);
+            this.addWall(xi+s,yi+s,s, xi,yi+s,s);
+            this.addWall(xi,yi+s,s, xi,yi,s);
+         }
       }
 
       private function addWall(x0:Number, y0:Number, z0:Number, x1:Number, y1:Number, z1:Number) : void
@@ -132,6 +159,15 @@ package com.company.assembleegameclient.objects
          var s:int = this.wallSize_;
          var vin:Vector.<Number> = new <Number>[x0,y0,z0,x1,y1,z1,x1,y1,z1 - s,x0,y0,z0 - s];
          var face:Face3D = new Face3D(texture_,vin,UVT,true,true);
+         face.bitmapFill_.repeat = true;
+         this.faces_.push(face);
+      }
+
+      private function addWallSlice(x0:Number, y0:Number, z0:Number, x1:Number, y1:Number, z1:Number, sliceTex:BitmapData) : void
+      {
+         // Each stacked cube is 1 unit tall
+         var vin:Vector.<Number> = new <Number>[x0,y0,z0,x1,y1,z1,x1,y1,z1 - 1,x0,y0,z0 - 1];
+         var face:Face3D = new Face3D(sliceTex,vin,UVT,true,true);
          face.bitmapFill_.repeat = true;
          this.faces_.push(face);
       }
