@@ -93,7 +93,7 @@ package com.company.assembleegameclient.objects
          {
             face = this.faces_[f];
             sq = map_.lookupSquare(x_ + sqX[f],y_ + sqY[f]);
-            if(sq == null || sq.texture_ == null || sq != null && sq.obj_ != null && !sq.obj_.dead_)
+            if(sq == null || sq.texture_ == null || sq != null && sq.obj_ is Wall && !sq.obj_.dead_)
             {
                face.blackOut_ = true;
             }
