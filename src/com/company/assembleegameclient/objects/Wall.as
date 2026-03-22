@@ -12,6 +12,8 @@ package com.company.assembleegameclient.objects
 
       private static const UVT:Vector.<Number> = new <Number>[0,0,0,1,0,0,1,1,0,0,1,0];
 
+      private static const UVT_FLIP:Vector.<Number> = new <Number>[1,0,0,0,0,0,0,1,0,1,1,0];
+
       private static const sqX:Vector.<int> = new <int>[0,1,0,-1];
 
       private static const sqY:Vector.<int> = new <int>[-1,0,1,0];
@@ -131,10 +133,10 @@ package com.company.assembleegameclient.objects
                if (sliceTex == null) continue;
 
                // 4 side faces for this cube level
-               this.addWallSlice(xi, yi, topZ, xi+1, yi, topZ, sliceTex);
-               this.addWallSlice(xi+1, yi, topZ, xi+1, yi+1, topZ, sliceTex);
-               this.addWallSlice(xi+1, yi+1, topZ, xi, yi+1, topZ, sliceTex);
-               this.addWallSlice(xi, yi+1, topZ, xi, yi, topZ, sliceTex);
+               this.addWallSlice(xi, yi, topZ, xi+1, yi, topZ, sliceTex, false);
+               this.addWallSlice(xi+1, yi, topZ, xi+1, yi+1, topZ, sliceTex, false);
+               this.addWallSlice(xi+1, yi+1, topZ, xi, yi+1, topZ, sliceTex, true);
+               this.addWallSlice(xi, yi+1, topZ, xi, yi, topZ, sliceTex, true);
             }
             // Top face on the topmost cube (black)
             var topVin:Vector.<Number> = new <Number>[xi,yi,numCubes, xi+1,yi,numCubes, xi+1,yi+1,numCubes, xi,yi+1,numCubes];
@@ -163,11 +165,11 @@ package com.company.assembleegameclient.objects
          this.faces_.push(face);
       }
 
-      private function addWallSlice(x0:Number, y0:Number, z0:Number, x1:Number, y1:Number, z1:Number, sliceTex:BitmapData) : void
+      private function addWallSlice(x0:Number, y0:Number, z0:Number, x1:Number, y1:Number, z1:Number, sliceTex:BitmapData, flipU:Boolean = false) : void
       {
          // Each stacked cube is 1 unit tall
          var vin:Vector.<Number> = new <Number>[x0,y0,z0,x1,y1,z1,x1,y1,z1 - 1,x0,y0,z0 - 1];
-         var face:Face3D = new Face3D(sliceTex,vin,UVT,true,true);
+         var face:Face3D = new Face3D(sliceTex,vin,flipU ? UVT_FLIP : UVT,true,true);
          face.bitmapFill_.repeat = true;
          this.faces_.push(face);
       }

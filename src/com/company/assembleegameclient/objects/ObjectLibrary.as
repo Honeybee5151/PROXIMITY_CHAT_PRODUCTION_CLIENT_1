@@ -583,8 +583,8 @@ public class ObjectLibrary
                     var r:uint = data.readUnsignedByte();
                     var g:uint = data.readUnsignedByte();
                     var b:uint = data.readUnsignedByte();
-                    // Near-black (0x2a2a2a) = placeholder for transparent pixels
-                    if (r <= 0x2a && g <= 0x2a && b <= 0x2a)
+                    // Near-black (0x2a2a2a) = placeholder for transparent pixels, but pure black is opaque
+                    if (r == 0x2a && g == 0x2a && b == 0x2a)
                     {
                         pixelVec[pi] = 0x00000000;
                     }
@@ -614,7 +614,7 @@ public class ObjectLibrary
                         var fr:uint = data.readUnsignedByte();
                         var fg:uint = data.readUnsignedByte();
                         var fb:uint = data.readUnsignedByte();
-                        if (fr <= 0x2a && fg <= 0x2a && fb <= 0x2a)
+                        if (fr == 0x2a && fg == 0x2a && fb == 0x2a)
                             fpv[fpi] = 0x00000000;
                         else
                             fpv[fpi] = 0xFF000000 | (fr << 16) | (fg << 8) | fb;
