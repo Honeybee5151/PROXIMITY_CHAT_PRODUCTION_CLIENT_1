@@ -77,15 +77,21 @@ package com.company.assembleegameclient.objects
          if(ObjectLibrary.customWallComposite_[objectType_] != null)
          {
             // Custom tall wall: faces 0-3 = bottom (N,E,S,W), faces 4-7 = upper (N,E,S,W)
-            // Skip any face whose direction has a wall neighbor
+            // Bottom: skip if ANY object neighbor (covered at z=0-1)
+            // Upper: skip only if neighbor is also a tall custom wall (covers z=1+)
             for(var sf:int = 0; sf < this.faces_.length; sf++)
             {
                face = this.faces_[sf];
                var dir2:int = sf % 4;
                sq = map_.lookupSquare(x_ + sqX[dir2], y_ + sqY[dir2]);
-               if(sq != null && sq.obj_ is Wall && !sq.obj_.dead_)
+               var hasObj:Boolean = sq != null && sq.obj_ != null && !sq.obj_.dead_;
+               if(sf < 4)
                {
-                  continue;
+                  if(hasObj) continue;
+               }
+               else
+               {
+                  if(hasObj && ObjectLibrary.customWallComposite_[sq.obj_.objectType_] != null) continue;
                }
                face.blackOut_ = false;
                face.draw(graphicsData, camera);
