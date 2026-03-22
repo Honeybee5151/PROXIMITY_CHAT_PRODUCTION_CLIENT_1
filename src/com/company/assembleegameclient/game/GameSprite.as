@@ -271,6 +271,11 @@ public class GameSprite extends Sprite {
       {
          Parameters.data_.cameraAngle = 0;
       }
+      // Force 180° rotation when entering cavern dungeon
+      if (mapInfo.name_ == "cavern")
+      {
+         Parameters.data_.cameraAngle = Math.PI;
+      }
       this.showPreloader(mapInfo);
    }
 
