@@ -51,6 +51,7 @@ public class ObjectLibrary
     public static const dungeonsXMLLibrary_:Dictionary = new Dictionary(true);
     public static const customObjAnimFrames_:Dictionary = new Dictionary();
     public static const customWallSlices_:Dictionary = new Dictionary(); // typeCode → Vector.<BitmapData> of 8×8 slices (bottom-to-top)
+    public static const customWallComposite_:Dictionary = new Dictionary(); // typeCode → BitmapData composite (8 wide × N*8 tall)
     public static const ENEMY_FILTER_LIST:Vector.<String> = new <String>["None", "Hp", "Defense"];
     public static const TILE_FILTER_LIST:Vector.<String> = new <String>["ALL", "Walkable", "Unwalkable", "Slow", "Speed=1"];
     public static const defaultProps_:ObjectProperties = new ObjectProperties(null);
@@ -714,6 +715,20 @@ public class ObjectLibrary
                         slices[si] = sliceBmd;
                     }
                     customWallSlices_[typeCode] = slices;
+
+                    // Create composite texture: 8 wide × (numSlices*8) tall, slices arranged top-to-bottom
+                    // Slice 0 (bottom of wall) goes at bottom of bitmap, slice N-1 (top) at top
+                    var compH:int = numSlices * 8;
+                    var compBmd:BitmapData = new BitmapData(8, compH, true, 0x00000000);
+                    for (var ci:int = 0; ci < numSlices; ci++)
+                    {
+                        if (slices[ci] != null)
+                        {
+                            var compY:int = compH - (ci + 1) * 8;
+                            compBmd.copyPixels(slices[ci], slices[ci].rect, new Point(0, compY));
+                        }
+                    }
+                    customWallComposite_[typeCode] = compBmd;
                 }
             }
             else
@@ -755,13 +770,18 @@ public class ObjectLibrary
                     delete customObjAnimFrames_[tc];
                 }
 
-                // Dispose wall slice textures
+                // Dispose wall slice textures and composite
                 if (customWallSlices_[tc] != null)
                 {
                     var sliceVec:Vector.<BitmapData> = customWallSlices_[tc];
                     for each (var slc:BitmapData in sliceVec)
                         if (slc != null) slc.dispose();
                     delete customWallSlices_[tc];
+                }
+                if (customWallComposite_[tc] != null)
+                {
+                    (customWallComposite_[tc] as BitmapData).dispose();
+                    delete customWallComposite_[tc];
                 }
             }
         }

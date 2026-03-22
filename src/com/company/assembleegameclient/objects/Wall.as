@@ -90,14 +90,13 @@ package com.company.assembleegameclient.objects
             this.topFace_.draw(graphicsData, camera);
             return;
          }
-         if(ObjectLibrary.customWallSlices_[objectType_] != null)
+         if(ObjectLibrary.customWallComposite_[objectType_] != null)
          {
-            // Stacked wall: apply neighbor culling (faces stored as N,E,S,W per cube level)
+            // Composite wall: 4 faces (N,E,S,W) with neighbor culling, same as original
             for(var sf:int = 0; sf < this.faces_.length; sf++)
             {
                face = this.faces_[sf];
-               var dir:int = sf % 4;
-               sq = map_.lookupSquare(x_ + sqX[dir], y_ + sqY[dir]);
+               sq = map_.lookupSquare(x_ + sqX[sf], y_ + sqY[sf]);
                if(sq == null || sq.texture_ == null || sq.obj_ is Wall && !sq.obj_.dead_)
                {
                   face.blackOut_ = true;
@@ -140,29 +139,19 @@ package com.company.assembleegameclient.objects
          var yi:int = y_;
          var s:int = this.wallSize_;
 
-         // Check for stacked wall slices (custom walls with spriteSize > 8)
-         var slices:Vector.<BitmapData> = ObjectLibrary.customWallSlices_[objectType_];
-         if (slices != null && slices.length > 1)
+         // Check for composite wall texture (custom walls with spriteSize > 8)
+         var compTex:BitmapData = ObjectLibrary.customWallComposite_[objectType_];
+         if (compTex != null)
          {
-            // Stacked lego-style: N cubes of 1×1×1 each, stacked vertically
-            var numCubes:int = slices.length;
-            for (var ci:int = 0; ci < numCubes; ci++)
-            {
-               var baseZ:Number = ci;
-               var topZ:Number = ci + 1;
-               var sliceTex:BitmapData = slices[ci];
-               if (sliceTex == null) continue;
-
-               // 4 side faces for this cube level
-               this.addWallSlice(xi, yi, topZ, xi+1, yi, topZ, sliceTex, false);
-               this.addWallSlice(xi+1, yi, topZ, xi+1, yi+1, topZ, sliceTex, false);
-               this.addWallSlice(xi+1, yi+1, topZ, xi, yi+1, topZ, sliceTex, true);
-               this.addWallSlice(xi, yi+1, topZ, xi, yi, topZ, sliceTex, true);
-            }
-            // Top face on the topmost cube (black)
-            var topVin:Vector.<Number> = new <Number>[xi,yi,numCubes, xi+1,yi,numCubes, xi+1,yi+1,numCubes, xi,yi+1,numCubes];
+            // Single face per side spanning full height, like the base game
+            var h:int = compTex.height / 8; // number of 8×8 slices = wall height in units
+            var topVin:Vector.<Number> = new <Number>[xi,yi,h, xi+1,yi,h, xi+1,yi+1,h, xi,yi+1,h];
             this.topFace_ = new Face3D(this.topTexture_,topVin,UVT,false,true);
             this.topFace_.bitmapFill_.repeat = true;
+            this.addCompositeWall(xi, yi, h, xi+1, yi, h, compTex, false);
+            this.addCompositeWall(xi+1, yi, h, xi+1, yi+1, h, compTex, false);
+            this.addCompositeWall(xi+1, yi+1, h, xi, yi+1, h, compTex, true);
+            this.addCompositeWall(xi, yi+1, h, xi, yi, h, compTex, true);
          }
          else
          {
@@ -186,13 +175,12 @@ package com.company.assembleegameclient.objects
          this.faces_.push(face);
       }
 
-      private function addWallSlice(x0:Number, y0:Number, z0:Number, x1:Number, y1:Number, z1:Number, sliceTex:BitmapData, flipU:Boolean = false) : void
+      private function addCompositeWall(x0:Number, y0:Number, z0:Number, x1:Number, y1:Number, z1:Number, compTex:BitmapData, flipU:Boolean = false) : void
       {
-         // Each stacked cube is 1 unit tall, with slight overlap (0.05) to prevent seams
-         var botZ0:Number = z0 - 1.05;
-         var botZ1:Number = z1 - 1.05;
-         var vin:Vector.<Number> = new <Number>[x0,y0,z0,x1,y1,z1,x1,y1,botZ1,x0,y0,botZ0];
-         var face:Face3D = new Face3D(sliceTex,vin,flipU ? UVT_FLIP : UVT,true,true);
+         // Single face spanning full wall height, using composite texture
+         var h:int = compTex.height / 8;
+         var vin:Vector.<Number> = new <Number>[x0,y0,z0,x1,y1,z1,x1,y1,z1 - h,x0,y0,z0 - h];
+         var face:Face3D = new Face3D(compTex,vin,flipU ? UVT_FLIP : UVT,true,true);
          face.bitmapFill_.repeat = true;
          this.faces_.push(face);
       }
