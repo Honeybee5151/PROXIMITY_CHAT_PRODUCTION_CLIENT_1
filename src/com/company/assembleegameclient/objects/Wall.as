@@ -188,7 +188,7 @@ package com.company.assembleegameclient.objects
       {
          // Face spanning faceH units of height
          var vin:Vector.<Number> = new <Number>[x0,y0,z0,x1,y1,z1,x1,y1,z1 - faceH,x0,y0,z0 - faceH];
-         var face:Face3D = new Face3D(tex,vin,flipU ? UVT_FLIP : UVT,false,true);
+         var face:Face3D = new Face3D(tex,vin,flipU ? UVT_FLIP : UVT,true,true);
          face.bitmapFill_.repeat = true;
          this.faces_.push(face);
       }
