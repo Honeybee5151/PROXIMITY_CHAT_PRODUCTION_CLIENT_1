@@ -94,13 +94,12 @@ package com.company.assembleegameclient.objects
          }
          if(ObjectLibrary.customWallComposite_[objectType_] != null)
          {
-            // Custom tall wall: faces 0-3 = bottom (N,E,S,W), faces 4-7 = upper (N,E,S,W)
+            // Custom tall wall: faces 0-3 = N,E,S,W full height
             // Skip any face whose direction has a wall neighbor
             for(var sf:int = 0; sf < this.faces_.length; sf++)
             {
                face = this.faces_[sf];
-               var dir2:int = sf % 4;
-               sq = map_.lookupSquare(x_ + sqX[dir2], y_ + sqY[dir2]);
+               sq = map_.lookupSquare(x_ + sqX[sf], y_ + sqY[sf]);
                if(sq != null && sq.obj_ is Wall && !sq.obj_.dead_)
                {
                   face.blackOut_ = true;
@@ -162,25 +161,25 @@ package com.company.assembleegameclient.objects
          // Check for split wall textures (custom walls with spriteSize > 8)
          var slices:Vector.<BitmapData> = ObjectLibrary.customWallSlices_[objectType_];
          var upperTex:BitmapData = ObjectLibrary.customWallUpper_[objectType_];
-         if (slices != null && slices.length > 1 && upperTex != null)
+         var compTex:BitmapData = ObjectLibrary.customWallComposite_[objectType_];
+         if (slices != null && slices.length > 1 && compTex != null)
          {
             var h:int = slices.length; // total height in units
-            var topVin:Vector.<Number> = new <Number>[xi,yi,h, xi+1,yi,h, xi+1,yi+1,h, xi,yi+1,h];
+            // Slight overlap (e) to eliminate sub-pixel seam gaps between faces
+            var e:Number = 0.02;
+            var topVin:Vector.<Number> = new <Number>[xi-e,yi-e,h, xi+1+e,yi-e,h, xi+1+e,yi+1+e,h, xi-e,yi+1+e,h];
             this.topFace_ = new Face3D(this.topTexture_,topVin,UVT,false,true);
             this.topFace_.bitmapFill_.repeat = true;
-            // Bottom faces (z=0 to z=1): use bottom slice, neighbor-culled
-            // faces_[0..3] = N,E,S,W bottom
-            this.addSplitFace(xi, yi, 1, xi+1, yi, 1, 1, slices[0], false);
-            this.addSplitFace(xi+1, yi, 1, xi+1, yi+1, 1, 1, slices[0], false);
-            this.addSplitFace(xi+1, yi+1, 1, xi, yi+1, 1, 1, slices[0], true);
-            this.addSplitFace(xi, yi+1, 1, xi, yi, 1, 1, slices[0], true);
-            // Upper faces (z=1 to z=h): use upper composite, always visible
-            // faces_[4..7] = N,E,S,W upper
-            var uh:int = h - 1;
-            this.addSplitFace(xi, yi, h, xi+1, yi, h, uh, upperTex, false);
-            this.addSplitFace(xi+1, yi, h, xi+1, yi+1, h, uh, upperTex, false);
-            this.addSplitFace(xi+1, yi+1, h, xi, yi+1, h, uh, upperTex, true);
-            this.addSplitFace(xi, yi+1, h, xi, yi, h, uh, upperTex, true);
+            // Single full-height faces per direction, extended slightly past corners
+            // faces_[0..3] = N,E,S,W full height
+            // N face: extend x range by e on each side, extend z up by e
+            this.addSplitFace(xi-e, yi, h+e, xi+1+e, yi, h+e, h+e, compTex, false);
+            // E face
+            this.addSplitFace(xi+1, yi-e, h+e, xi+1, yi+1+e, h+e, h+e, compTex, false);
+            // S face
+            this.addSplitFace(xi+1+e, yi+1, h+e, xi-e, yi+1, h+e, h+e, compTex, true);
+            // W face
+            this.addSplitFace(xi, yi+1+e, h+e, xi, yi-e, h+e, h+e, compTex, true);
          }
          else
          {
@@ -204,7 +203,7 @@ package com.company.assembleegameclient.objects
          this.faces_.push(face);
       }
 
-      private function addSplitFace(x0:Number, y0:Number, z0:Number, x1:Number, y1:Number, z1:Number, faceH:int, tex:BitmapData, flipU:Boolean = false) : void
+      private function addSplitFace(x0:Number, y0:Number, z0:Number, x1:Number, y1:Number, z1:Number, faceH:Number, tex:BitmapData, flipU:Boolean = false) : void
       {
          // Face spanning faceH units of height
          var vin:Vector.<Number> = new <Number>[x0,y0,z0,x1,y1,z1,x1,y1,z1 - faceH,x0,y0,z0 - faceH];
