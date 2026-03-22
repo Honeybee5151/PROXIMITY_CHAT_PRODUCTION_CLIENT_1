@@ -93,8 +93,8 @@ package com.company.assembleegameclient.objects
          if(ObjectLibrary.customWallComposite_[objectType_] != null)
          {
             // Split wall: faces 0-3 = bottom (N,E,S,W), faces 4-7 = upper (N,E,S,W)
-            // Both bottom and upper use neighbor culling: if adjacent tile has any wall,
-            // hide that side entirely (matching how generic walls behave in formations)
+            // Neighbor culling: if adjacent tile has wall, SKIP drawing that face entirely
+            // (don't render as black — tall walls would show black stripe above neighbors)
             for(var sf:int = 0; sf < this.faces_.length; sf++)
             {
                face = this.faces_[sf];
@@ -102,12 +102,10 @@ package com.company.assembleegameclient.objects
                sq = map_.lookupSquare(x_ + sqX[dir2], y_ + sqY[dir2]);
                if(sq == null || sq.texture_ == null || sq.obj_ is Wall && !sq.obj_.dead_)
                {
-                  face.blackOut_ = true;
+                  // Skip drawing entirely — don't render as black stripe
+                  continue;
                }
-               else
-               {
-                  face.blackOut_ = false;
-               }
+               face.blackOut_ = false;
                face.draw(graphicsData, camera);
             }
             this.topFace_.draw(graphicsData, camera);
