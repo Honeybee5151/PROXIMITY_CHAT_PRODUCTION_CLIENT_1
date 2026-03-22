@@ -188,9 +188,9 @@ package com.company.assembleegameclient.objects
 
       private function addWallSlice(x0:Number, y0:Number, z0:Number, x1:Number, y1:Number, z1:Number, sliceTex:BitmapData, flipU:Boolean = false) : void
       {
-         // Each stacked cube is 1 unit tall, with slight overlap (0.01) to prevent seams
-         var botZ0:Number = z0 - 1.01;
-         var botZ1:Number = z1 - 1.01;
+         // Each stacked cube is 1 unit tall, with slight overlap (0.05) to prevent seams
+         var botZ0:Number = z0 - 1.05;
+         var botZ1:Number = z1 - 1.05;
          var vin:Vector.<Number> = new <Number>[x0,y0,z0,x1,y1,z1,x1,y1,botZ1,x0,y0,botZ0];
          var face:Face3D = new Face3D(sliceTex,vin,flipU ? UVT_FLIP : UVT,true,true);
          face.bitmapFill_.repeat = true;
