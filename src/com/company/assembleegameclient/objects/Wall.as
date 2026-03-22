@@ -52,6 +52,24 @@ package com.company.assembleegameclient.objects
          return BitmapUtil.mostCommonColor(this.topTexture_);
       }
 
+      override public function computeSortVal(camera:Camera) : void
+      {
+         var slices:Vector.<BitmapData> = ObjectLibrary.customWallSlices_[objectType_];
+         if(slices != null && slices.length > 1)
+         {
+            // Tall wall: sort using z=1 (just above base)
+            this.posW_.length = 0;
+            this.posW_.push(this.x_,this.y_,0,this.x_,this.y_,1);
+            this.posS_.length = 0;
+            camera.wToS_.transformVectors(this.posW_,this.posS_);
+            this.sortVal_ = int(this.posS_[4]);
+         }
+         else
+         {
+            super.computeSortVal(camera);
+         }
+      }
+
       override public function draw(graphicsData:Vector.<IGraphicsData>, camera:Camera, time:int) : void
       {
          var animTexture:BitmapData = null;

@@ -455,6 +455,42 @@ public class Player extends Character {
         if (this.ridingEntityId_ > 0) {
             this.sortVal_ += 1;
         }
+        // When touching a tall wall and behind it from camera view,
+        // bump player sort down so wall draws on top
+        if (this == map_.player_)
+        {
+            var pi:int = int(this.x_);
+            var pj:int = int(this.y_);
+            var nbrX:Array = [0,1,0,-1];
+            var nbrY:Array = [-1,0,1,0];
+            for (var d:int = 0; d < 4; d++)
+            {
+                var sq:Square = map_.lookupSquare(pi + nbrX[d], pj + nbrY[d]);
+                if (sq != null && sq.obj_ is Wall && !sq.obj_.dead_
+                    && ObjectLibrary.customWallSlices_[sq.obj_.objectType_] != null)
+                {
+                    var dx:Number = this.x_ - sq.obj_.x_;
+                    var dy:Number = this.y_ - sq.obj_.y_;
+                    var distSq:Number = dx * dx + dy * dy;
+                    if (distSq < 2.25)
+                    {
+                        var camCos:Number = Math.cos(camera.angleRad_ + Math.PI / 2);
+                        var camSin:Number = Math.sin(camera.angleRad_ + Math.PI / 2);
+                        var dot:Number = dx * camCos + dy * camSin;
+                        // Dynamic sort bump based on camera angle:
+                        // dot < 0.6: player is behind or beside wall
+                        // Linearly scale: dot=0.6 → bump=-4, dot=-1 → bump=-12
+                        if (dot < 0.6)
+                        {
+                            var t:Number = (0.6 - dot) / 1.6; // 0 at dot=0.6, 1 at dot=-1
+                            if (t > 1) t = 1;
+                            this.sortVal_ -= 4 + Math.round(t * 8);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
     }
 
     override public function draw(graphicsData:Vector.<IGraphicsData>, camera:Camera, time:int):void {
