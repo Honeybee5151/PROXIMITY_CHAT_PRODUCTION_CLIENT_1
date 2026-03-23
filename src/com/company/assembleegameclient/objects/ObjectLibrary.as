@@ -663,24 +663,10 @@ public class ObjectLibrary
             {
                 objXml.appendChild(<Class>GameObject</Class>);
             }
-            else if (classFlag == 5) // Flat — ground-plane, walk-through, with outline
+            else if (classFlag == 5) // Flat — ground-plane, walk-through
             {
                 objXml.appendChild(<Class>GameObject</Class>);
                 objXml.appendChild(<DrawOnGround/>);
-                // Add 1px black outline around opaque pixels (expands bitmap by 2px)
-                if (bmd != null)
-                {
-                    bmd = addOutline(bmd);
-                }
-                // Outline animation frames too
-                var flatFrames:Vector.<BitmapData> = customObjAnimFrames_[typeCode];
-                if (flatFrames != null)
-                {
-                    for (var oi:int = 0; oi < flatFrames.length; oi++)
-                    {
-                        flatFrames[oi] = addOutline(flatFrames[oi]);
-                    }
-                }
             }
             else // 0 = Object — 2D flat, solid (blocks movement)
             {
