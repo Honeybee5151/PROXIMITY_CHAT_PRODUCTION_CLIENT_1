@@ -1,6 +1,7 @@
 package com.company.assembleegameclient.objects
 {
    import com.company.assembleegameclient.engine3d.Face3D;
+   import com.company.assembleegameclient.map.AnimateProperties;
    import com.company.assembleegameclient.map.Camera;
    import com.company.assembleegameclient.map.Square;
    import com.company.util.BitmapUtil;
@@ -92,6 +93,40 @@ package com.company.assembleegameclient.objects
                texture = animTexture;
             }
          }
+
+         // Check if the ground at this wall's position has flow/wave animation
+         var mySq:Square = square_;
+         var animType:int = 0;
+         if(mySq != null && mySq.props_ != null && mySq.props_.animate_ != null)
+         {
+            animType = mySq.props_.animate_.type_;
+         }
+         if(animType != AnimateProperties.NO_ANIMATE)
+         {
+            var animDx:Number = mySq.props_.animate_.dx_;
+            var animDy:Number = mySq.props_.animate_.dy_;
+            var xOff:Number = 0;
+            var yOff:Number = 0;
+            if(animType == AnimateProperties.WAVE_ANIMATE)
+            {
+               xOff = Math.sin(animDx * time / 1000);
+               yOff = Math.sin(animDy * time / 1000);
+            }
+            else if(animType == AnimateProperties.FLOW_ANIMATE)
+            {
+               xOff = animDx * time / 1000;
+               yOff = animDy * time / 1000;
+            }
+            var animUVT:Vector.<Number> = new <Number>[xOff,yOff,0, 1+xOff,yOff,0, 1+xOff,1+yOff,0, xOff,1+yOff,0];
+            for each(face in this.faces_)
+            {
+               face.setUVT(animUVT);
+               face.bitmapFill_.repeat = true;
+            }
+            this.topFace_.setUVT(animUVT);
+            this.topFace_.bitmapFill_.repeat = true;
+         }
+
          if(ObjectLibrary.customWallComposite_[objectType_] != null)
          {
             // Custom tall wall: faces 0-3 = N,E,S,W full height
