@@ -562,7 +562,7 @@ public class ObjectLibrary
     /**
      * Load custom objects from binary data (sent per-dungeon, like custom grounds).
      * Format: int32 count + (uint16 typeCode + byte[192] RGB pixels + byte classFlag) per entry
-     * classFlag: 0=Wall, 1=DestructibleWall, 2=Decoration
+     * classFlag: 0=Object, 1=Destructible, 2=Decoration, 3=Wall, 4=Blocker, 5=Flat
      */
     public static function loadBinaryCustomObjects(data:ByteArray):int
     {
@@ -598,7 +598,7 @@ public class ObjectLibrary
                 bmd.setVector(bmd.rect, pixelVec);
             }
 
-            // 0=Object(2D solid), 1=Destructible(3D), 2=Decoration(2D), 3=Wall(3D), 4=Blocker(invisible)
+            // 0=Object(2D solid), 1=Destructible(3D), 2=Decoration(2D), 3=Wall(3D), 4=Blocker(invisible), 5=Flat(ground-plane)
             var classFlag:int = data.readUnsignedByte();
 
             // Animation frames
@@ -662,6 +662,25 @@ public class ObjectLibrary
             else if (classFlag == 2) // Decoration — 2D flat, walk-through
             {
                 objXml.appendChild(<Class>GameObject</Class>);
+            }
+            else if (classFlag == 5) // Flat — ground-plane, walk-through, with outline
+            {
+                objXml.appendChild(<Class>GameObject</Class>);
+                objXml.appendChild(<DrawOnGround/>);
+                // Add 1px black outline around opaque pixels
+                if (bmd != null)
+                {
+                    addOutline(bmd);
+                }
+                // Outline animation frames too
+                var flatFrames:Vector.<BitmapData> = customObjAnimFrames_[typeCode];
+                if (flatFrames != null)
+                {
+                    for (var oi:int = 0; oi < flatFrames.length; oi++)
+                    {
+                        addOutline(flatFrames[oi]);
+                    }
+                }
             }
             else // 0 = Object — 2D flat, solid (blocks movement)
             {
@@ -748,6 +767,45 @@ public class ObjectLibrary
         }
 
         return count;
+    }
+
+    /**
+     * Add a 1px black outline around opaque pixels in a BitmapData.
+     * For each transparent pixel adjacent (up/down/left/right) to an opaque pixel,
+     * set it to opaque black. This creates a clean border around the sprite shape.
+     */
+    private static function addOutline(bmd:BitmapData):void
+    {
+        var w:int = bmd.width;
+        var h:int = bmd.height;
+        var pixels:Vector.<uint> = bmd.getVector(bmd.rect);
+        // Collect positions to set to black (don't modify while scanning)
+        var outlinePositions:Vector.<int> = new Vector.<int>();
+        for (var y:int = 0; y < h; y++)
+        {
+            for (var x:int = 0; x < w; x++)
+            {
+                var idx:int = y * w + x;
+                var alpha:uint = (pixels[idx] >> 24) & 0xFF;
+                if (alpha > 0) continue; // Already opaque, skip
+                // Check if any neighbor is opaque
+                var hasOpaqueNeighbor:Boolean = false;
+                if (x > 0 && ((pixels[idx - 1] >> 24) & 0xFF) > 0) hasOpaqueNeighbor = true;
+                if (x < w - 1 && ((pixels[idx + 1] >> 24) & 0xFF) > 0) hasOpaqueNeighbor = true;
+                if (y > 0 && ((pixels[idx - w] >> 24) & 0xFF) > 0) hasOpaqueNeighbor = true;
+                if (y < h - 1 && ((pixels[idx + w] >> 24) & 0xFF) > 0) hasOpaqueNeighbor = true;
+                if (hasOpaqueNeighbor)
+                {
+                    outlinePositions.push(idx);
+                }
+            }
+        }
+        // Apply outline
+        for (var i:int = 0; i < outlinePositions.length; i++)
+        {
+            pixels[outlinePositions[i]] = 0xFF000000; // Opaque black
+        }
+        bmd.setVector(bmd.rect, pixels);
     }
 
     /**
