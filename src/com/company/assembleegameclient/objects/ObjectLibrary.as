@@ -562,7 +562,7 @@ public class ObjectLibrary
     /**
      * Load custom objects from binary data (sent per-dungeon, like custom grounds).
      * Format: int32 count + (uint16 typeCode + byte[192] RGB pixels + byte classFlag) per entry
-     * classFlag: 0=Object, 1=Destructible, 2=Decoration, 3=Wall, 4=Blocker, 5=Flat
+     * classFlag: 0=Wall, 1=DestructibleWall, 2=Decoration
      */
     public static function loadBinaryCustomObjects(data:ByteArray):int
     {
@@ -598,7 +598,7 @@ public class ObjectLibrary
                 bmd.setVector(bmd.rect, pixelVec);
             }
 
-            // 0=Object(2D solid), 1=Destructible(3D), 2=Decoration(2D), 3=Wall(3D), 4=Blocker(invisible), 5=Flat(ground-plane)
+            // 0=Object(2D solid), 1=Destructible(3D), 2=Decoration(2D), 3=Wall(3D), 4=Blocker(invisible)
             var classFlag:int = data.readUnsignedByte();
 
             // Animation frames
@@ -662,11 +662,6 @@ public class ObjectLibrary
             else if (classFlag == 2) // Decoration — 2D flat, walk-through
             {
                 objXml.appendChild(<Class>GameObject</Class>);
-            }
-            else if (classFlag == 5) // Flat — ground-plane, walk-through
-            {
-                objXml.appendChild(<Class>GameObject</Class>);
-                objXml.appendChild(<DrawOnGround/>);
             }
             else // 0 = Object — 2D flat, solid (blocks movement)
             {
@@ -753,49 +748,6 @@ public class ObjectLibrary
         }
 
         return count;
-    }
-
-    /**
-     * Create a new BitmapData with a 1px black outline around opaque pixels.
-     * Expands the bitmap by 2px (1px border each side) so the outline always has room,
-     * even when opaque pixels touch the edge of the original sprite.
-     */
-    private static function addOutline(src:BitmapData):BitmapData
-    {
-        var sw:int = src.width;
-        var sh:int = src.height;
-        var dw:int = sw + 2;
-        var dh:int = sh + 2;
-        var dst:BitmapData = new BitmapData(dw, dh, true, 0x00000000);
-        // Copy source pixels into center (offset by 1,1)
-        dst.copyPixels(src, src.rect, new Point(1, 1));
-
-        var pixels:Vector.<uint> = dst.getVector(dst.rect);
-        var outlinePositions:Vector.<int> = new Vector.<int>();
-        for (var y:int = 0; y < dh; y++)
-        {
-            for (var x:int = 0; x < dw; x++)
-            {
-                var idx:int = y * dw + x;
-                if (((pixels[idx] >> 24) & 0xFF) > 0) continue; // Already opaque
-                // Check 4-connected neighbors for opaque pixel
-                var hasOpaque:Boolean = false;
-                if (x > 0 && ((pixels[idx - 1] >> 24) & 0xFF) > 0) hasOpaque = true;
-                if (!hasOpaque && x < dw - 1 && ((pixels[idx + 1] >> 24) & 0xFF) > 0) hasOpaque = true;
-                if (!hasOpaque && y > 0 && ((pixels[idx - dw] >> 24) & 0xFF) > 0) hasOpaque = true;
-                if (!hasOpaque && y < dh - 1 && ((pixels[idx + dw] >> 24) & 0xFF) > 0) hasOpaque = true;
-                if (hasOpaque)
-                {
-                    outlinePositions.push(idx);
-                }
-            }
-        }
-        for (var i:int = 0; i < outlinePositions.length; i++)
-        {
-            pixels[outlinePositions[i]] = 0xFF000000;
-        }
-        dst.setVector(dst.rect, pixels);
-        return dst;
     }
 
     /**
