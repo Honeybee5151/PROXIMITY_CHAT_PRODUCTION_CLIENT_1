@@ -667,10 +667,10 @@ public class ObjectLibrary
             {
                 objXml.appendChild(<Class>GameObject</Class>);
                 objXml.appendChild(<DrawOnGround/>);
-                // Add 1px black outline around opaque pixels
+                // Add 1px black outline around opaque pixels (expands bitmap by 2px)
                 if (bmd != null)
                 {
-                    addOutline(bmd);
+                    bmd = addOutline(bmd);
                 }
                 // Outline animation frames too
                 var flatFrames:Vector.<BitmapData> = customObjAnimFrames_[typeCode];
@@ -678,7 +678,7 @@ public class ObjectLibrary
                 {
                     for (var oi:int = 0; oi < flatFrames.length; oi++)
                     {
-                        addOutline(flatFrames[oi]);
+                        flatFrames[oi] = addOutline(flatFrames[oi]);
                     }
                 }
             }
@@ -770,42 +770,46 @@ public class ObjectLibrary
     }
 
     /**
-     * Add a 1px black outline around opaque pixels in a BitmapData.
-     * For each transparent pixel adjacent (up/down/left/right) to an opaque pixel,
-     * set it to opaque black. This creates a clean border around the sprite shape.
+     * Create a new BitmapData with a 1px black outline around opaque pixels.
+     * Expands the bitmap by 2px (1px border each side) so the outline always has room,
+     * even when opaque pixels touch the edge of the original sprite.
      */
-    private static function addOutline(bmd:BitmapData):void
+    private static function addOutline(src:BitmapData):BitmapData
     {
-        var w:int = bmd.width;
-        var h:int = bmd.height;
-        var pixels:Vector.<uint> = bmd.getVector(bmd.rect);
-        // Collect positions to set to black (don't modify while scanning)
+        var sw:int = src.width;
+        var sh:int = src.height;
+        var dw:int = sw + 2;
+        var dh:int = sh + 2;
+        var dst:BitmapData = new BitmapData(dw, dh, true, 0x00000000);
+        // Copy source pixels into center (offset by 1,1)
+        dst.copyPixels(src, src.rect, new Point(1, 1));
+
+        var pixels:Vector.<uint> = dst.getVector(dst.rect);
         var outlinePositions:Vector.<int> = new Vector.<int>();
-        for (var y:int = 0; y < h; y++)
+        for (var y:int = 0; y < dh; y++)
         {
-            for (var x:int = 0; x < w; x++)
+            for (var x:int = 0; x < dw; x++)
             {
-                var idx:int = y * w + x;
-                var alpha:uint = (pixels[idx] >> 24) & 0xFF;
-                if (alpha > 0) continue; // Already opaque, skip
-                // Check if any neighbor is opaque
-                var hasOpaqueNeighbor:Boolean = false;
-                if (x > 0 && ((pixels[idx - 1] >> 24) & 0xFF) > 0) hasOpaqueNeighbor = true;
-                if (x < w - 1 && ((pixels[idx + 1] >> 24) & 0xFF) > 0) hasOpaqueNeighbor = true;
-                if (y > 0 && ((pixels[idx - w] >> 24) & 0xFF) > 0) hasOpaqueNeighbor = true;
-                if (y < h - 1 && ((pixels[idx + w] >> 24) & 0xFF) > 0) hasOpaqueNeighbor = true;
-                if (hasOpaqueNeighbor)
+                var idx:int = y * dw + x;
+                if (((pixels[idx] >> 24) & 0xFF) > 0) continue; // Already opaque
+                // Check 4-connected neighbors for opaque pixel
+                var hasOpaque:Boolean = false;
+                if (x > 0 && ((pixels[idx - 1] >> 24) & 0xFF) > 0) hasOpaque = true;
+                if (!hasOpaque && x < dw - 1 && ((pixels[idx + 1] >> 24) & 0xFF) > 0) hasOpaque = true;
+                if (!hasOpaque && y > 0 && ((pixels[idx - dw] >> 24) & 0xFF) > 0) hasOpaque = true;
+                if (!hasOpaque && y < dh - 1 && ((pixels[idx + dw] >> 24) & 0xFF) > 0) hasOpaque = true;
+                if (hasOpaque)
                 {
                     outlinePositions.push(idx);
                 }
             }
         }
-        // Apply outline
         for (var i:int = 0; i < outlinePositions.length; i++)
         {
-            pixels[outlinePositions[i]] = 0xFF000000; // Opaque black
+            pixels[outlinePositions[i]] = 0xFF000000;
         }
-        bmd.setVector(bmd.rect, pixels);
+        dst.setVector(dst.rect, pixels);
+        return dst;
     }
 
     /**
