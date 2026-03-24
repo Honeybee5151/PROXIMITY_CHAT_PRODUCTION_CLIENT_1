@@ -271,8 +271,8 @@ public class GameSprite extends Sprite {
       {
          Parameters.data_.cameraAngle = 0;
       }
-      // Force 180° rotation when entering cavern dungeon
-      if (mapInfo.name_ == "cavern")
+      // Force 180° rotation when entering cavern dungeons
+      if (mapInfo.name_ == "cavern" || mapInfo.name_ == "Giant Cavern")
       {
          Parameters.data_.cameraAngle = Math.PI;
       }
