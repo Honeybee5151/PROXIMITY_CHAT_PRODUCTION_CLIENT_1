@@ -58,6 +58,10 @@ package com.company.assembleegameclient.objects
             {
                 this.parse(_local_2);
             }
+            if (_arg_1.hasOwnProperty("FrameCycle"))
+            {
+                frameCycleMs_ = int(_arg_1.FrameCycle);
+            }
             if (_arg_1.hasOwnProperty("Mask"))
             {
                 this.parse(XML(_arg_1.Mask));

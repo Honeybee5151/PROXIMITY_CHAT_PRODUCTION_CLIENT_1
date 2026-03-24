@@ -34,13 +34,15 @@ package com.company.assembleegameclient.util
        
       
       public var origImage_:MaskedImage;
-      
+
       public var width_:int;
-      
+
       public var height_:int;
-      
+
       public var firstDir_:int;
-      
+
+      public var allFrames_:Vector.<MaskedImage>;
+
       private var dict_:Dictionary;
       
       public function AnimatedChar(image:MaskedImage, width:int, height:int, firstDir:int)
@@ -54,6 +56,14 @@ package com.company.assembleegameclient.util
          var classDict:Dictionary = new Dictionary();
          var frames:MaskedImageSet = new MaskedImageSet();
          frames.addFromMaskedImage(image,width,height);
+         this.allFrames_ = new Vector.<MaskedImage>();
+         for(var fi:int = 0; fi < frames.images_.length; fi++)
+         {
+            if(frames.images_[fi].amountTransparent() < 1)
+            {
+               this.allFrames_.push(frames.images_[fi]);
+            }
+         }
          if(firstDir == RIGHT)
          {
             this.dict_[RIGHT] = this.loadDir(0,false,false,frames);

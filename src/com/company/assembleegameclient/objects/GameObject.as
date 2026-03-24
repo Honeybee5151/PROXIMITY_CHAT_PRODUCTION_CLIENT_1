@@ -188,6 +188,7 @@ public class GameObject extends BasicObject {
     public var attackAngle_:Number = 0;
     public var attackStart_:int = 0;
     public var animatedChar_:AnimatedChar = null;
+    public var frameCycleMs_:int = 0;
     public var texture_:BitmapData = null;
     public var mask_:BitmapData = null;
     public var randomTextureData_:Vector.<TextureData> = null;
@@ -548,6 +549,7 @@ public class GameObject extends BasicObject {
         this.texture_ = altTextureData.texture_;
         this.mask_ = altTextureData.mask_;
         this.animatedChar_ = altTextureData.animatedChar_;
+        this.frameCycleMs_ = altTextureData.frameCycleMs_;
         if (this.effect_ != null) {
             map_.removeObj(this.effect_.objectId_);
             this.effect_ = null;
@@ -1174,6 +1176,12 @@ public class GameObject extends BasicObject {
             var msPerFrame:int = 200; // 5 FPS animation
             var frameIdx:int = (time / msPerFrame) % customFrames.length;
             texture = customFrames[frameIdx];
+        }
+        else if (this.frameCycleMs_ > 0 && this.animatedChar_ != null && this.animatedChar_.allFrames_ != null && this.animatedChar_.allFrames_.length > 1) {
+            var cycleIdx:int = (time / this.frameCycleMs_) % this.animatedChar_.allFrames_.length;
+            image = this.animatedChar_.allFrames_[cycleIdx];
+            texture = image.image_;
+            mask = image.mask_;
         }
         else if (this.animatedChar_ != null) {
             p = 0;

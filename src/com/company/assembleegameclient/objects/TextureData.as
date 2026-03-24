@@ -21,6 +21,7 @@ public class TextureData
     public var altTextures_:Dictionary = null;
     public var remoteTextureDir_:int;
     public var effectProps_:EffectProperties = null;
+    public var frameCycleMs_:int = 0;
 
 
     public function getTexture(_arg_1:int=0):BitmapData
