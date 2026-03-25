@@ -231,6 +231,7 @@ public class GameObject extends BasicObject {
     public var moveVec_:Vector3D;
     protected var bitmapFill_:GraphicsBitmapFill;
     protected var path_:GraphicsPath;
+    public var tbag_:Boolean = false;
     private var groundWV_:Vector.<Number> = null;
     private var groundTileFills_:Vector.<GraphicsBitmapFill> = null;
     private var groundTilePaths_:Vector.<GraphicsPath> = null;
@@ -526,6 +527,12 @@ public class GameObject extends BasicObject {
         }
         this.vS_.length = 0;
         this.vS_.push(posS_[3] - w / 2, posS_[4] - h + h2, posS_[3] + w / 2, posS_[4] - h + h2, posS_[3] + w / 2, posS_[4], posS_[3] - w / 2, posS_[4]);
+        // T-bag: squish sprite down while key held (feet stay, top compresses)
+        if (this.tbag_) {
+            var squish:Number = 0.35 * h;
+            this.vS_[1] += squish;
+            this.vS_[3] += squish;
+        }
         this.path_.data = this.vS_;
 
         if (!(this.props_.isPlayer_ && this != this.map_.player_)) {

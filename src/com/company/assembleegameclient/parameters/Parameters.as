@@ -185,6 +185,7 @@ public class Parameters {
         //777592
         setDefaultKey("PCUI", KeyCodes.U);
         setDefaultKey("PCTALK", KeyCodes.SHIFT);
+        setDefaultKey("tbag", KeyCodes.T);
 
     }
 

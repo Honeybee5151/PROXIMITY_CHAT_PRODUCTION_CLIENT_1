@@ -550,6 +550,9 @@ public class MapUserInput
                VoiceChatService.getInstance().setPushToTalkKeyState(true);
             }
             break;
+         case Parameters.data_.tbag:
+            player.tbag_ = true;
+            break;
       }
       this.setPlayerMovement();
    }
@@ -670,6 +673,13 @@ public class MapUserInput
                   this.gs_.map.player_.useAltWeapon(this.gs_.map.mouseX,this.gs_.map.mouseY,UseType.END_USE);
                }
             }
+            break;
+         case Parameters.data_.tbag:
+            var tbagPlayer:Player = this.gs_.map.player_;
+            if (tbagPlayer != null) {
+               tbagPlayer.tbag_ = false;
+            }
+            break;
       }
       this.setPlayerMovement();
    }

@@ -371,6 +371,7 @@ public class Options extends Sprite
       //777592
       this.addOption(new KeyMapper("PCUI", "Toggle PCUI", "Use this to toggle the Proxmity Chat UI"));
       this.addOption(new KeyMapper("PCTALK", "Push to Talk", "Set the push to talk button"));
+      this.addOption(new KeyMapper("tbag", "T-Bag", "Hold this key to crouch"));
    }
 
    private function addChatOptions() : void
