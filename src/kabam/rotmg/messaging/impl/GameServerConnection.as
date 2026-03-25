@@ -183,6 +183,7 @@ import kabam.rotmg.messaging.impl.outgoing.ChangeTrade;
 import kabam.rotmg.messaging.impl.outgoing.ChooseName;
 import kabam.rotmg.messaging.impl.outgoing.Create;
 import kabam.rotmg.messaging.impl.outgoing.CreateGuild;
+import kabam.rotmg.messaging.impl.outgoing.Crouch;
 import kabam.rotmg.messaging.impl.outgoing.Dash;
 import kabam.rotmg.messaging.impl.outgoing.EditAccountList;
 import kabam.rotmg.messaging.impl.outgoing.EnemyHit;
@@ -339,6 +340,7 @@ public class GameServerConnection
       public static const VAULT_DATA:int = 93;
       public static const VAULT_SWAP:int = 94;
       public static const DASH:int = 95;
+      public static const CROUCH:int = 96;
 
       private static const TO_MILLISECONDS:int = 1000;
 
@@ -551,6 +553,7 @@ public class GameServerConnection
          messages.map(VAULT_DATA).toMessage(VaultData).toMethod(this.onVaultData);
          messages.map(VAULT_SWAP).toMessage(VaultSwap);
          messages.map(DASH).toMessage(Dash);
+         messages.map(CROUCH).toMessage(Crouch);
       }
 
       private function unmapMessages() : void {
@@ -1320,6 +1323,13 @@ public class GameServerConnection
       {
          var pkt:Dash = this.messages.require(DASH) as Dash;
          pkt.time_ = time;
+         this.serverConnection.sendMessage(pkt);
+      }
+
+      public function crouch(isCrouching:Boolean) : void
+      {
+         var pkt:Crouch = this.messages.require(CROUCH) as Crouch;
+         pkt.isCrouching_ = isCrouching;
          this.serverConnection.sendMessage(pkt);
       }
 
@@ -2167,6 +2177,9 @@ public class GameServerConnection
                case StatData.RIDING_ENTITY_ID:
                   player.ridingEntityId_ = value;
                   player.raftInitialized_ = false;
+                  continue;
+               case StatData.IS_CROUCHING:
+                  go.tbag_ = value != 0;
                   continue;
                default:
                   trace("unhandled stat: " + stat.statType_);

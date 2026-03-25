@@ -551,7 +551,10 @@ public class MapUserInput
             }
             break;
          case Parameters.data_.tbag:
-            player.tbag_ = true;
+            if (!player.tbag_) {
+               player.tbag_ = true;
+               this.gs_.gsc_.crouch(true);
+            }
             break;
       }
       this.setPlayerMovement();
@@ -676,8 +679,9 @@ public class MapUserInput
             break;
          case Parameters.data_.tbag:
             var tbagPlayer:Player = this.gs_.map.player_;
-            if (tbagPlayer != null) {
+            if (tbagPlayer != null && tbagPlayer.tbag_) {
                tbagPlayer.tbag_ = false;
+               this.gs_.gsc_.crouch(false);
             }
             break;
       }

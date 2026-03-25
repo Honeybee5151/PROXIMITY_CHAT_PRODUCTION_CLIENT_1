@@ -37,6 +37,7 @@ package com.company.assembleegameclient.engine3d
       
       public function calculateTextureMatrix(vout:Vector.<Number>) : void
       {
+         if (this.uvMatrix_ == null) return;
          this.tToS_.a = this.uvMatrix_.a;
          this.tToS_.b = this.uvMatrix_.b;
          this.tToS_.c = this.uvMatrix_.c;
@@ -55,20 +56,29 @@ package com.company.assembleegameclient.engine3d
       }
 
       public function calculateUVMatrix(uvt:Vector.<Number>):void {
-         if (this.texture_ == null) {
-            this.uvMatrix_ = null;
+         if (this.texture_ == null || this.texture_.width <= 0 || this.texture_.height <= 0) {
+            // Degenerate or disposed texture — reset to identity to avoid NaN/corrupt matrix
+            if (this.uvMatrix_ != null) this.uvMatrix_.identity();
             return;
          }
 
          var i:int = uvt.length - 3;
-         var tx:Number = uvt[0] * this.texture_.width;
-         var ty:Number = uvt[1] * this.texture_.height;
-         this.uvMatrix_.a = uvt[3] * this.texture_.width - tx;
-         this.uvMatrix_.b = uvt[4] * this.texture_.height - ty;
-         this.uvMatrix_.c = uvt[i] * this.texture_.width - tx;
-         this.uvMatrix_.d = uvt[i + 1] * this.texture_.height - ty;
+         var tw:Number = this.texture_.width;
+         var th:Number = this.texture_.height;
+         var tx:Number = uvt[0] * tw;
+         var ty:Number = uvt[1] * th;
+         this.uvMatrix_.a = uvt[3] * tw - tx;
+         this.uvMatrix_.b = uvt[4] * th - ty;
+         this.uvMatrix_.c = uvt[i] * tw - tx;
+         this.uvMatrix_.d = uvt[i + 1] * th - ty;
          this.uvMatrix_.tx = tx;
          this.uvMatrix_.ty = ty;
+         // Guard against singular matrix (det == 0) which produces NaN on invert
+         var det:Number = this.uvMatrix_.a * this.uvMatrix_.d - this.uvMatrix_.b * this.uvMatrix_.c;
+         if (det == 0) {
+            this.uvMatrix_.identity();
+            return;
+         }
          this.uvMatrix_.invert();
       }
    }

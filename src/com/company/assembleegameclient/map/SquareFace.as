@@ -79,9 +79,23 @@ public class SquareFace
          GraphicsFillExtra.setOffsetUV(this.face_.bitmapFill_,xOffset,yOffset);
          xOffset = yOffset = 0;
       }
-      this.face_.uvt_.length = 0;
-      this.face_.uvt_.push(xOffset,yOffset,0,1 + xOffset,yOffset,0,1 + xOffset,1 + yOffset,0,xOffset,1 + yOffset,0);
-      this.face_.setUVT(this.face_.uvt_);
+      // Direct index assignment avoids Vector shrink/grow cycle (length=0 + push)
+      // which can corrupt internal buffer after prolonged play with flow animation.
+      // Also explicitly resets t-values (indices 2,5,8,11) that Utils3D.projectVectors modifies.
+      var uvt:Vector.<Number> = this.face_.uvt_;
+      uvt[0] = xOffset;
+      uvt[1] = yOffset;
+      uvt[2] = 0;
+      uvt[3] = 1 + xOffset;
+      uvt[4] = yOffset;
+      uvt[5] = 0;
+      uvt[6] = 1 + xOffset;
+      uvt[7] = 1 + yOffset;
+      uvt[8] = 0;
+      uvt[9] = xOffset;
+      uvt[10] = 1 + yOffset;
+      uvt[11] = 0;
+      this.face_.setUVT(uvt);
       return this.face_.draw(graphicsData,camera);
    }
 }
