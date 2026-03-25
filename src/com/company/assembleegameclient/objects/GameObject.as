@@ -40,6 +40,7 @@ import flash.filters.ColorMatrixFilter;
 import flash.filters.GlowFilter;
 import flash.geom.Matrix;
 import flash.geom.Point;
+import flash.geom.Utils3D;
 import flash.geom.Vector3D;
 import flash.utils.Dictionary;
 import flash.utils.getQualifiedClassName;
@@ -230,7 +231,11 @@ public class GameObject extends BasicObject {
     public var moveVec_:Vector3D;
     protected var bitmapFill_:GraphicsBitmapFill;
     protected var path_:GraphicsPath;
-    private var groundTexMatrix_:TextureMatrix = null;
+    private var groundWV_:Vector.<Number> = null;
+    private var groundTileFills_:Vector.<GraphicsBitmapFill> = null;
+    private var groundTilePaths_:Vector.<GraphicsPath> = null;
+    private var groundTexMatrices_:Vector.<TextureMatrix> = null;
+    private var groundTileCount_:int = 0;
     protected var vS_:Vector.<Number>;
     protected var uvt_:Vector.<Number>;
     protected var fillMatrix_:Matrix;
@@ -421,24 +426,77 @@ public class GameObject extends BasicObject {
     override public function draw(graphicsData:Vector.<IGraphicsData>, camera:Camera, time:int):void {
         var texture:BitmapData = this.getTexture(camera, time);
         if (this.props_.drawOnGround_) {
-            if (square_.faces_.length == 0) {
-                return;
+            if (texture == null) return;
+            // Per-tile rendering: draw each tile individually like ground tiles
+            // This avoids affine texture distortion on large quads
+            var tileW:int = int(texture.width / 8);
+            var tileH:int = int(texture.height / 8);
+            if (tileW < 1) tileW = 1;
+            if (tileH < 1) tileH = 1;
+            var totalTiles:int = tileW * tileH;
+
+            // Lazy-init per-tile rendering objects (allocated once, reused each frame)
+            if (this.groundTileFills_ == null || this.groundTileCount_ != totalTiles) {
+                this.groundTileCount_ = totalTiles;
+                this.groundTileFills_ = new Vector.<GraphicsBitmapFill>(totalTiles);
+                this.groundTilePaths_ = new Vector.<GraphicsPath>(totalTiles);
+                this.groundTexMatrices_ = new Vector.<TextureMatrix>(totalTiles);
+                for (var gi:int = 0; gi < totalTiles; gi++) {
+                    this.groundTileFills_[gi] = new GraphicsBitmapFill(null, null, false, false);
+                    this.groundTilePaths_[gi] = new GraphicsPath(GraphicsUtil.QUAD_COMMANDS, new Vector.<Number>(8));
+                    var gu:int = gi % tileW;
+                    var gv:int = int(gi / tileW);
+                    var guv:Vector.<Number> = new <Number>[
+                        Number(gu)/Number(tileW), Number(gv)/Number(tileH), 0,
+                        Number(gu+1)/Number(tileW), Number(gv)/Number(tileH), 0,
+                        Number(gu+1)/Number(tileW), Number(gv+1)/Number(tileH), 0,
+                        Number(gu)/Number(tileW), Number(gv+1)/Number(tileH), 0
+                    ];
+                    this.groundTexMatrices_[gi] = new TextureMatrix(texture, guv);
+                }
             }
-            this.path_.data = square_.faces_[0].face_.vout_;
-            this.bitmapFill_.bitmapData = texture;
-            // Use object's own texture for matrix (not square's tile texture)
-            // so textures of any size map correctly onto the ground quad
-            if (this.groundTexMatrix_ == null) {
-                this.groundTexMatrix_ = new TextureMatrix(texture, Square.UVT);
-            } else if (this.groundTexMatrix_.texture_ != texture) {
-                this.groundTexMatrix_.texture_ = texture;
-                this.groundTexMatrix_.calculateUVMatrix(Square.UVT);
+
+            // Snap imprint to tile grid centered on object position
+            var startTX:int = int(Math.floor(x_)) - int(tileW / 2);
+            var startTY:int = int(Math.floor(y_)) - int(tileH / 2);
+
+            if (this.groundWV_ == null) {
+                this.groundWV_ = new Vector.<Number>(12, true);
             }
-            this.groundTexMatrix_.calculateTextureMatrix(this.path_.data);
-            this.bitmapFill_.matrix = this.groundTexMatrix_.tToS_;
-            graphicsData.push(this.bitmapFill_);
-            graphicsData.push(this.path_);
-            graphicsData.push(GraphicsUtil.END_FILL);
+            var projUVT:Vector.<Number> = new Vector.<Number>(12);
+
+            var idx:int = 0;
+            for (var gty:int = 0; gty < tileH; gty++) {
+                for (var gtx:int = 0; gtx < tileW; gtx++) {
+                    var wx:int = startTX + gtx;
+                    var wy:int = startTY + gty;
+
+                    // World-space corners for this tile (same as Square.vin_)
+                    groundWV_[0] = wx;     groundWV_[1] = wy;     groundWV_[2] = 0;
+                    groundWV_[3] = wx + 1; groundWV_[4] = wy;     groundWV_[5] = 0;
+                    groundWV_[6] = wx + 1; groundWV_[7] = wy + 1; groundWV_[8] = 0;
+                    groundWV_[9] = wx;     groundWV_[10] = wy + 1; groundWV_[11] = 0;
+
+                    // Project to screen (same method as Face3D.draw)
+                    var tilePath:GraphicsPath = this.groundTilePaths_[idx];
+                    Utils3D.projectVectors(camera.wToS_, groundWV_, tilePath.data, projUVT);
+
+                    // Update texture matrix with new screen vertices
+                    var texMat:TextureMatrix = this.groundTexMatrices_[idx];
+                    texMat.calculateTextureMatrix(tilePath.data);
+
+                    // Set fill
+                    var tileFill:GraphicsBitmapFill = this.groundTileFills_[idx];
+                    tileFill.bitmapData = texture;
+                    tileFill.matrix = texMat.tToS_;
+
+                    graphicsData.push(tileFill);
+                    graphicsData.push(tilePath);
+                    graphicsData.push(GraphicsUtil.END_FILL);
+
+                    idx++;
+                }
+            }
             return;
         }
         if (this.obj3D_ != null) {
