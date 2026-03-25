@@ -55,6 +55,7 @@ package com.company.assembleegameclient.objects.particles
          this.worldVerts_ = new Vector.<Number>();
          this.screenVerts_ = new Vector.<Number>();
          this.edgeSpawnTimer_ = 999;
+         this.alwaysDraw_ = true;
       }
 
       override public function update(time:int, dt:int) : Boolean

@@ -454,7 +454,8 @@ public class Map extends Sprite {
             go.drawn_ = false;
             if (!go.dead_) {
                 square = go.square_;
-                if (!(square == null || square.lastVisible_ != time)) {
+                var squareVis:Boolean = !(square == null || square.lastVisible_ != time);
+                if (squareVis || go.alwaysDraw_) {
                     go.drawn_ = true;
                     go.computeSortVal(camera);
                     if (go.props_.drawUnder_) {

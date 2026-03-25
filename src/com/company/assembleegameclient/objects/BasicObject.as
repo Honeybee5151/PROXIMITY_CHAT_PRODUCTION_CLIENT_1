@@ -19,6 +19,7 @@ public class BasicObject
       public var z_:Number;
       public var hasShadow_:Boolean;
       public var drawn_:Boolean;
+      public var alwaysDraw_:Boolean;
       public var posW_:Vector.<Number>;
       public var posS_:Vector.<Number>;
       public var sortVal_:int;
@@ -46,6 +47,7 @@ public class BasicObject
          this.z_ = 0;
          this.hasShadow_ = false;
          this.drawn_ = false;
+         this.alwaysDraw_ = false;
          this.posW_.length = 0;
          this.posS_.length = 0;
          this.sortVal_ = 0;
