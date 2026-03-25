@@ -1,6 +1,7 @@
 package com.company.assembleegameclient.objects {
 import com.company.assembleegameclient.engine3d.Model3D;
 import com.company.assembleegameclient.engine3d.Object3D;
+import com.company.assembleegameclient.engine3d.TextureMatrix;
 import com.company.assembleegameclient.map.Camera;
 import com.company.assembleegameclient.map.Map;
 import com.company.assembleegameclient.map.Square;
@@ -229,6 +230,7 @@ public class GameObject extends BasicObject {
     public var moveVec_:Vector3D;
     protected var bitmapFill_:GraphicsBitmapFill;
     protected var path_:GraphicsPath;
+    private var groundTexMatrix_:TextureMatrix = null;
     protected var vS_:Vector.<Number>;
     protected var uvt_:Vector.<Number>;
     protected var fillMatrix_:Matrix;
@@ -424,8 +426,16 @@ public class GameObject extends BasicObject {
             }
             this.path_.data = square_.faces_[0].face_.vout_;
             this.bitmapFill_.bitmapData = texture;
-            square_.baseTexMatrix_.calculateTextureMatrix(this.path_.data);
-            this.bitmapFill_.matrix = square_.baseTexMatrix_.tToS_;
+            // Use object's own texture for matrix (not square's tile texture)
+            // so textures of any size map correctly onto the ground quad
+            if (this.groundTexMatrix_ == null) {
+                this.groundTexMatrix_ = new TextureMatrix(texture, Square.UVT);
+            } else if (this.groundTexMatrix_.texture_ != texture) {
+                this.groundTexMatrix_.texture_ = texture;
+                this.groundTexMatrix_.calculateUVMatrix(Square.UVT);
+            }
+            this.groundTexMatrix_.calculateTextureMatrix(this.path_.data);
+            this.bitmapFill_.matrix = this.groundTexMatrix_.tToS_;
             graphicsData.push(this.bitmapFill_);
             graphicsData.push(this.path_);
             graphicsData.push(GraphicsUtil.END_FILL);
