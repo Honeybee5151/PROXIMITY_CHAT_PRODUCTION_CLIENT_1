@@ -81,6 +81,11 @@ public class TileRedrawer
          super();
       }
 
+      public static function clearCache():void
+      {
+         cache__ = new <Object>[null, new Object()];
+      }
+
       public static function redraw(square:Square, origBackground:Boolean) : BitmapData
       {
          var sig:Array;

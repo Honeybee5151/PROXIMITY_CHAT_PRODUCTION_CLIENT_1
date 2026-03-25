@@ -684,10 +684,36 @@ public class ObjectLibrary
             td.texture_ = bmd;
             typeToTextureData_[typeCode] = td;
 
-            // Walls get a black top texture; other objects reuse the side texture
+            // Walls get a top texture using the most common color from the sprite
             if (classFlag == 3 || classFlag == 1) // Wall or Destructible
             {
-                var blackBmd:BitmapData = new BitmapData(8, 8, false, 0xFF000000);
+                // Find the most common opaque color in the sprite
+                var colorCounts:Object = {};
+                var mostCommonColor:uint = 0xFF000000;
+                var maxCount:int = 0;
+                for (var cy:int = 0; cy < bmd.height; cy++)
+                {
+                    for (var cx:int = 0; cx < bmd.width; cx++)
+                    {
+                        var px:uint = bmd.getPixel32(cx, cy);
+                        if ((px >>> 24) < 128) continue; // skip transparent pixels
+                        var rgb:uint = px & 0x00FFFFFF;
+                        var key:String = rgb.toString();
+                        var cnt:int = (colorCounts[key] || 0) + 1;
+                        colorCounts[key] = cnt;
+                        if (cnt > maxCount)
+                        {
+                            maxCount = cnt;
+                            mostCommonColor = 0xFF000000 | rgb;
+                        }
+                    }
+                }
+                // Darken the color slightly for a roof/shadow effect
+                var tr:int = ((mostCommonColor >> 16) & 0xFF) * 0.7;
+                var tg:int = ((mostCommonColor >> 8) & 0xFF) * 0.7;
+                var tb:int = (mostCommonColor & 0xFF) * 0.7;
+                var topColor:uint = 0xFF000000 | (tr << 16) | (tg << 8) | tb;
+                var blackBmd:BitmapData = new BitmapData(8, 8, false, topColor);
                 var topTd:TextureDataConcrete = new TextureDataConcrete(dummyXml);
                 topTd.texture_ = blackBmd;
                 typeToTopTextureData_[typeCode] = topTd;

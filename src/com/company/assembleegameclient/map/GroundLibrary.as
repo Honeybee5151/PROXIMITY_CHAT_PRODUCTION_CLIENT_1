@@ -148,6 +148,9 @@ public class GroundLibrary
          var hasAdvanced:Boolean = blendPriority != -1 || speed != 1.0 ||
             minDamage > 0 || maxDamage > 0 || sink || animType != 0 || push || slideAmount != 0;
 
+         if (animType != 0)
+            trace("[CustomGrounds] Tile 0x" + typeCode.toString(16) + " animType=" + animType + " dx=" + animDx + " dy=" + animDy);
+
          // If any special properties set, build per-tile props with all flags combined
          if (hasAdvanced)
          {

@@ -9,6 +9,7 @@ import com.company.assembleegameclient.game.events.GuildResultEvent;
 import com.company.assembleegameclient.game.events.NameResultEvent;
 import com.company.assembleegameclient.game.events.ReconnectEvent;
 import com.company.assembleegameclient.map.GroundLibrary;
+import com.company.assembleegameclient.util.TileRedrawer;
 import com.company.assembleegameclient.map.Map;
 import com.company.assembleegameclient.map.mapoverlay.CharacterStatusText;
 import com.company.assembleegameclient.objects.Container;
@@ -2349,6 +2350,7 @@ public class GameServerConnection
          // Clean up previous dungeon's custom data to prevent cross-dungeon memory leak
          GroundLibrary.cleanupCustomGrounds();
          ObjectLibrary.cleanupCustomObjects();
+         TileRedrawer.clearCache();
 
          this.gs_.applyMapInfo(mapInfo);
          this.rand_ = new Random(mapInfo.fp_);

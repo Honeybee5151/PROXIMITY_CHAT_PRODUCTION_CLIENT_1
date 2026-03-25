@@ -118,6 +118,20 @@ package com.company.assembleegameclient.map
          {
             return;
          }
+         // Lazy refresh for custom ground tiles: if props_ is still defaultProps_,
+         // custom ground data may have loaded after setTileType was called.
+         // Re-lookup props and texture so animation (Flow/Wave) and visuals are correct.
+         if(this.tileType_ >= 0x8000 && this.props_ === GroundLibrary.defaultProps_)
+         {
+            var freshProps:GroundProperties = GroundLibrary.propsLibrary_[this.tileType_];
+            if(freshProps != null && freshProps !== GroundLibrary.defaultProps_)
+            {
+               this.props_ = freshProps;
+               this.texture_ = GroundLibrary.getBitmapData(this.tileType_, hash(this.x_, this.y_));
+               this.baseTexMatrix_ = new TextureMatrix(this.texture_, UVT);
+               this.faces_.length = 0;
+            }
+         }
          if(this.faces_.length == 0)
          {
             this.rebuild3D();

@@ -647,6 +647,7 @@ public class GameSprite extends Sprite {
          CachingColorTransformer.clear();
          TextureRedrawer.clearCache();
          GlowRedrawer.clearCache();
+         TileRedrawer.clearCache();
          Projectile.dispose();
          FreeList.dispose();
          this.gsc_.disconnect();
