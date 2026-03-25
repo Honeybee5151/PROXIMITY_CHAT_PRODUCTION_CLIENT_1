@@ -62,6 +62,11 @@ public class SquareFace
             case AnimateProperties.FLOW_ANIMATE:
                xOffset = this.xOffset_ + this.animateDx_ * time / 1000;
                yOffset = this.yOffset_ + this.animateDy_ * time / 1000;
+               // Keep UV offset in [0,1) range — texture repeats so visual is identical,
+               // but prevents floating-point precision loss in the bitmap fill matrix
+               // when time grows large (causes pixel-sampling artifacts on small textures)
+               xOffset = xOffset - Math.floor(xOffset);
+               yOffset = yOffset - Math.floor(yOffset);
          }
       }
       else
