@@ -1654,6 +1654,12 @@ public class GameServerConnection
                   this.gs_.map.victoryOverlay_.show();
                }
                break;
+            default:
+               if (notification.text.indexOf("dungeonQuest:") == 0 && this.gs_ && this.gs_.dungeonQuestOverlay)
+               {
+                  this.gs_.dungeonQuestOverlay.show(notification.text.substr(13));
+               }
+               break;
          }
       }
 

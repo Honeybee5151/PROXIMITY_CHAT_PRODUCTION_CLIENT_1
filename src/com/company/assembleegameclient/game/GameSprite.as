@@ -58,6 +58,7 @@ import kabam.rotmg.stage3D.Renderer;
 import kabam.rotmg.ui.UIUtils;
 import kabam.rotmg.ui.view.BossHealthBar;
 import kabam.rotmg.ui.view.HUDView;
+import com.company.assembleegameclient.map.DungeonQuestOverlay;
 //777592
 import kabam.rotmg.ProximityChat.PCManager;
 import kabam.rotmg.ProximityChat.SpeakerIconManager;
@@ -93,6 +94,7 @@ public class GameSprite extends Sprite {
    private var displaysPosY:uint = 4;
    public var chatPlayerMenu:PlayerMenu;
    public var bossHealthBar:BossHealthBar;
+   public var dungeonQuestOverlay:DungeonQuestOverlay;
    public var arenaMenu:ArenaMenu;
    public var scaledLayer:Sprite;
    public var forceScaledLayer:Sprite;
@@ -223,6 +225,11 @@ public class GameSprite extends Sprite {
       this.bossHealthBar.y = 10;
       this.bossHealthBar.visible = false;
       addChild(this.bossHealthBar);
+
+      this.dungeonQuestOverlay = new DungeonQuestOverlay();
+      this.dungeonQuestOverlay.x = 10;
+      this.dungeonQuestOverlay.y = 10;
+      addChild(this.dungeonQuestOverlay);
    }
 
    public function updateBossBar() : void
