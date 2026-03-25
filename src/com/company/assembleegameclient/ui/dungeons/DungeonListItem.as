@@ -33,7 +33,7 @@ public class DungeonListItem extends Sprite
         // Dungeon name
         var nameText:SimpleText = new SimpleText(16, 0xFFFFFF, false, 0, 0);
         nameText.setBold(true);
-        nameText.text = data.name;
+        nameText.text = data.displayName || data.name;
         nameText.updateMetrics();
         nameText.filters = [new DropShadowFilter(0, 0, 0, 1, 2, 2)];
         nameText.x = 15;
