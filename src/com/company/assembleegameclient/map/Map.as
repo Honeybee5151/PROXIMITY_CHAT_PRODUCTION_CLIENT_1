@@ -62,6 +62,7 @@ public class Map extends Sprite {
         this.hurtOverlay_ = new HurtOverlay();
         this.gradientOverlay_ = new GradientOverlay();
         this.darknessOverlay_ = new DarknessOverlay();
+        this.victoryOverlay_ = new DungeonVictoryOverlay(WebMain.sWidth, WebMain.sHeight);
         this.mapOverlay_ = new MapOverlay();
         this.partyOverlay_ = new PartyOverlay(this);
         this.party_ = new Party(this);
@@ -85,6 +86,7 @@ public class Map extends Sprite {
     public var hurtOverlay_:HurtOverlay = null;
     public var gradientOverlay_:GradientOverlay = null;
     public var darknessOverlay_:DarknessOverlay = null; //editor8182381
+    public var victoryOverlay_:DungeonVictoryOverlay = null;
     public var mapOverlay_:MapOverlay = null;
     public var partyOverlay_:PartyOverlay = null;
     public var squareList_:Vector.<Square>;
@@ -146,6 +148,7 @@ public class Map extends Sprite {
         addChild(this.hurtOverlay_);
         addChild(this.gradientOverlay_);
         addChild(this.darknessOverlay_); //editor8182381
+        addChild(this.victoryOverlay_);
         addChild(this.mapOverlay_);
         addChild(this.partyOverlay_);
     }
@@ -160,6 +163,7 @@ public class Map extends Sprite {
         this.map_ = null;
         this.hurtOverlay_ = null;
         this.gradientOverlay_ = null;
+        this.victoryOverlay_ = null;
         this.mapOverlay_ = null;
         this.partyOverlay_ = null;
         for each(square in this.squareList_) {
@@ -539,6 +543,12 @@ public class Map extends Sprite {
         }
         else {
             this.gradientOverlay_.visible = false;
+        }
+
+        // position victory overlay to screen coordinates
+        if (this.victoryOverlay_ != null && this.victoryOverlay_.visible) {
+            this.victoryOverlay_.x = screenRect.left;
+            this.victoryOverlay_.y = screenRect.top;
         }
 
         //editor8182381 — Progressive darkness zone

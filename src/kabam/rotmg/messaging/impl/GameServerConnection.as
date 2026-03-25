@@ -1648,6 +1648,12 @@ public class GameServerConnection
             case "showKeyUI":
                ShowKeyUISignal.instance.dispatch();
                break;
+            case "dungeonVictory":
+               if (this.gs_ && this.gs_.map && this.gs_.map.victoryOverlay_)
+               {
+                  this.gs_.map.victoryOverlay_.show();
+               }
+               break;
          }
       }
 

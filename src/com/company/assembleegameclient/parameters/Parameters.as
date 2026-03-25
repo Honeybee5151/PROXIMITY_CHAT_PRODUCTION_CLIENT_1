@@ -160,6 +160,8 @@ public class Parameters {
         setDefault("playPewPew", true);
         setDefault("playHeartbeat", true); //editor8182381
         setDefault("heartbeatVolume", 1.0); //editor8182381
+        setDefault("playVictorySound", true);
+        setDefault("victoryVolume", 1.0);
         setDefault("centerOnPlayer", true);
         setDefault("preferredServer", null);
         setDefault("cameraAngle", 7 * Math.PI / 4);

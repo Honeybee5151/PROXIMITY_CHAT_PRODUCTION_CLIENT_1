@@ -508,6 +508,9 @@ public class Options extends Sprite
       this.addOption(new ChoiceOption("playHeartbeat",new <String>["On","Off"],[true,false],"Play Heartbeat","Plays a heartbeat sound when HP is low",null));
       this.addOption(new Sprite());
       this.addOption(new SliderOption("heartbeatVolume"), 90, 15);
+      this.addOption(new ChoiceOption("playVictorySound",new <String>["On","Off"],[true,false],"Play Victory Sound","Plays a sound when a dungeon is cleared",null));
+      this.addOption(new Sprite());
+      this.addOption(new SliderOption("victoryVolume"), 90, 15);
    }
 
    private function onPlayMusicChange() : void
