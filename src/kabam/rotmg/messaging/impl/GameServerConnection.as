@@ -1655,9 +1655,17 @@ public class GameServerConnection
                }
                break;
             default:
-               if (notification.text.indexOf("dungeonQuest:") == 0 && this.gs_ && this.gs_.dungeonQuestOverlay)
+               if (notification.text.indexOf("dungeonQuest:") == 0 && this.gs_)
                {
-                  this.gs_.dungeonQuestOverlay.show(notification.text.substr(13));
+                  var questStr:String = notification.text.substr(13);
+                  if (this.gs_.dungeonQuestOverlay)
+                  {
+                     this.gs_.dungeonQuestOverlay.show(questStr);
+                  }
+                  else
+                  {
+                     this.gs_.pendingQuestText = questStr;
+                  }
                }
                break;
          }

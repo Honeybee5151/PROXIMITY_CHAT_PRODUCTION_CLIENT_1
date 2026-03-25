@@ -95,6 +95,7 @@ public class GameSprite extends Sprite {
    public var chatPlayerMenu:PlayerMenu;
    public var bossHealthBar:BossHealthBar;
    public var dungeonQuestOverlay:DungeonQuestOverlay;
+   public var pendingQuestText:String = null;
    public var arenaMenu:ArenaMenu;
    public var scaledLayer:Sprite;
    public var forceScaledLayer:Sprite;
@@ -230,6 +231,12 @@ public class GameSprite extends Sprite {
       this.dungeonQuestOverlay.x = 10;
       this.dungeonQuestOverlay.y = 10;
       addChild(this.dungeonQuestOverlay);
+
+      if (this.pendingQuestText != null)
+      {
+         this.dungeonQuestOverlay.show(this.pendingQuestText);
+         this.pendingQuestText = null;
+      }
    }
 
    public function updateBossBar() : void
