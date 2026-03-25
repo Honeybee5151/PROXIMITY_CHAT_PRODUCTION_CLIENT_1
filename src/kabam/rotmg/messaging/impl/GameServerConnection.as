@@ -733,6 +733,7 @@ public class GameServerConnection
       private var _pendingDungeonObjectsXml:XML = null;
       private var _loadedDungeonSheetNames:Vector.<String> = new Vector.<String>();
       private var _loadedDungeonAnimSheetNames:Vector.<String> = new Vector.<String>();
+      private var _deferredDungeonEntities:Vector.<ObjectData> = new Vector.<ObjectData>();
 
       private function cleanupDungeonAssets():void {
          // Remove previously loaded per-dungeon sprite sheets from memory
@@ -747,6 +748,7 @@ public class GameServerConnection
             trace("[DungeonAssets] Unloaded animated sheet: " + animName);
          }
          _loadedDungeonAnimSheetNames.length = 0;
+         _deferredDungeonEntities.length = 0;
       }
 
       private function onCustomDungeonAssets(msg:CustomDungeonAssetsMsg):void {
@@ -889,6 +891,16 @@ public class GameServerConnection
                }
                if (refreshed > 0) {
                   trace("[DungeonAssets] Refreshed " + refreshed + " existing entities with updated textures");
+               }
+            }
+
+            // Retry deferred entities that arrived before assets were ready
+            if (_deferredDungeonEntities.length > 0) {
+               trace("[DungeonAssets] Retrying " + _deferredDungeonEntities.length + " deferred entities");
+               var deferred:Vector.<ObjectData> = _deferredDungeonEntities.concat();
+               _deferredDungeonEntities.length = 0;
+               for each (var dObj:ObjectData in deferred) {
+                  addObject(dObj);
                }
             }
          }
@@ -1523,7 +1535,13 @@ public class GameServerConnection
             return;
          }
          if(go == null) {
-            trace("[BeamDebug] addObject go==null for type=0x" + obj.objectType_.toString(16));
+            // Dungeon assets still loading async — buffer this entity for retry
+            if (_pendingDungeonSheets > 0 || _pendingDungeonObjectsXml != null) {
+               _deferredDungeonEntities.push(obj);
+               trace("[DungeonAssets] Deferred entity type=0x" + obj.objectType_.toString(16) + " (assets still loading)");
+            } else {
+               trace("[BeamDebug] addObject go==null for type=0x" + obj.objectType_.toString(16));
+            }
             return;
          }
          if(obj.objectType_ == 0x49D1 || obj.objectType_ == 0x49D2) {
