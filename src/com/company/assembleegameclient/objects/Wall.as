@@ -116,6 +116,8 @@ package com.company.assembleegameclient.objects
             {
                xOff = animDx * time / 1000;
                yOff = animDy * time / 1000;
+               xOff = xOff - Math.floor(xOff);
+               yOff = yOff - Math.floor(yOff);
             }
             var animUVT:Vector.<Number> = new <Number>[xOff,yOff,0, 1+xOff,yOff,0, 1+xOff,1+yOff,0, xOff,1+yOff,0];
             for each(face in this.faces_)
