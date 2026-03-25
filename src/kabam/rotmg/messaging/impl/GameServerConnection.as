@@ -1667,6 +1667,11 @@ public class GameServerConnection
                      this.gs_.pendingQuestText = questStr;
                   }
                }
+               else if (notification.text.indexOf("openDungeonBrowser:") == 0 && this.gs_)
+               {
+                  var browserTab:String = notification.text.substr(19);
+                  this.gs_.openDungeonBrowser(browserTab);
+               }
                break;
          }
       }

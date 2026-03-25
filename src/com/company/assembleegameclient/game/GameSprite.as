@@ -59,6 +59,7 @@ import kabam.rotmg.ui.UIUtils;
 import kabam.rotmg.ui.view.BossHealthBar;
 import kabam.rotmg.ui.view.HUDView;
 import com.company.assembleegameclient.map.DungeonQuestOverlay;
+import com.company.assembleegameclient.ui.dungeons.DungeonBrowser;
 //777592
 import kabam.rotmg.ProximityChat.PCManager;
 import kabam.rotmg.ProximityChat.SpeakerIconManager;
@@ -237,6 +238,12 @@ public class GameSprite extends Sprite {
          this.dungeonQuestOverlay.show(this.pendingQuestText);
          this.pendingQuestText = null;
       }
+   }
+
+   public function openDungeonBrowser(tab:String = "community"):void
+   {
+      var browser:DungeonBrowser = new DungeonBrowser(this, tab);
+      this.forceScaledLayer.addChild(browser);
    }
 
    public function updateBossBar() : void

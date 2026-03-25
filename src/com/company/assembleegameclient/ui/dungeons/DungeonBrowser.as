@@ -63,16 +63,21 @@ public class DungeonBrowser extends Sprite
 
     private var loadingText_:SimpleText;
     private var ratePanel_:DungeonRatePanel;
+    private var optionsPanel_:DungeonOptionsPanel;
+    private var optionsBtn_:TextButton;
+    private var selectedDifficulty_:int = 0;
+    private var diffLabel_:SimpleText;
 
     // Timer-based text polling (avoids Flash ENTER_FRAME timing issues)
     private var pollTimer_:Timer;
     private var lastSearchText_:String = "";
     private var lastDiffText_:String = "";
 
-    public function DungeonBrowser(gs:GameSprite)
+    public function DungeonBrowser(gs:GameSprite, startTab:String = "community")
     {
         super();
         this.gs_ = gs;
+        this.activeTab_ = startTab;
 
         // Center on screen
         this.x = (800 - WIDTH) / 2;
@@ -82,6 +87,7 @@ public class DungeonBrowser extends Sprite
         this.drawTitle();
         this.drawCloseButton();
         this.drawTabs();
+        this.drawOptionsButton();
         this.drawSearchBar();
         this.drawSortButtons();
         this.drawListArea();
@@ -165,6 +171,63 @@ public class DungeonBrowser extends Sprite
         // Active tab: bright, inactive: dim
         this.tabCommunity_.alpha = this.activeTab_ == "community" ? 1.0 : 0.4;
         this.tabOfficial_.alpha = this.activeTab_ == "official" ? 1.0 : 0.4;
+
+        // Show/hide options button based on active tab
+        if (this.optionsBtn_) this.optionsBtn_.visible = this.activeTab_ == "official";
+        if (this.diffLabel_) this.diffLabel_.visible = this.activeTab_ == "official";
+    }
+
+    private function drawOptionsButton():void
+    {
+        var tabY:int = 42;
+
+        // Difficulty label showing current selection
+        var diffNames:Array = ["Peaceful", "Easy", "Medium", "Hard"];
+        this.diffLabel_ = new SimpleText(12, 0x44CC44, false, 0, 0);
+        this.diffLabel_.text = diffNames[this.selectedDifficulty_];
+        this.diffLabel_.updateMetrics();
+        this.diffLabel_.x = WIDTH - 180;
+        this.diffLabel_.y = tabY + 5;
+        this.diffLabel_.visible = this.activeTab_ == "official";
+        addChild(this.diffLabel_);
+
+        this.optionsBtn_ = new TextButton(13, "Options", 70);
+        this.optionsBtn_.x = WIDTH - 110;
+        this.optionsBtn_.y = tabY;
+        this.optionsBtn_.addEventListener(MouseEvent.CLICK, this.onOptionsClick);
+        this.optionsBtn_.visible = this.activeTab_ == "official";
+        addChild(this.optionsBtn_);
+    }
+
+    private function onOptionsClick(e:MouseEvent):void
+    {
+        if (this.optionsPanel_ && this.optionsPanel_.parent)
+            removeChild(this.optionsPanel_);
+
+        this.optionsPanel_ = new DungeonOptionsPanel(this, this.selectedDifficulty_);
+        this.optionsPanel_.x = (WIDTH - 320) / 2;
+        this.optionsPanel_.y = (HEIGHT - 280) / 2;
+        addChild(this.optionsPanel_);
+    }
+
+    public function setSelectedDifficulty(d:int):void
+    {
+        this.selectedDifficulty_ = d;
+        var diffNames:Array = ["Peaceful", "Easy", "Medium", "Hard"];
+        var diffColors:Array = [0x44CC44, 0xFFFFFF, 0xFFCC00, 0xFF4444];
+        if (this.diffLabel_)
+        {
+            this.diffLabel_.textColor = diffColors[d];
+            this.diffLabel_.text = diffNames[d];
+            this.diffLabel_.updateMetrics();
+        }
+    }
+
+    public function closeOptionsPanel():void
+    {
+        if (this.optionsPanel_ && this.optionsPanel_.parent)
+            removeChild(this.optionsPanel_);
+        this.optionsPanel_ = null;
     }
 
     private function onTabCommunity(e:MouseEvent):void
@@ -656,7 +719,10 @@ public class DungeonBrowser extends Sprite
             return;
         }
         // Send /dungeon command through game connection
-        this.gs_.gsc_.playerText("/dungeon " + name);
+        var cmd:String = "/dungeon " + name;
+        if (this.activeTab_ == "official")
+            cmd = "/dungeon " + name + "::" + this.selectedDifficulty_;
+        this.gs_.gsc_.playerText(cmd);
         this.close();
     }
 
@@ -733,6 +799,11 @@ public class DungeonBrowser extends Sprite
             removeChild(this.ratePanel_);
         this.ratePanel_ = null;
 
+        // Clean up options panel
+        if (this.optionsPanel_ && this.optionsPanel_.parent)
+            removeChild(this.optionsPanel_);
+        this.optionsPanel_ = null;
+
         // Clean up list items
         this.clearList();
 
@@ -743,6 +814,8 @@ public class DungeonBrowser extends Sprite
         this.sortNewest_.removeEventListener(MouseEvent.CLICK, this.onSortNewest);
         this.sortOldest_.removeEventListener(MouseEvent.CLICK, this.onSortOldest);
         this.sortLiked_.removeEventListener(MouseEvent.CLICK, this.onSortLiked);
+        if (this.optionsBtn_)
+            this.optionsBtn_.removeEventListener(MouseEvent.CLICK, this.onOptionsClick);
         this.scrollbar_.removeEventListener(Event.CHANGE, this.onScroll);
         this.background_.removeEventListener(MouseEvent.CLICK, this.onBackgroundClick);
 
