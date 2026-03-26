@@ -67,8 +67,8 @@ public class DialoguePanel extends Sprite
             addChild(btn);
         }
 
-        // Top-center of game area (600px wide game viewport, HUD occupies right 200px)
-        this.x = 300 - PANEL_W / 2;
+        // Top-center of game area (600px wide, HUD occupies right 200px of 800px screen)
+        this.x = (600 - PANEL_W) / 2;
         this.y = 20;
     }
 
@@ -77,8 +77,8 @@ public class DialoguePanel extends Sprite
         var self:DialoguePanel = this;
         return function(e:MouseEvent):void
         {
-            self.gs_.gsc_.playerText("/dialogue " + optionId);
             self.close();
+            self.gs_.gsc_.playerText("/dialogue " + optionId);
         };
     }
 
