@@ -8,7 +8,7 @@ import flash.display.Sprite;
 import flash.events.MouseEvent;
 import flash.filters.DropShadowFilter;
 
-import kabam.rotmg.game.view.GameSprite;
+import com.company.assembleegameclient.game.GameSprite;
 
 public class DialoguePanel extends Sprite
 {
