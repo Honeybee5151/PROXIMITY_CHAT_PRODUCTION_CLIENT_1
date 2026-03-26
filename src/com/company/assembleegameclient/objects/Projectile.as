@@ -365,6 +365,8 @@ public class Projectile extends BasicObject
       var dist:Number = NaN;
       var minDist:Number = Number.MAX_VALUE;
       var minGO:GameObject = null;
+      // Large projectiles get extra hit radius proportional to visual size
+      var projRadius:Number = (this.size > 100) ? (this.size / 100 * 0.4) : 0;
 
       var hittables:Vector.<GameObject> = damagesEnemies_ ? map_.hitTEnemies_ : map_.hitTPlayers_;
       for each(go in hittables)
@@ -380,7 +382,8 @@ public class Projectile extends BasicObject
          if ((this.damagesEnemies_ && go.props_.isEnemy_) || (this.damagesPlayers_ && go.props_.isPlayer_)) {
             xDiff = go.x_ > pX?Number(go.x_ - pX):Number(pX - go.x_);
             yDiff = go.y_ > pY?Number(go.y_ - pY):Number(pY - go.y_);
-            if(!(xDiff > go.radius_ || yDiff > go.radius_))
+            var effectiveRadius:Number = go.radius_ + projRadius;
+            if(!(xDiff > effectiveRadius || yDiff > effectiveRadius))
             {
                if(go == map_.player_) {
                   return go;

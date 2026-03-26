@@ -71,6 +71,8 @@ public class ConditionEffect
    public static const WIS_DEBUFF:uint = 57;
    public static const DEX_DEBUFF:uint = 58;
    public static const INSPIRED:uint = 59;
+   public static const MANA_DEPLETE:uint = 60;
+   public static const NIGHTVISION:uint = 61;
 
    public static const GROUND_DAMAGE:uint = 99;
 
@@ -133,6 +135,8 @@ public class ConditionEffect
    public static const WIS_DEBUFF_BIT:uint = 1 << (WIS_DEBUFF - NEW_CON_THREASHOLD);
    public static const DEX_DEBUFF_BIT:uint = 1 << (DEX_DEBUFF - NEW_CON_THREASHOLD);
    public static const INSPIRED_BIT:uint = 1 << (INSPIRED - NEW_CON_THREASHOLD);
+   public static const MANA_DEPLETE_BIT:uint = 1 << (MANA_DEPLETE - NEW_CON_THREASHOLD);
+   public static const NIGHTVISION_BIT:uint = 1 << (NIGHTVISION - NEW_CON_THREASHOLD);
 
    public static const MAP_FILTER_BITMASK:uint = DRUNK_BIT | BLIND_BIT | PAUSED_BIT;
 
@@ -209,6 +213,8 @@ public class ConditionEffect
       new ConditionEffect("Wis Debuff", WIS_DEBUFF_BIT, [0x37], true),
       new ConditionEffect("Dex Debuff", DEX_DEBUFF_BIT, [0x35], true),
       new ConditionEffect("Inspired", INSPIRED_BIT, [0x3e]),
+      new ConditionEffect("Mana Deplete", MANA_DEPLETE_BIT, null),
+      new ConditionEffect("Night Vision", NIGHTVISION_BIT, [0x29]),
    ];
 
    private static var conditionEffectFromName_:Object = null;

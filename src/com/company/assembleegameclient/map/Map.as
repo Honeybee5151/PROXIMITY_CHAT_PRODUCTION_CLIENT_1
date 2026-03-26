@@ -11,9 +11,11 @@ import com.company.assembleegameclient.objects.particles.DangerZoneEffect;
 import com.company.assembleegameclient.parameters.Parameters;
 import com.company.assembleegameclient.util.ConditionEffect;
 
+import flash.display.BlendMode;
 import flash.display.GraphicsBitmapFill;
 import flash.display.GraphicsSolidFill;
 import flash.display.IGraphicsData;
+import flash.display.Shape;
 import flash.display.Sprite;
 import flash.display3D.Context3D;
 import flash.filters.BlurFilter;
@@ -62,6 +64,14 @@ public class Map extends Sprite {
         this.hurtOverlay_ = new HurtOverlay();
         this.gradientOverlay_ = new GradientOverlay();
         this.darknessOverlay_ = new DarknessOverlay();
+        this.nightVisionOverlay_ = new Sprite();
+        this.nightVisionOverlay_.cacheAsBitmap = true;
+        this.nightVisionOverlay_.visible = false;
+        this.nightVisionDark_ = new Shape();
+        this.nightVisionCone_ = new Shape();
+        this.nightVisionCone_.blendMode = BlendMode.ERASE;
+        this.nightVisionOverlay_.addChild(this.nightVisionDark_);
+        this.nightVisionOverlay_.addChild(this.nightVisionCone_);
         this.victoryOverlay_ = new DungeonVictoryOverlay(WebMain.sWidth, WebMain.sHeight);
         this.mapOverlay_ = new MapOverlay();
         this.partyOverlay_ = new PartyOverlay(this);
@@ -119,6 +129,11 @@ public class Map extends Sprite {
     public var communityDungeon_:Boolean;
     public var lockRotation_:Boolean;
 
+    // Night vision flashlight cone overlay
+    public var nightVisionOverlay_:Sprite = null;
+    private var nightVisionDark_:Shape = null;
+    private var nightVisionCone_:Shape = null;
+
     //editor8182381 — Darkness zone config
     public var darknessZoneCenterX_:Number = 0;
     public var darknessZoneCenterY_:Number = 0;
@@ -148,6 +163,7 @@ public class Map extends Sprite {
         addChild(this.hurtOverlay_);
         addChild(this.gradientOverlay_);
         addChild(this.darknessOverlay_); //editor8182381
+        addChild(this.nightVisionOverlay_);
         addChild(this.victoryOverlay_);
         addChild(this.mapOverlay_);
         addChild(this.partyOverlay_);
@@ -609,19 +625,58 @@ public class Map extends Sprite {
 
         // draw filters
         this.map_.filters.length = 0;
+        var hasNightVision:Boolean = this.player_ != null && this.player_.isNightVision();
         if (this.player_ != null && (this.player_.condition_[ConditionEffect.CE_FIRST_BATCH] & ConditionEffect.MAP_FILTER_BITMASK) != 0) {
             var filters:Array = [];
             if (this.player_.isDrunk()) {
                 d = 20 + 10 * Math.sin(time / 1000);
                 filters.push(new BlurFilter(d, d));
             }
-            if (this.player_.isBlind()) {
+            if (this.player_.isBlind() && !hasNightVision) {
                 filters.push(BLIND_FILTER);
             }
             this.map_.filters = filters;
         }
         else if (this.map_.filters.length > 0) {
             this.map_.filters = [];
+        }
+
+        // Night vision flashlight cone
+        if (hasNightVision && this.player_.isBlind()) {
+            this.nightVisionOverlay_.visible = true;
+            this.nightVisionOverlay_.x = screenRect.left;
+            this.nightVisionOverlay_.y = screenRect.top;
+            var screenW:Number = screenRect.width;
+            var screenH:Number = screenRect.height;
+            var centerX:Number = screenW / 2;
+            var centerY:Number = screenH / 2;
+            var mouseAngle:Number = Math.atan2(
+                this.gs_.mouseY - this.gs_.stage.stageHeight / 2,
+                this.gs_.mouseX - this.gs_.stage.stageWidth / 2
+            );
+            var coneHalf:Number = Math.PI / 8; // ~22.5 deg half-angle = 45 deg total
+            var coneLen:Number = Math.max(screenW, screenH) * 1.5;
+            // Draw dark background
+            this.nightVisionDark_.graphics.clear();
+            this.nightVisionDark_.graphics.beginFill(0x000000, 0.92);
+            this.nightVisionDark_.graphics.drawRect(0, 0, screenW, screenH);
+            this.nightVisionDark_.graphics.endFill();
+            // Draw cone cutout (ERASE blend mode punches through the dark layer)
+            this.nightVisionCone_.graphics.clear();
+            this.nightVisionCone_.graphics.beginFill(0x000000, 1.0);
+            this.nightVisionCone_.graphics.moveTo(centerX, centerY);
+            var coneSteps:int = 12;
+            for (var ci:int = 0; ci <= coneSteps; ci++) {
+                var coneA:Number = mouseAngle - coneHalf + (coneHalf * 2) * ci / coneSteps;
+                this.nightVisionCone_.graphics.lineTo(
+                    centerX + Math.cos(coneA) * coneLen,
+                    centerY + Math.sin(coneA) * coneLen
+                );
+            }
+            this.nightVisionCone_.graphics.lineTo(centerX, centerY);
+            this.nightVisionCone_.graphics.endFill();
+        } else {
+            this.nightVisionOverlay_.visible = false;
         }
 
         this.mapOverlay_.draw(camera, time);
@@ -634,7 +689,7 @@ public class Map extends Sprite {
             if (player_.isPaused()) {
                 filterIndex = Renderer.STAGE3D_FILTER_PAUSE;
             }
-            else if (player_.isBlind()) {
+            else if (player_.isBlind() && !player_.isNightVision()) {
                 filterIndex = Renderer.STAGE3D_FILTER_BLIND;
             }
             else if (player_.isDrunk()) {

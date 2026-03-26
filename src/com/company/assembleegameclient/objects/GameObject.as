@@ -851,6 +851,10 @@ public class GameObject extends BasicObject {
         return (condition_[ConditionEffect.CE_SECOND_BATCH] & ConditionEffect.INSPIRED_BIT) != 0;
     }
 
+    public function isNightVision():Boolean {
+        return (condition_[ConditionEffect.CE_SECOND_BATCH] & ConditionEffect.NIGHTVISION_BIT) != 0;
+    }
+
     public function isUntargetable():Boolean {
         return isInvincible() || isPaused() || isStasis() || dead_;
     }
