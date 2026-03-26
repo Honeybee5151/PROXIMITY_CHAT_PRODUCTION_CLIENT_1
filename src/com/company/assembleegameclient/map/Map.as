@@ -641,7 +641,8 @@ public class Map extends Sprite {
             this.map_.filters = [];
         }
 
-        // Night vision flashlight cone
+        // Night vision scope — vertical strip from player to top of screen (forward direction)
+        // Map rotates with camera, so "up on screen" = always the player's forward
         if (hasNightVision && this.player_.isBlind()) {
             this.nightVisionOverlay_.visible = true;
             this.nightVisionOverlay_.x = screenRect.left;
@@ -650,30 +651,16 @@ public class Map extends Sprite {
             var screenH:Number = screenRect.height;
             var centerX:Number = screenW / 2;
             var centerY:Number = screenH / 2;
-            var mouseAngle:Number = Math.atan2(
-                this.gs_.mouseY - this.gs_.stage.stageHeight / 2,
-                this.gs_.mouseX - this.gs_.stage.stageWidth / 2
-            );
-            var coneHalf:Number = Math.PI / 8; // ~22.5 deg half-angle = 45 deg total
-            var coneLen:Number = Math.max(screenW, screenH) * 1.5;
-            // Draw dark background
+            var scopeHalf:Number = 16; // half-width matching bullet size
+            // Dark background
             this.nightVisionDark_.graphics.clear();
             this.nightVisionDark_.graphics.beginFill(0x000000, 0.92);
             this.nightVisionDark_.graphics.drawRect(0, 0, screenW, screenH);
             this.nightVisionDark_.graphics.endFill();
-            // Draw cone cutout (ERASE blend mode punches through the dark layer)
+            // Vertical rectangle cutout from player center straight up to top edge
             this.nightVisionCone_.graphics.clear();
             this.nightVisionCone_.graphics.beginFill(0x000000, 1.0);
-            this.nightVisionCone_.graphics.moveTo(centerX, centerY);
-            var coneSteps:int = 12;
-            for (var ci:int = 0; ci <= coneSteps; ci++) {
-                var coneA:Number = mouseAngle - coneHalf + (coneHalf * 2) * ci / coneSteps;
-                this.nightVisionCone_.graphics.lineTo(
-                    centerX + Math.cos(coneA) * coneLen,
-                    centerY + Math.sin(coneA) * coneLen
-                );
-            }
-            this.nightVisionCone_.graphics.lineTo(centerX, centerY);
+            this.nightVisionCone_.graphics.drawRect(centerX - scopeHalf, 0, scopeHalf * 2, centerY);
             this.nightVisionCone_.graphics.endFill();
         } else {
             this.nightVisionOverlay_.visible = false;
