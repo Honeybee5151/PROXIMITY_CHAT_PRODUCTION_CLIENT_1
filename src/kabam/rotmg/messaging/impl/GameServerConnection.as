@@ -1448,6 +1448,11 @@ public class GameServerConnection
          var proj:Projectile = FreeList.newObject(Projectile) as Projectile;
          proj.reset(serverPlayerShoot.containerType_,0, serverPlayerShoot.ownerId_, serverPlayerShoot.bulletId_, serverPlayerShoot.angle_,this.gs_.lastUpdate_);
          proj.setDamage(serverPlayerShoot.damage_);
+         // Scale up projectile if owner has NightVision (helmet ability shot)
+         if (owner.isNightVision()) {
+            proj.size = proj.size * 4;
+            proj.p_.setSize(8 * (proj.size / 100));
+         }
          this.gs_.map.addObj(proj,serverPlayerShoot.startingPos_.x_,serverPlayerShoot.startingPos_.y_);
          if(needsAck)
          {
