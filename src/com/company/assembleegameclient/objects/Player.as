@@ -1002,6 +1002,13 @@ public class Player extends Character {
             return false;
         }
 
+        // Night vision: override target to shoot straight ahead based on camera angle
+        if (this.isNightVision()) {
+            var forwardAngle:Number = Parameters.data_.cameraAngle - Math.PI / 2;
+            pW.x = x_ + 6 * Math.cos(forwardAngle);
+            pW.y = y_ + 6 * Math.sin(forwardAngle);
+        }
+
         var shoot:Boolean = false;
         for each(activateXML in objectXML.Activate) {
             if (activateXML.toString() == ActivationType.TELEPORT) {

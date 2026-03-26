@@ -649,8 +649,8 @@ public class Map extends Sprite {
             this.nightVisionOverlay_.y = screenRect.top;
             var screenW:Number = screenRect.width;
             var screenH:Number = screenRect.height;
-            var centerX:Number = screenW / 2;
-            var centerY:Number = screenH / 2;
+            var centerX:Number = -screenRect.x; // player screen X (accounts for HUD offset)
+            var centerY:Number = -screenRect.y; // player screen Y
             var scopeHalf:Number = 16; // half-width matching bullet size
             // Dark background
             this.nightVisionDark_.graphics.clear();
