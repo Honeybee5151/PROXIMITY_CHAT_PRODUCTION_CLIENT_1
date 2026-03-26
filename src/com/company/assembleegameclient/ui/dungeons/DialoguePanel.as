@@ -67,9 +67,9 @@ public class DialoguePanel extends Sprite
             addChild(btn);
         }
 
-        // Center on screen
-        this.x = 400 - PANEL_W / 2;
-        this.y = 300 - panelH / 2;
+        // Top-center of game area (600px wide game viewport, HUD occupies right 200px)
+        this.x = 300 - PANEL_W / 2;
+        this.y = 20;
     }
 
     private function makeClickHandler(optionId:int):Function
