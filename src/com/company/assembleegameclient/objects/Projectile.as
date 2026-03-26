@@ -58,6 +58,7 @@ public class Projectile extends BasicObject
    protected var shadowGradientFill_:GraphicsGradientFill;
    protected var shadowPath_:GraphicsPath;
    public var size:int;
+   public var lifetimeOverride_:int = 0;
    public var speedMul_:Number;
 
    public function Projectile()
@@ -250,7 +251,8 @@ public class Projectile extends BasicObject
    override public function update(time:int, dt:int) : Boolean
    {
       var elapsed:int = time - this.startTime_;
-      if(elapsed > this.projProps_.lifetime_) {
+      var lt:int = this.lifetimeOverride_ > 0 ? this.lifetimeOverride_ : this.projProps_.lifetime_;
+      if(elapsed > lt) {
          return false;
       }
 
