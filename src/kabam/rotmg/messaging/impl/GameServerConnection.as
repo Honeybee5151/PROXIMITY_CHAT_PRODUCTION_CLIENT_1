@@ -1672,6 +1672,12 @@ public class GameServerConnection
                   var browserTab:String = notification.text.substr(19);
                   this.gs_.openDungeonBrowser(browserTab);
                }
+               else if (notification.text.indexOf("npcDialogue:") == 0 && this.gs_)
+               {
+                  var dialogueJson:String = notification.text.substr(12);
+                  var dialogueData:Object = JSON.parse(dialogueJson);
+                  this.gs_.showDialoguePanel(dialogueData);
+               }
                break;
          }
       }
