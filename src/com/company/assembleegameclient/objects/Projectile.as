@@ -57,7 +57,7 @@ public class Projectile extends BasicObject
    private var staticVector3D_:Vector3D;
    protected var shadowGradientFill_:GraphicsGradientFill;
    protected var shadowPath_:GraphicsPath;
-   private var size:int;
+   public var size:int;
    public var speedMul_:Number;
 
    public function Projectile()
