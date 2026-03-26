@@ -1631,6 +1631,7 @@ public class GameServerConnection
 
       private function onGlobalNotification(notification:GlobalNotification) : void
       {
+         trace("[GlobalNotif] type=" + notification.type + " text=" + notification.text.substr(0, 60));
          switch(notification.text)
          {
             case "yellow":
@@ -1675,7 +1676,9 @@ public class GameServerConnection
                else if (notification.text.indexOf("npcDialogue:") == 0 && this.gs_)
                {
                   var dialogueJson:String = notification.text.substr(12);
+                  trace("[NpcDialogue] Received JSON: " + dialogueJson);
                   var dialogueData:Object = JSON.parse(dialogueJson);
+                  trace("[NpcDialogue] Parsed data, showing panel");
                   this.gs_.showDialoguePanel(dialogueData);
                }
                break;
