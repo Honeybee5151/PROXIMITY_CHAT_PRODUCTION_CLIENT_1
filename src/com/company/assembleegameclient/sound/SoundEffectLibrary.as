@@ -99,8 +99,10 @@ package com.company.assembleegameclient.sound
       {
          var channel:SoundChannel = null;
          var transform:SoundTransform = null;
-         for each(channel in activeSfxList_)
+         for(var key:Object in activeSfxList_)
          {
+            channel = key as SoundChannel;
+            if(channel == null) continue;
             transform = channel.soundTransform;
             transform.volume = Boolean(Parameters.data_.playSFX)?Number(activeSfxList_[channel]):Number(0);
             channel.soundTransform = transform;
