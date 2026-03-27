@@ -800,8 +800,14 @@ public class GameServerConnection
          var self:GameServerConnection = this;
 
          ldr.contentLoaderInfo.addEventListener(Event.COMPLETE, function(e:Event):void {
-            var bmp:BitmapData = (ldr.content as Bitmap).bitmapData;
-            trace("[DungeonAssets]   Sheet decoded: " + sheetName + " -> " + bmp.width + "x" + bmp.height);
+            var loaderBmp:BitmapData = (ldr.content as Bitmap).bitmapData;
+            trace("[DungeonAssets]   Sheet decoded: " + sheetName + " -> " + loaderBmp.width + "x" + loaderBmp.height);
+
+            // Copy to fresh BitmapData — Loader's internal bitmap can be in a weird state
+            // that causes copyPixels to fail for small/non-standard PNG dimensions
+            var bmp:BitmapData = new BitmapData(loaderBmp.width, loaderBmp.height, true, 0x00000000);
+            bmp.copyPixels(loaderBmp, loaderBmp.rect, new Point(0, 0));
+            loaderBmp.dispose();
 
             if (isAnimated) {
                AnimatedChars.add(sheetName, bmp, null, tileW, tileH, bmp.width, bmp.height, AnimatedChar.RIGHT);
