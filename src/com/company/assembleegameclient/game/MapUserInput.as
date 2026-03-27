@@ -594,9 +594,9 @@ public class MapUserInput
                   // Empty input or non-input TextField — clear focus and proceed
                   stage.focus = null;
               }
-              // Dismiss tutorial overlay if showing
+              // Block PCUI toggle while tutorial is active (tutorial handles its own keys)
               if (gs_.pcTutorialOverlay) {
-                  gs_.dismissPCTutorial();
+                  break;
               }
               if(!PCUIChecker) {
                   gs_.initializePCUI();

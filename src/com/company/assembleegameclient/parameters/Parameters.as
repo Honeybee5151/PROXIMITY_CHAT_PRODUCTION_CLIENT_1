@@ -186,7 +186,7 @@ public class Parameters {
         setDefault("ProximityToggle", false);
         //777592
         setDefaultKey("PCUI", KeyCodes.U);
-        setDefaultKey("PCTALK", KeyCodes.SHIFT);
+        setDefaultKey("PCTALK", KeyCodes.V);
         setDefaultKey("tbag", KeyCodes.T);
 
     }

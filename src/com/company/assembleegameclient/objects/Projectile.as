@@ -106,10 +106,26 @@ public class Projectile extends BasicObject
       z_ = 0.5;
       this.speedMul_ = speedMult;
       this.containerProps_ = ObjectLibrary.propsLibrary_[this.containerType_];
+      if (this.containerProps_ == null) {
+         trace("Projectile.reset: missing containerProps for type 0x" + this.containerType_.toString(16));
+         return;
+      }
       this.projProps_ = this.containerProps_.projectiles_[bulletType];
+      if (this.projProps_ == null) {
+         trace("Projectile.reset: missing projProps for bulletType " + bulletType + " on type 0x" + this.containerType_.toString(16));
+         return;
+      }
       this.props_ = ObjectLibrary.getPropsFromId(this.projProps_.objectId_);
+      if (this.props_ == null) {
+         trace("Projectile.reset: missing props for objectId " + this.projProps_.objectId_);
+         return;
+      }
       hasShadow_ = Parameters.data_.drawShadows && this.props_.shadowSize_ > 0;
       var textureData:TextureData = ObjectLibrary.typeToTextureData_[this.props_.type_];
+      if (textureData == null) {
+         trace("Projectile.reset: missing textureData for type 0x" + this.props_.type_.toString(16));
+         return;
+      }
       this.texture_ = textureData.getTexture(objectId_);
       this.colors_ = BloodComposition.getColors(this.texture_);
       this.damagesPlayers_ = this.containerProps_.isEnemy_;

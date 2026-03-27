@@ -31,6 +31,7 @@ import flash.display.Sprite;
 import flash.display.StageAlign;
 import flash.display.StageScaleMode;
 import flash.events.Event;
+import flash.events.KeyboardEvent;
 import flash.events.MouseEvent;
 import flash.external.ExternalInterface;
 import flash.filters.ColorMatrixFilter;
@@ -146,8 +147,10 @@ public class GameSprite extends Sprite {
 
    private var tutorialTitle:SimpleText;
    private var tutorialBody:SimpleText;
+   private var tutorialStep:int = 0;
 
    public function showPCTutorial():void {
+      tutorialStep = 0;
       pcTutorialOverlay = new Sprite();
 
       // Dark background
@@ -158,8 +161,6 @@ public class GameSprite extends Sprite {
       // Title
       tutorialTitle = new SimpleText(28, 0xFFFFFF, false, 400, 0);
       tutorialTitle.setBold(true);
-      tutorialTitle.htmlText = "<p align=\"center\">Proximity Chat</p>";
-      tutorialTitle.updateMetrics();
       tutorialTitle.filters = [new DropShadowFilter(0, 0, 0, 1, 6, 6, 1)];
       tutorialTitle.y = 200;
       pcTutorialOverlay.addChild(tutorialTitle);
@@ -168,22 +169,75 @@ public class GameSprite extends Sprite {
       tutorialBody = new SimpleText(18, 0xCCCCCC, false, 500, 0);
       tutorialBody.multiline = true;
       tutorialBody.wordWrap = true;
-      tutorialBody.htmlText = "<p align=\"center\">" +
-         "This game has <font color=\"#FFD700\">proximity voice chat</font>!\n\n" +
-         "Press <font color=\"#FFD700\">U</font> to open the voice chat panel\n" +
-         "Push-to-Talk is set to <font color=\"#FFD700\">Shift</font>\n\n" +
-         "<font color=\"#888888\">Press U to continue</font>" +
-         "</p>";
-      tutorialBody.updateMetrics();
       tutorialBody.filters = [new DropShadowFilter(0, 0, 0, 1, 4, 4, 1)];
       tutorialBody.y = 260;
       pcTutorialOverlay.addChild(tutorialBody);
+
+      updateTutorialStep();
 
       addChild(pcTutorialOverlay);
       mui_.enablePlayerInput_ = false;
 
       scaleTutorialText();
       WebMain.STAGE.addEventListener(Event.RESIZE, onTutorialResize);
+      WebMain.STAGE.addEventListener(KeyboardEvent.KEY_DOWN, onTutorialKeyDown);
+   }
+
+   private function updateTutorialStep():void {
+      switch (tutorialStep) {
+         case 0:
+            tutorialTitle.htmlText = "<p align=\"center\">Welcome!</p>";
+            tutorialTitle.updateMetrics();
+            tutorialBody.htmlText = "<p align=\"center\">" +
+               "This game has <font color=\"#FFD700\">proximity voice chat</font>!\n\n" +
+               "Press <font color=\"#FFD700\">U</font> to open the voice chat panel\n" +
+               "Push-to-Talk is set to <font color=\"#FFD700\">V</font>\n\n" +
+               "<font color=\"#888888\">Press U to continue</font>" +
+               "</p>";
+            break;
+         case 1:
+            tutorialTitle.htmlText = "<p align=\"center\">Dash</p>";
+            tutorialTitle.updateMetrics();
+            tutorialBody.htmlText = "<p align=\"center\">" +
+               "Press <font color=\"#FFD700\">Shift</font> to dash forward!\n\n" +
+               "Dashing gives brief invulnerability.\n\n" +
+               "<font color=\"#888888\">Press Shift to continue</font>" +
+               "</p>";
+            break;
+         case 2:
+            tutorialTitle.htmlText = "<p align=\"center\">Crouch</p>";
+            tutorialTitle.updateMetrics();
+            tutorialBody.htmlText = "<p align=\"center\">" +
+               "Hold <font color=\"#FFD700\">T</font> to crouch!\n\n" +
+               "<font color=\"#888888\">Press T to continue</font>" +
+               "</p>";
+            break;
+      }
+      tutorialBody.updateMetrics();
+      scaleTutorialText();
+   }
+
+   private function onTutorialKeyDown(e:KeyboardEvent):void {
+      if (!pcTutorialOverlay) return;
+      switch (tutorialStep) {
+         case 0:
+            if (e.keyCode == Parameters.data_.PCUI) {
+               tutorialStep = 1;
+               updateTutorialStep();
+            }
+            break;
+         case 1:
+            if (e.keyCode == Parameters.data_.dash) {
+               tutorialStep = 2;
+               updateTutorialStep();
+            }
+            break;
+         case 2:
+            if (e.keyCode == Parameters.data_.tbag) {
+               dismissPCTutorial();
+            }
+            break;
+      }
    }
 
    private function onTutorialResize(e:Event):void {
@@ -195,7 +249,6 @@ public class GameSprite extends Sprite {
       var w:Number = WebMain.STAGE.stageWidth;
       var h:Number = WebMain.STAGE.stageHeight;
       var sx:Number = (h * 800) / (w * 600);
-//d
       tutorialTitle.scaleX = sx;
       tutorialTitle.x = 400 - (400 * sx) / 2;
 
@@ -206,6 +259,7 @@ public class GameSprite extends Sprite {
    public function dismissPCTutorial():void {
       if (pcTutorialOverlay) {
          WebMain.STAGE.removeEventListener(Event.RESIZE, onTutorialResize);
+         WebMain.STAGE.removeEventListener(KeyboardEvent.KEY_DOWN, onTutorialKeyDown);
          if (pcTutorialOverlay.parent)
             removeChild(pcTutorialOverlay);
          pcTutorialOverlay = null;
@@ -216,7 +270,7 @@ public class GameSprite extends Sprite {
 
       // Mark tutorial done on server + locally so it won't reappear on instance switch
       if (this.model && this.model.charList)
-         this.model.charList.tutorialDone_ = true; //editor8182381 — CHANGED: persist locally to prevent re-show on instance switch
+         this.model.charList.tutorialDone_ = true;
       if (gsc_)
          gsc_.playerText("/tutorialdone");
    }
